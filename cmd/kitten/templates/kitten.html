@@ -1,0 +1,51 @@
+{{ define "header-part" }}
+{{ end }}
+
+{{ define "head" }}
+{{ end }}
+
+{{ define "favicon" }}
+{{ end }}
+
+{{ define "seo" }}
+  {{ $title := "Kitten - Slack bot for Unsplash Caption" }}
+  {{ $description := "Kitten adds a command in your Slack's workspace or Discord server for finding an image from Unsplash and add caption on it." }}
+
+  <title>{{ $title }}</title>
+  <meta name="description" content="{{ $description }}">
+  <meta property="og:title" content="{{ $title }}" />
+  <meta property="og:description" content="{{ $description }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ publicURL "" }}" />
+  <meta property="og:image" content="{{ publicURL "/images/discord.png" }}" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:width" content="512" />
+{{ end }}
+
+{{ define "app" }}
+  <style type="text/css" nonce="{{ .nonce }}">
+    .screenshot {
+      max-width: 100%;
+    }
+  </style>
+
+  <h2 class="center">
+    Kitten adds a command in your Slack's workspace or Discord server for finding an image from Unsplash and add caption on it.
+  </h2 class="center">
+
+  <p class="center">
+    <a href="https://slack.com/oauth/v2/authorize?client_id=TO_BE_DEFINED&scope=commands&user_scope=">
+      <img alt="Add to Slack" height="40" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
+    </a>
+  </p>
+
+  <p class="center">
+    <a href="https://discord.com/api/oauth2/authorize?client_id=TO_BE_DEFINED&redirect_uri=https%3A%2F%2FKitten.vibioh.fr%2Fdiscord%2Foauth&scope=applications.commands">
+      <img alt="Add to Discord" height="40" src="/images/discord.png" />
+    </a>
+  </center>
+
+  <p class="center margin">
+    We don't log anything, don't store any token, we just add a fun command in your workspace. Full code source is available <a href="https://github.com/ViBiOh/kitten" rel="noreferrer noopener">on GitHub</a>.
+  </p>
+{{ end }}

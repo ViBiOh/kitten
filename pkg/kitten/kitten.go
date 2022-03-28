@@ -8,11 +8,10 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/kitten/pkg/meme"
-	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
 // Handler for Hello request. Should be use with net/http
-func Handler(unplashApp unsplash.App) http.Handler {
+func Handler(memeApp meme.App) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -33,13 +32,7 @@ func Handler(unplashApp unsplash.App) http.Handler {
 			return
 		}
 
-		image, err := unplashApp.GetRandomImage(r.Context(), search)
-		if err != nil {
-			httperror.InternalServerError(w, err)
-			return
-		}
-
-		image, err = meme.CaptionImage(image, caption)
+		image, _, _, err := memeApp.Get(r.Context(), search, caption)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return

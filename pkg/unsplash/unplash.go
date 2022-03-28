@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -13,11 +14,21 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
-type randomResponse struct {
-	URLs map[string]string `json:"urls"`
+type unsplashUser struct {
+	Name  string            `json:"name"`
+	Links map[string]string `json:"links"`
 }
 
-const unsplashRoot = "https://api.unsplash.com"
+type unsplashResponse struct {
+	ID   string            `json:"id"`
+	URLs map[string]string `json:"urls"`
+	User unsplashUser      `json:"user"`
+}
+
+const (
+	unsplashRoot   = "https://api.unsplash.com"
+	unsplashImages = "https://images.unsplash.com/"
+)
 
 // App of package
 type App struct {
@@ -43,27 +54,47 @@ func New(config Config) App {
 	}
 }
 
+// GetImage from unsplash for given keyword
+func (a App) GetImage(ctx context.Context, id string) (image.Image, string, string, error) {
+	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("unable to get image `%s`: %s", id, err)
+	}
+
+	return getImageFromResponse(ctx, resp)
+}
+
 // GetRandomImage from unsplash for given keyword
-func (a App) GetRandomImage(ctx context.Context, query string) (image.Image, error) {
+func (a App) GetRandomImage(ctx context.Context, query string) (image.Image, string, string, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get random image: %s", err)
+		return nil, "", "", fmt.Errorf("unable to get random image: %s", err)
 	}
 
-	var random randomResponse
-	if err = httpjson.Read(resp, &random); err != nil {
-		return nil, fmt.Errorf("unable to parse random response: %s", err)
+	return getImageFromResponse(ctx, resp)
+}
+
+func getImageFromResponse(ctx context.Context, resp *http.Response) (output image.Image, id string, credits string, err error) {
+	var imageContent unsplashResponse
+	if err = httpjson.Read(resp, &imageContent); err != nil {
+		err = fmt.Errorf("unable to parse random response: %s", err)
+		return
 	}
 
-	resp, err = request.Get(fmt.Sprintf("%s?fm=png&w=800&fit=max", random.URLs["raw"])).Send(ctx, nil)
+	id = imageContent.ID
+
+	resp, err = request.Get(fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])).Send(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to download image: %s", err)
+		err = fmt.Errorf("unable to download image: %s", err)
+		return
 	}
 
-	image, _, err := image.Decode(resp.Body)
+	output, _, err = image.Decode(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode image: %s", err)
+		err = fmt.Errorf("unable to decode image: %s", err)
+		return
 	}
 
-	return image, nil
+	credits = fmt.Sprintf("%s|%s", imageContent.User.Name, imageContent.User.Links["html"])
+	return
 }

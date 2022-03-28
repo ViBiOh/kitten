@@ -1,8 +1,10 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"strings"
@@ -18,15 +20,22 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/owasp"
 	"github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
+	"github.com/ViBiOh/httputils/v4/pkg/renderer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/kitten"
+	"github.com/ViBiOh/kitten/pkg/meme"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
+//go:embed templates static
+var content embed.FS
+
 const (
-	apiPath = "/api"
+	slackPrefix   = "/slack"
+	discordPrefix = "/discord"
+	apiPath       = "/api"
 )
 
 func main() {
@@ -40,10 +49,11 @@ func main() {
 	loggerConfig := logger.Flags(fs, "logger")
 	tracerConfig := tracer.Flags(fs, "tracer")
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
-	owaspConfig := owasp.Flags(fs, "")
+	owaspConfig := owasp.Flags(fs, "", flags.NewOverride("Csp", "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com"))
 	corsConfig := cors.Flags(fs, "cors")
 
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
+	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
@@ -65,7 +75,15 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	apiHandler := http.StripPrefix(apiPath, kitten.Handler(unsplash.New(unsplashConfig)))
+	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, tracerApp)
+	logger.Fatal(err)
+
+	kittenHandler := rendererApp.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
+		return renderer.NewPage("public", http.StatusOK, nil), nil
+	})
+
+	memeApp := meme.New(unsplash.New(unsplashConfig))
+	apiHandler := http.StripPrefix(apiPath, kitten.Handler(memeApp))
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, apiPath) {
@@ -73,7 +91,7 @@ func main() {
 			return
 		}
 
-		w.WriteHeader(http.StatusTeapot)
+		kittenHandler.ServeHTTP(w, r)
 	})
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
