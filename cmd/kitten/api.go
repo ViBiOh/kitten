@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	_ "net/http/pprof"
 
@@ -22,6 +23,10 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/kitten"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
+)
+
+const (
+	apiPath = "/api"
 )
 
 func main() {
@@ -60,12 +65,19 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	unsplashApp := unsplash.New(unsplashConfig)
+	apiHandler := http.StripPrefix(apiPath, kitten.Handler(unsplash.New(unsplashConfig)))
 
-	apiHandler := kitten.Handler(unsplashApp)
+	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, apiPath) {
+			apiHandler.ServeHTTP(w, r)
+			return
+		}
+
+		w.WriteHeader(http.StatusTeapot)
+	})
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
-	go appServer.Start("http", healthApp.End(), httputils.Handler(apiHandler, healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware, owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
+	go appServer.Start("http", healthApp.End(), httputils.Handler(appHandler, healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware, owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
 	server.GracefulWait(appServer.Done(), promServer.Done())
