@@ -1,14 +1,14 @@
-# goweb
+# kitten
 
-[![Build](https://github.com/ViBiOh/goweb/workflows/Build/badge.svg)](https://github.com/ViBiOh/goweb/actions)
-[![codecov](https://codecov.io/gh/ViBiOh/goweb/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/goweb)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_goweb&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_goweb)
+[![Build](https://github.com/ViBiOh/kitten/workflows/Build/badge.svg)](https://github.com/ViBiOh/kitten/actions)
+[![codecov](https://codecov.io/gh/ViBiOh/kitten/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/kitten)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_kitten&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_kitten)
 
 ## Getting started
 
-Golang binary is built with static link. You can download it directly from the [Github Release page](https://github.com/ViBiOh/goweb/releases) or build it by yourself by cloning this repo and running `make`.
+Golang binary is built with static link. You can download it directly from the [Github Release page](https://github.com/ViBiOh/kitten/releases) or build it by yourself by cloning this repo and running `make`.
 
-A Docker image is available for `amd64`, `arm` and `arm64` platforms on Docker Hub: [vibioh/goweb](https://hub.docker.com/r/vibioh/goweb/tags).
+A Docker image is available for `amd64`, `arm` and `arm64` platforms on Docker Hub: [vibioh/kitten](https://hub.docker.com/r/vibioh/kitten/tags).
 
 You can configure app by passing CLI args or environment variables (cf. [Usage](#usage) section). CLI override environment variables.
 
@@ -31,81 +31,81 @@ The application can be configured by passing CLI args described below or their e
 Be careful when using the CLI values, if someone list the processes on the system, they will appear in plain-text. Pass secrets by environment variables: it's less easily visible.
 
 ```bash
-Usage of api:
+Usage of kitten:
   -address string
-        [server] Listen address {API_ADDRESS}
+        [server] Listen address {KITTEN_ADDRESS}
   -cert string
-        [server] Certificate file {API_CERT}
+        [server] Certificate file {KITTEN_CERT}
   -corsCredentials
-        [cors] Access-Control-Allow-Credentials {API_CORS_CREDENTIALS}
+        [cors] Access-Control-Allow-Credentials {KITTEN_CORS_CREDENTIALS}
   -corsExpose string
-        [cors] Access-Control-Expose-Headers {API_CORS_EXPOSE}
+        [cors] Access-Control-Expose-Headers {KITTEN_CORS_EXPOSE}
   -corsHeaders string
-        [cors] Access-Control-Allow-Headers {API_CORS_HEADERS} (default "Content-Type")
+        [cors] Access-Control-Allow-Headers {KITTEN_CORS_HEADERS} (default "Content-Type")
   -corsMethods string
-        [cors] Access-Control-Allow-Methods {API_CORS_METHODS} (default "GET")
+        [cors] Access-Control-Allow-Methods {KITTEN_CORS_METHODS} (default "GET")
   -corsOrigin string
-        [cors] Access-Control-Allow-Origin {API_CORS_ORIGIN} (default "*")
+        [cors] Access-Control-Allow-Origin {KITTEN_CORS_ORIGIN} (default "*")
   -csp string
-        [owasp] Content-Security-Policy {API_CSP} (default "default-src 'self'; base-uri 'self'")
+        [owasp] Content-Security-Policy {KITTEN_CSP} (default "default-src 'self'; base-uri 'self'")
   -frameOptions string
-        [owasp] X-Frame-Options {API_FRAME_OPTIONS} (default "deny")
+        [owasp] X-Frame-Options {KITTEN_FRAME_OPTIONS} (default "deny")
   -graceDuration string
-        [http] Grace duration when SIGTERM received {API_GRACE_DURATION} (default "30s")
+        [http] Grace duration when SIGTERM received {KITTEN_GRACE_DURATION} (default "30s")
   -hsts
-        [owasp] Indicate Strict Transport Security {API_HSTS} (default true)
+        [owasp] Indicate Strict Transport Security {KITTEN_HSTS} (default true)
   -idleTimeout string
-        [server] Idle Timeout {API_IDLE_TIMEOUT} (default "2m")
+        [server] Idle Timeout {KITTEN_IDLE_TIMEOUT} (default "2m")
   -key string
-        [server] Key file {API_KEY}
-  -location string
-        [hello] TimeZone for displaying current time {API_LOCATION} (default "Europe/Paris")
+        [server] Key file {KITTEN_KEY}
   -loggerJson
-        [logger] Log format as JSON {API_LOGGER_JSON}
+        [logger] Log format as JSON {KITTEN_LOGGER_JSON}
   -loggerLevel string
-        [logger] Logger level {API_LOGGER_LEVEL} (default "INFO")
+        [logger] Logger level {KITTEN_LOGGER_LEVEL} (default "INFO")
   -loggerLevelKey string
-        [logger] Key for level in JSON {API_LOGGER_LEVEL_KEY} (default "level")
+        [logger] Key for level in JSON {KITTEN_LOGGER_LEVEL_KEY} (default "level")
   -loggerMessageKey string
-        [logger] Key for message in JSON {API_LOGGER_MESSAGE_KEY} (default "message")
+        [logger] Key for message in JSON {KITTEN_LOGGER_MESSAGE_KEY} (default "message")
   -loggerTimeKey string
-        [logger] Key for timestamp in JSON {API_LOGGER_TIME_KEY} (default "time")
+        [logger] Key for timestamp in JSON {KITTEN_LOGGER_TIME_KEY} (default "time")
   -okStatus int
-        [http] Healthy HTTP Status code {API_OK_STATUS} (default 204)
+        [http] Healthy HTTP Status code {KITTEN_OK_STATUS} (default 204)
   -port uint
-        [server] Listen port (0 to disable) {API_PORT} (default 1080)
+        [server] Listen port (0 to disable) {KITTEN_PORT} (default 1080)
   -prometheusAddress string
-        [prometheus] Listen address {API_PROMETHEUS_ADDRESS}
+        [prometheus] Listen address {KITTEN_PROMETHEUS_ADDRESS}
   -prometheusCert string
-        [prometheus] Certificate file {API_PROMETHEUS_CERT}
+        [prometheus] Certificate file {KITTEN_PROMETHEUS_CERT}
   -prometheusGzip
-        [prometheus] Enable gzip compression of metrics output {API_PROMETHEUS_GZIP}
+        [prometheus] Enable gzip compression of metrics output {KITTEN_PROMETHEUS_GZIP}
   -prometheusIdleTimeout string
-        [prometheus] Idle Timeout {API_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
+        [prometheus] Idle Timeout {KITTEN_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
   -prometheusIgnore string
-        [prometheus] Ignored path prefixes for metrics, comma separated {API_PROMETHEUS_IGNORE}
+        [prometheus] Ignored path prefixes for metrics, comma separated {KITTEN_PROMETHEUS_IGNORE}
   -prometheusKey string
-        [prometheus] Key file {API_PROMETHEUS_KEY}
+        [prometheus] Key file {KITTEN_PROMETHEUS_KEY}
   -prometheusPort uint
-        [prometheus] Listen port (0 to disable) {API_PROMETHEUS_PORT} (default 9090)
+        [prometheus] Listen port (0 to disable) {KITTEN_PROMETHEUS_PORT} (default 9090)
   -prometheusReadTimeout string
-        [prometheus] Read Timeout {API_PROMETHEUS_READ_TIMEOUT} (default "5s")
+        [prometheus] Read Timeout {KITTEN_PROMETHEUS_READ_TIMEOUT} (default "5s")
   -prometheusShutdownTimeout string
-        [prometheus] Shutdown Timeout {API_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
+        [prometheus] Shutdown Timeout {KITTEN_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
   -prometheusWriteTimeout string
-        [prometheus] Write Timeout {API_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
+        [prometheus] Write Timeout {KITTEN_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
   -readTimeout string
-        [server] Read Timeout {API_READ_TIMEOUT} (default "5s")
+        [server] Read Timeout {KITTEN_READ_TIMEOUT} (default "5s")
   -shutdownTimeout string
-        [server] Shutdown Timeout {API_SHUTDOWN_TIMEOUT} (default "10s")
+        [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default "10s")
   -tracerRate string
-        [tracer] Jaeger sample rate, 'always', 'never' or a float value {API_TRACER_RATE} (default "always")
+        [tracer] Jaeger sample rate, 'always', 'never' or a float value {KITTEN_TRACER_RATE} (default "always")
   -tracerURL string
-        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {API_TRACER_URL}
+        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {KITTEN_TRACER_URL}
+  -unsplashUnsplashAccessKey string
+        [unsplash] Unsplash Access Key {KITTEN_UNSPLASH_UNSPLASH_ACCESS_KEY}
   -url string
-        [alcotest] URL to check {API_URL}
+        [alcotest] URL to check {KITTEN_URL}
   -userAgent string
-        [alcotest] User-Agent for check {API_USER_AGENT} (default "Alcotest")
+        [alcotest] User-Agent for check {KITTEN_USER_AGENT} (default "Alcotest")
   -writeTimeout string
-        [server] Write Timeout {API_WRITE_TIMEOUT} (default "10s")
+        [server] Write Timeout {KITTEN_WRITE_TIMEOUT} (default "10s")
 ```
