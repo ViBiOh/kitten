@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: goweb
+  name: kitten
   namespace: default
 spec:
   interval: 120m
@@ -22,21 +22,20 @@ spec:
   rollback:
     cleanupOnFail: true
   values:
-    nameOverride: goweb
+    nameOverride: kitten
     image:
-      name: vibioh/goweb
-      tag: "202203262154" # {"$imagepolicy": "default:flux-goweb-api:tag"}
+      name: vibioh/kitten
+      tag: "latest" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     config:
-      API_LOGGER_JSON: "true"
-      API_TRACER_URL: http://jaeger.monitoring:14268/api/traces
-      OTEL_SERVICE_NAME: goweb
+      KITTEN_LOGGER_JSON: "true"
+      KITTEN_TRACER_URL: http://jaeger.monitoring:14268/api/traces
+      OTEL_SERVICE_NAME: kitten
+    secrets:
+      KITTEN_UNSPLASH_UNSPLASH_ACCESS_KEY: AgB25+jTG4RF6nKVMkCLecpjqIbWD2BV209vE3AJo0fcuc919OP2IgLGK+4u8vKL/ukJxqFFbByDxoNSoN2+jfZqfgRzduuLmQ9GA3DlqVRTRkFbTZuaZvLJNCISmKTa64p/yYDvF7AM7LfHtp53lEWQeaw+dwAxi+n5Ozkug8T3BDQRWgxAYM2yFG1ZjZOBnl0M/1PkqBDmDUjDz7fj4cCFS5qIJWlFLMIDvrZpIpJfZJOnDDyCTRq9OH+jROfbFvYLfGwyrPjgymCVSzP2io9UwotBXXRf4/SqHwLcoG96qrltAYm2vk3TFPGRkmQNn0cfTpnPyRfLxg+t8XcZwAvM9kwsrlDDub3+seIQ2Oq3gf/hcR6zQhBHsLsxqaeppkvtQOprerXm2jOZVZ6T7OReXudAGOwDduPaWXHc2JlcZeX+lYFJTPQgSIQRxLznVnUQZpe1jf8etPMQTGRRRZUN8z7wxq98NfcaZP0TrYTl8xqXGJwfXPz7TuS3YEtHOJdMzxwFX1NbZHlM5gdvPIb2I3w15iwHuZr8Q5UJFSMGZCLthdHikQ+FIH4INuhSQ6I9vgsrX7WxiQ863hxSzdKXV39uQMX8bq2e7bt0ByzGzY+NUXzQSyMDpYFbKr0WP4DizjdUzzrKLCKbp0Se+yp7UsH0/ZPx0Ue1Lyo7ln3SOMnXsWpXMsgvtkTp3PWpjH4Glf7gwQuTxSB60VX+iDfglUSF720eflZEDX0j8yC5Olzy6U3PJqow3pBj
     ingress:
       enabled: true
       compress: true
       hosts:
-      - api.vibioh.fr
-    canary:
-      enabled: true
-      url: http://api.vibioh.fr/hello/
+        - kitten.vibioh.fr
     pprof:
       enabled: true
