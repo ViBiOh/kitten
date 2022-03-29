@@ -2,12 +2,14 @@ package meme
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -22,7 +24,13 @@ var cancelButton = slack.NewButtonElement("Annuler", cancelValue, "", "danger")
 
 // SlackCommand handler
 func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
-	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, search, caption))
+	response := a.getKittenBlock(ctx, search, caption)
+
+	if payload, err := json.Marshal(response); err == nil {
+		logger.Info("%s", payload)
+	}
+
+	httpjson.Write(w, http.StatusOK, response)
 }
 
 func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
@@ -78,7 +86,7 @@ func (a App) getKittenResponse(search string, image unsplash.Image, caption, use
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of [%s](%s) from [Unsplash](%s)", user, image.Author, image.AuthorURL, image.URL)), nil),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
 			content,
 		},
 	}
