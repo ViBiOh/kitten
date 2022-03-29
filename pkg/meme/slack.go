@@ -2,14 +2,12 @@ package meme
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -24,13 +22,7 @@ var cancelButton = slack.NewButtonElement("Annuler", cancelValue, "", "danger")
 
 // SlackCommand handler
 func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
-	response := a.getKittenBlock(ctx, search, caption)
-
-	if payload, err := json.Marshal(response); err == nil {
-		logger.Info("%s", payload)
-	}
-
-	httpjson.Write(w, http.StatusOK, response)
+	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, search, caption))
 }
 
 func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
@@ -49,9 +41,8 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 		return slack.NewEphemeralMessage("Ok, not now.")
 	}
 
-	id, caption := parseBlockID(action.Value)
-
 	if action.ActionID == sendValue {
+		id, caption := parseBlockID(action.Value)
 		image, err := a.unsplashApp.GetImage(ctx, id)
 		if err != nil {
 			return slack.NewEphemeralMessage(fmt.Sprintf("Unable to find asked image: %s", err))
@@ -61,7 +52,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	}
 
 	if action.ActionID == nextValue {
-		return a.getKittenBlock(ctx, action.BlockID, caption)
+		return a.getKittenBlock(ctx, action.BlockID, action.Value)
 	}
 
 	return slack.NewEphemeralMessage("On ne comprend pas l'action à effectuer")
@@ -76,7 +67,7 @@ func (a App) getKittenResponse(search string, image unsplash.Image, caption, use
 			ReplaceOriginal: true,
 			Blocks: []slack.Block{
 				content,
-				slack.NewActions(search, cancelButton, slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s@%s", search, caption), ""),
+				slack.NewActions(search, cancelButton, slack.NewButtonElement("Another?", nextValue, caption, ""),
 					slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s@%s", image.ID, caption), "primary")),
 			},
 		}
