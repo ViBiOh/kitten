@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"image"
 	"net/http"
 	"net/url"
 	"strings"
@@ -55,26 +54,26 @@ func New(config Config) App {
 }
 
 // GetImage from unsplash for given keyword
-func (a App) GetImage(ctx context.Context, id string) (image.Image, string, string, error) {
+func (a App) GetImage(ctx context.Context, id string) (string, string, string, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("unable to get image `%s`: %s", id, err)
+		return "", "", "", fmt.Errorf("unable to get image `%s`: %s", id, err)
 	}
 
 	return getImageFromResponse(ctx, resp)
 }
 
 // GetRandomImage from unsplash for given keyword
-func (a App) GetRandomImage(ctx context.Context, query string) (image.Image, string, string, error) {
+func (a App) GetRandomImage(ctx context.Context, query string) (string, string, string, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("unable to get random image: %s", err)
+		return "", "", "", fmt.Errorf("unable to get random image: %s", err)
 	}
 
 	return getImageFromResponse(ctx, resp)
 }
 
-func getImageFromResponse(ctx context.Context, resp *http.Response) (output image.Image, id string, credits string, err error) {
+func getImageFromResponse(ctx context.Context, resp *http.Response) (output string, id string, credits string, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("unable to parse random response: %s", err)
@@ -82,19 +81,8 @@ func getImageFromResponse(ctx context.Context, resp *http.Response) (output imag
 	}
 
 	id = imageContent.ID
-
-	resp, err = request.Get(fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])).Send(ctx, nil)
-	if err != nil {
-		err = fmt.Errorf("unable to download image: %s", err)
-		return
-	}
-
-	output, _, err = image.Decode(resp.Body)
-	if err != nil {
-		err = fmt.Errorf("unable to decode image: %s", err)
-		return
-	}
-
 	credits = fmt.Sprintf("%s|%s", imageContent.User.Name, imageContent.User.Links["html"])
+	output = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+
 	return
 }
