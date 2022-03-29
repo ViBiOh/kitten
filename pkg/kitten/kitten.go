@@ -32,7 +32,7 @@ func Handler(memeApp meme.App) http.Handler {
 			return
 		}
 
-		image, _, _, err := memeApp.Get(r.Context(), search, caption)
+		image, _, _, err := memeApp.GetFromUnsplash(r.Context(), search, caption)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return

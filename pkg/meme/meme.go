@@ -6,11 +6,12 @@ import (
 	"image"
 	"strings"
 
+	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
 )
 
-const fontSize = 64
+const fontSize float64 = 64
 
 // App of package
 type App struct {
@@ -24,14 +25,19 @@ func New(unsplashApp unsplash.App) App {
 	}
 }
 
-// Get  a meme caption to the given image name
-func (a App) Get(ctx context.Context, name, caption string) (image.Image, string, string, error) {
-	image, credits, id, err := a.unsplashApp.GetRandomImage(ctx, name)
+// GetFromUnsplash a meme caption to the given image name from unsplash
+func (a App) GetFromUnsplash(ctx context.Context, name, caption string) (image.Image, string, string, error) {
+	imageURL, credits, id, err := a.unsplashApp.GetRandomImage(ctx, name)
 	if err != nil {
 		return nil, credits, id, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}
 
-	image, err = captionImage(image, caption)
+	image, err := getImage(ctx, imageURL)
+	if err != nil {
+		return nil, credits, id, fmt.Errorf("unable to get image: %s", err)
+	}
+
+	image, err = captionImage(image, caption, fontSize)
 	if err != nil {
 		return nil, credits, id, fmt.Errorf("unable to caption image: %s", err)
 	}
@@ -39,7 +45,36 @@ func (a App) Get(ctx context.Context, name, caption string) (image.Image, string
 	return image, credits, id, nil
 }
 
-func captionImage(source image.Image, text string) (image.Image, error) {
+// GetFromURL a meme caption to the given image name from unsplash
+func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Image, error) {
+	image, err := getImage(ctx, imageURL)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get image: %s", err)
+	}
+
+	image, err = captionImage(image, caption, fontSize)
+	if err != nil {
+		return nil, fmt.Errorf("unable to caption image: %s", err)
+	}
+
+	return image, nil
+}
+
+func getImage(ctx context.Context, imageURL string) (image.Image, error) {
+	resp, err := request.Get(imageURL).Send(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch URL `%s`: %s", imageURL, err)
+	}
+
+	output, _, err := image.Decode(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode image: %s", err)
+	}
+
+	return output, nil
+}
+
+func captionImage(source image.Image, text string, fontSize float64) (image.Image, error) {
 	imageCtx := gg.NewContextForImage(source)
 	if err := imageCtx.LoadFontFace("impact.ttf", fontSize); err != nil {
 		return nil, fmt.Errorf("unable to load font: %s", err)
@@ -48,7 +83,7 @@ func captionImage(source image.Image, text string) (image.Image, error) {
 	imageCtx.SetRGB(1, 1, 1)
 	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
 	xAnchor := float64(imageCtx.Width() / 2)
-	yAnchor := float64(fontSize) / 2
+	yAnchor := fontSize / 2
 
 	n := float64(2)
 
