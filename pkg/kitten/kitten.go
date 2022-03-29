@@ -2,12 +2,14 @@ package kitten
 
 import (
 	"errors"
+	"image"
 	"image/png"
 	"net/http"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/kitten/pkg/meme"
+	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
 // Handler for Hello request. Should be use with net/http
@@ -20,22 +22,35 @@ func Handler(memeApp meme.App) http.Handler {
 
 		query := r.URL.Query()
 
-		search := strings.TrimSpace(query.Get("search"))
-		if len(search) == 0 {
-			httperror.BadRequest(w, errors.New("search param is required"))
-			return
-		}
-
 		caption := strings.TrimSpace(query.Get("caption"))
 		if len(caption) == 0 {
 			httperror.BadRequest(w, errors.New("caption param is required"))
 			return
 		}
 
-		image, _, _, err := memeApp.GetFromUnsplash(r.Context(), search, caption)
+		var image image.Image
+		var details unsplash.Image
+		var err error
+
+		from := strings.TrimSpace(query.Get("from"))
+		if len(from) != 0 {
+			image, err = memeApp.GetFromURL(r.Context(), from, caption)
+		} else if search := strings.TrimSpace(query.Get("search")); len(search) == 0 {
+			httperror.BadRequest(w, errors.New("search param is required"))
+			return
+		} else {
+			image, details, err = memeApp.GetFromUnsplash(r.Context(), query.Get("id"), search, caption)
+		}
+
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
+		}
+
+		if !details.IsZero() {
+			w.Header().Set("X-Image-ID", details.ID)
+			w.Header().Set("X-Image-Author", details.Author)
+			w.Header().Set("X-Image-Author-URL", details.AuthorURL)
 		}
 
 		w.Header().Set("Content-Type", "image/png")
