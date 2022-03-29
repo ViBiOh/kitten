@@ -20,6 +20,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/owasp"
 	"github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
+	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/renderer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
@@ -49,6 +50,8 @@ func main() {
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
 	owaspConfig := owasp.Flags(fs, "", flags.NewOverride("Csp", "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com"))
 	corsConfig := cors.Flags(fs, "cors")
+
+	redisConfig := redis.Flags(fs, "redis")
 
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
@@ -80,7 +83,7 @@ func main() {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	memeApp := meme.New(unsplash.New(unsplashConfig))
+	memeApp := meme.New(unsplash.New(unsplashConfig, redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)))
 	apiHandler := http.StripPrefix(apiPath, kitten.Handler(memeApp))
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

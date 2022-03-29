@@ -2,20 +2,26 @@ package unsplash
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ViBiOh/flags"
+	"github.com/ViBiOh/httputils/v4/pkg/cache"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
 // Image describe an image use by app
 type Image struct {
 	ID        string
+	Raw       string
 	URL       string
 	Author    string
 	AuthorURL string
@@ -32,18 +38,22 @@ type unsplashUser struct {
 }
 
 type unsplashResponse struct {
-	ID   string            `json:"id"`
-	URLs map[string]string `json:"urls"`
-	User unsplashUser      `json:"user"`
+	ID    string            `json:"id"`
+	URLs  map[string]string `json:"urls"`
+	Links map[string]string `json:"links"`
+	User  unsplashUser      `json:"user"`
 }
 
 const (
 	unsplashRoot = "https://api.unsplash.com"
 )
 
+var cacheDuration = time.Hour * 24
+
 // App of package
 type App struct {
 	unplashReq request.Request
+	redisApp   redis.App
 }
 
 // Config of package
@@ -59,20 +69,23 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config) App {
+func New(config Config, redisApp redis.App) App {
 	return App{
 		unplashReq: request.Get(unsplashRoot).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
+		redisApp:   redisApp,
 	}
 }
 
 // GetImage from unsplash for given keyword
 func (a App) GetImage(ctx context.Context, id string) (Image, error) {
-	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
-	if err != nil {
-		return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
-	}
+	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Image, error) {
+		resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
+		if err != nil {
+			return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
+		}
 
-	return getImageFromResponse(ctx, resp)
+		return getImageFromResponse(ctx, resp)
+	}, cacheDuration)
 }
 
 // GetRandomImage from unsplash for given keyword
@@ -82,7 +95,21 @@ func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 		return Image{}, fmt.Errorf("unable to get random image: %s", err)
 	}
 
-	return getImageFromResponse(ctx, resp)
+	image, err := getImageFromResponse(ctx, resp)
+	if err != nil {
+		go func() {
+			payload, err := json.Marshal(image)
+			if err != nil {
+				logger.Error("unable to marshal image for cache: %s", err)
+			}
+
+			if err = a.redisApp.Store(context.Background(), cacheID(image.ID), payload, cacheDuration); err != nil {
+				logger.Error("unable to save image in cache: %s", err)
+			}
+		}()
+	}
+
+	return image, err
 }
 
 func getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
@@ -93,9 +120,14 @@ func getImageFromResponse(ctx context.Context, resp *http.Response) (output Imag
 	}
 
 	output.ID = imageContent.ID
-	output.URL = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+	output.URL = imageContent.Links["html"]
 	output.Author = imageContent.User.Name
 	output.AuthorURL = imageContent.User.Links["html"]
 
 	return
+}
+
+func cacheID(id string) string {
+	return "kitten:unsplash:" + id
 }
