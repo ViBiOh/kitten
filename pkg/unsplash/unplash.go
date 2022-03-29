@@ -38,8 +38,7 @@ type unsplashResponse struct {
 }
 
 const (
-	unsplashRoot   = "https://api.unsplash.com"
-	unsplashImages = "https://images.unsplash.com/"
+	unsplashRoot = "https://api.unsplash.com"
 )
 
 // App of package
