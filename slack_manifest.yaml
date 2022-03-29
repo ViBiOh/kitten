@@ -1,0 +1,41 @@
+---
+_metadata:
+  major_version: 1
+  minor_version: 1
+display_information:
+  name: Kitten
+  description: Get a cute (or not) meme
+  background_color: "#004492"
+features:
+  bot_user:
+    display_name: Kitten
+    always_online: false
+  slash_commands:
+    - command: /kitten
+      url: https://kitten.vibioh.fr/slack/kitten
+      description: Get a kitten meme
+      usage_hint: "[caption text]"
+      should_escape: false
+    - command: /puppy
+      url: https://kitten.vibioh.fr/slack/puppy
+      description: Get a puppy meme
+      usage_hint: "[caption text]"
+      should_escape: false
+    - command: /trout
+      url: https://kitten.vibioh.fr/slack/trout
+      description: Get a trout meme
+      usage_hint: "[caption text]"
+      should_escape: false
+oauth_config:
+  redirect_urls:
+    - https://kitten.vibioh.fr/slack/oauth
+  scopes:
+    bot:
+      - commands
+settings:
+  interactivity:
+    is_enabled: true
+    request_url: https://kitten.vibioh.fr/slack/interactive
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
