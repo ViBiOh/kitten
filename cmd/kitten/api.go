@@ -33,9 +33,7 @@ import (
 var content embed.FS
 
 const (
-	slackPrefix   = "/slack"
-	discordPrefix = "/discord"
-	apiPath       = "/api"
+	apiPath = "/api"
 )
 
 func main() {
