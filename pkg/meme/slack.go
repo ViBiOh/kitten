@@ -18,7 +18,7 @@ const (
 	sendValue   = "send"
 )
 
-var cancelButton = slack.NewButtonElement("Annuler", cancelValue, "", "danger")
+var cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 
 // SlackCommand handler
 func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
@@ -55,7 +55,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 		return a.getKittenBlock(ctx, action.BlockID, action.Value)
 	}
 
-	return slack.NewEphemeralMessage("On ne comprend pas l'action à effectuer")
+	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
 func (a App) getKittenResponse(search string, image unsplash.Image, caption, user string) slack.Response {
