@@ -27,6 +27,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/kitten"
 	"github.com/ViBiOh/kitten/pkg/meme"
+	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -34,7 +35,8 @@ import (
 var content embed.FS
 
 const (
-	apiPath = "/api"
+	apiPrefix   = "/api"
+	slackPrefix = "/slack"
 )
 
 func main() {
@@ -54,6 +56,7 @@ func main() {
 	redisConfig := redis.Flags(fs, "redis")
 
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
+	slackConfig := slack.Flags(fs, "slack")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
@@ -83,12 +86,18 @@ func main() {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	memeApp := meme.New(unsplash.New(unsplashConfig, redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)))
-	apiHandler := http.StripPrefix(apiPath, kitten.Handler(memeApp))
+	memeApp := meme.New(unsplash.New(unsplashConfig, redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)), rendererApp.PublicURL(""))
+	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp))
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, apiPath) {
+		if strings.HasPrefix(r.URL.Path, apiPrefix) {
 			apiHandler.ServeHTTP(w, r)
+			return
+		}
+
+		if strings.HasPrefix(r.URL.Path, slackPrefix) {
+			slackHandler.ServeHTTP(w, r)
 			return
 		}
 

@@ -16,12 +16,14 @@ const fontSize float64 = 64
 // App of package
 type App struct {
 	unsplashApp unsplash.App
+	website     string
 }
 
 // New creates new App from Config
-func New(unsplashApp unsplash.App) App {
+func New(unsplashApp unsplash.App, website string) App {
 	return App{
 		unsplashApp: unsplashApp,
+		website:     website,
 	}
 }
 

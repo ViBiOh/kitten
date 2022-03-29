@@ -112,6 +112,12 @@ Usage of kitten:
         [redis] Redis Username, if any {KITTEN_REDIS_USERNAME}
   -shutdownTimeout string
         [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default "10s")
+  -slackClientID string
+        [slack] ClientID {KITTEN_SLACK_CLIENT_ID}
+  -slackClientSecret string
+        [slack] ClientSecret {KITTEN_SLACK_CLIENT_SECRET}
+  -slackSigningSecret string
+        [slack] Signing secret {KITTEN_SLACK_SIGNING_SECRET}
   -title string
         Application title {KITTEN_TITLE} (default "KittenBot")
   -tracerRate string
