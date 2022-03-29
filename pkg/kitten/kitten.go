@@ -2,15 +2,19 @@ package kitten
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"image/png"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/kitten/pkg/meme"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
+
+var cacheDuration = fmt.Sprintf("public, max-age=%.0f", time.Duration(time.Hour*24).Seconds())
 
 // Handler for Hello request. Should be use with net/http
 func Handler(memeApp meme.App) http.Handler {
@@ -32,17 +36,15 @@ func Handler(memeApp meme.App) http.Handler {
 		var details unsplash.Image
 		var err error
 
+		id := strings.TrimSpace(query.Get("id"))
 		from := strings.TrimSpace(query.Get("from"))
+		search := strings.TrimSpace(query.Get("search"))
+
 		if len(from) != 0 {
 			image, err = memeApp.GetFromURL(r.Context(), from, caption)
+		} else if len(id) == 0 && len(search) == 0 {
+			httperror.BadRequest(w, errors.New("search param is required"))
 		} else {
-			search := strings.TrimSpace(query.Get("search"))
-			id := strings.TrimSpace(query.Get("id"))
-			if len(id) == 0 && len(search) == 0 {
-				httperror.BadRequest(w, errors.New("search param is required"))
-				return
-			}
-
 			image, details, err = memeApp.GetFromUnsplash(r.Context(), id, search, caption)
 		}
 
@@ -57,6 +59,7 @@ func Handler(memeApp meme.App) http.Handler {
 			w.Header().Set("X-Image-Author-URL", details.AuthorURL)
 		}
 
+		w.Header().Add("Cache-Control", cacheDuration)
 		w.Header().Set("Content-Type", "image/png")
 		w.WriteHeader(http.StatusOK)
 		if err = png.Encode(w, image); err != nil {
