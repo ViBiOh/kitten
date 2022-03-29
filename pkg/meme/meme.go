@@ -26,23 +26,28 @@ func New(unsplashApp unsplash.App) App {
 }
 
 // GetFromUnsplash a meme caption to the given image name from unsplash
-func (a App) GetFromUnsplash(ctx context.Context, name, caption string) (image.Image, string, string, error) {
-	imageURL, credits, id, err := a.unsplashApp.GetRandomImage(ctx, name)
-	if err != nil {
-		return nil, credits, id, fmt.Errorf("unable to get image from unsplash: %s", err)
+func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (output image.Image, unsplashImage unsplash.Image, err error) {
+	if len(id) != 0 {
+		unsplashImage, err = a.unsplashApp.GetImage(ctx, id)
+	} else {
+		unsplashImage, err = a.unsplashApp.GetRandomImage(ctx, name)
 	}
 
-	image, err := getImage(ctx, imageURL)
 	if err != nil {
-		return nil, credits, id, fmt.Errorf("unable to get image: %s", err)
+		return nil, unsplashImage, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}
 
-	image, err = captionImage(image, caption, fontSize)
+	output, err = getImage(ctx, unsplashImage.URL)
 	if err != nil {
-		return nil, credits, id, fmt.Errorf("unable to caption image: %s", err)
+		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
 	}
 
-	return image, credits, id, nil
+	output, err = captionImage(output, caption, fontSize)
+	if err != nil {
+		return nil, unsplashImage, fmt.Errorf("unable to caption image: %s", err)
+	}
+
+	return
 }
 
 // GetFromURL a meme caption to the given image name from unsplash

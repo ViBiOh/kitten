@@ -13,6 +13,19 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
+// Image describe an image use by app
+type Image struct {
+	ID        string
+	URL       string
+	Author    string
+	AuthorURL string
+}
+
+// IsZero checks if instance has value
+func (i Image) IsZero() bool {
+	return len(i.ID) == 0
+}
+
 type unsplashUser struct {
 	Name  string            `json:"name"`
 	Links map[string]string `json:"links"`
@@ -54,35 +67,36 @@ func New(config Config) App {
 }
 
 // GetImage from unsplash for given keyword
-func (a App) GetImage(ctx context.Context, id string) (string, string, string, error) {
+func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
 	if err != nil {
-		return "", "", "", fmt.Errorf("unable to get image `%s`: %s", id, err)
+		return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
 	}
 
 	return getImageFromResponse(ctx, resp)
 }
 
 // GetRandomImage from unsplash for given keyword
-func (a App) GetRandomImage(ctx context.Context, query string) (string, string, string, error) {
+func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
-		return "", "", "", fmt.Errorf("unable to get random image: %s", err)
+		return Image{}, fmt.Errorf("unable to get random image: %s", err)
 	}
 
 	return getImageFromResponse(ctx, resp)
 }
 
-func getImageFromResponse(ctx context.Context, resp *http.Response) (output string, id string, credits string, err error) {
+func getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("unable to parse random response: %s", err)
 		return
 	}
 
-	id = imageContent.ID
-	credits = fmt.Sprintf("%s|%s", imageContent.User.Name, imageContent.User.Links["html"])
-	output = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+	output.ID = imageContent.ID
+	output.URL = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+	output.Author = imageContent.User.Name
+	output.AuthorURL = imageContent.User.Links["html"]
 
 	return
 }
