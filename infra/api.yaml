@@ -25,7 +25,7 @@ spec:
     nameOverride: kitten
     image:
       name: vibioh/kitten
-      tag: "202203291903" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202203291906" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     config:
       KITTEN_LOGGER_JSON: "true"
       KITTEN_REDIS_ADDRESS: redis:80
