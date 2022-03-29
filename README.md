@@ -47,7 +47,7 @@ Usage of kitten:
   -corsOrigin string
         [cors] Access-Control-Allow-Origin {KITTEN_CORS_ORIGIN} (default "*")
   -csp string
-        [owasp] Content-Security-Policy {KITTEN_CSP} (default "default-src 'self'; base-uri 'self'")
+        [owasp] Content-Security-Policy {KITTEN_CSP} (default "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com")
   -frameOptions string
         [owasp] X-Frame-Options {KITTEN_FRAME_OPTIONS} (default "deny")
   -graceDuration string
@@ -68,8 +68,12 @@ Usage of kitten:
         [logger] Key for message in JSON {KITTEN_LOGGER_MESSAGE_KEY} (default "message")
   -loggerTimeKey string
         [logger] Key for timestamp in JSON {KITTEN_LOGGER_TIME_KEY} (default "time")
+  -minify
+        Minify HTML {KITTEN_MINIFY} (default true)
   -okStatus int
         [http] Healthy HTTP Status code {KITTEN_OK_STATUS} (default 204)
+  -pathPrefix string
+        Root Path Prefix {KITTEN_PATH_PREFIX}
   -port uint
         [server] Listen port (0 to disable) {KITTEN_PORT} (default 1080)
   -prometheusAddress string
@@ -92,10 +96,24 @@ Usage of kitten:
         [prometheus] Shutdown Timeout {KITTEN_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
   -prometheusWriteTimeout string
         [prometheus] Write Timeout {KITTEN_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
+  -publicURL string
+        Public URL {KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
   -readTimeout string
         [server] Read Timeout {KITTEN_READ_TIMEOUT} (default "5s")
+  -redisAddress string
+        [redis] Redis Address (blank to disable) {KITTEN_REDIS_ADDRESS} (default "localhost:6379")
+  -redisAlias string
+        [redis] Connection alias, for metric {KITTEN_REDIS_ALIAS}
+  -redisDatabase int
+        [redis] Redis Database {KITTEN_REDIS_DATABASE}
+  -redisPassword string
+        [redis] Redis Password, if any {KITTEN_REDIS_PASSWORD}
+  -redisUsername string
+        [redis] Redis Username, if any {KITTEN_REDIS_USERNAME}
   -shutdownTimeout string
         [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default "10s")
+  -title string
+        Application title {KITTEN_TITLE} (default "KittenBot")
   -tracerRate string
         [tracer] Jaeger sample rate, 'always', 'never' or a float value {KITTEN_TRACER_RATE} (default "always")
   -tracerURL string
