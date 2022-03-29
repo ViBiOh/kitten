@@ -39,7 +39,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 		return nil, unsplashImage, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}
 
-	output, err = getImage(ctx, unsplashImage.URL)
+	output, err = getImage(ctx, unsplashImage.Raw)
 	if err != nil {
 		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
 	}
@@ -56,7 +56,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Image, error) {
 	image, err := getImage(ctx, imageURL)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get image: %s", err)
+		return nil, fmt.Errorf("unable to get image from url: %s", err)
 	}
 
 	image, err = captionImage(image, caption, fontSize)
