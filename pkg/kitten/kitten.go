@@ -35,11 +35,15 @@ func Handler(memeApp meme.App) http.Handler {
 		from := strings.TrimSpace(query.Get("from"))
 		if len(from) != 0 {
 			image, err = memeApp.GetFromURL(r.Context(), from, caption)
-		} else if search := strings.TrimSpace(query.Get("search")); len(search) == 0 {
-			httperror.BadRequest(w, errors.New("search param is required"))
-			return
 		} else {
-			image, details, err = memeApp.GetFromUnsplash(r.Context(), query.Get("id"), search, caption)
+			search := strings.TrimSpace(query.Get("search"))
+			id := strings.TrimSpace(query.Get("id"))
+			if len(id) == 0 && len(search) == 0 {
+				httperror.BadRequest(w, errors.New("search param is required"))
+				return
+			}
+
+			image, details, err = memeApp.GetFromUnsplash(r.Context(), id, search, caption)
 		}
 
 		if err != nil {
