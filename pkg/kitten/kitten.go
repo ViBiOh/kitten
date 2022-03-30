@@ -42,27 +42,18 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 
 		query := r.URL.Query()
 
+		id := strings.TrimSpace(query.Get("id"))
+		from := strings.TrimSpace(query.Get("from"))
 		caption := strings.TrimSpace(query.Get("caption"))
+
 		if len(caption) == 0 {
 			httperror.BadRequest(w, errors.New("caption param is required"))
 			return
 		}
 
-		id := strings.TrimSpace(query.Get("id"))
-		from := strings.TrimSpace(query.Get("from"))
-
-		if content, err := redisApp.Load(r.Context(), getCacheKey(id, from, caption)); err == nil && len(content) > 0 {
-			if payload, err := base64.RawStdEncoding.DecodeString(content); err != nil {
-				logger.Error("unable to decode image from cache: %s", err)
-			} else {
-				w.Header().Add("Cache-Control", cacheControlDuration)
-				w.Header().Set("Content-Type", "image/png")
-				if _, err = w.Write(payload); err != nil {
-					logger.Error("unable to write image from cache: %s", err)
-				}
-				return
-			}
-		}
+		// if serveCached(r.Context(), redisApp, w, id, from, caption) {
+		// 	return
+		// }
 
 		var image image.Image
 		var details unsplash.Image
@@ -84,7 +75,7 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 		}
 
 		if !details.IsZero() {
-			id = details.ID
+			// id = details.ID
 
 			w.Header().Set("X-Image-ID", details.ID)
 			w.Header().Set("X-Image-Author", details.Author)
@@ -99,17 +90,45 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 			return
 		}
 
-		go func() {
-			buffer := bufferPool.Get().(*bytes.Buffer)
-			defer bufferPool.Put(buffer)
-
-			if err := png.Encode(buffer, image); err != nil {
-				logger.Error("unable to encode image for cache: %s", err)
-			} else if err = redisApp.Store(context.Background(), getCacheKey(id, from, caption), base64.RawStdEncoding.EncodeToString(buffer.Bytes()), cacheDuration); err != nil {
-				logger.Error("unable to write image to cache: %s", err)
-			}
-		}()
+		// go storeInCache(redisApp, id, from, caption, image)
 	})
+}
+
+func serveCached(ctx context.Context, redisApp redis.App, w http.ResponseWriter, id, from, caption string) bool {
+	content, err := redisApp.Load(ctx, getCacheKey(id, from, caption))
+	if err != nil {
+		logger.Error("unable to load image from cache: %s", err)
+		return false
+	}
+
+	if len(content) == 0 {
+		return false
+	}
+
+	payload, err := base64.RawStdEncoding.DecodeString(content)
+	if err != nil {
+		logger.Error("unable to decode image from cache: %s", err)
+		return false
+	}
+
+	w.Header().Add("Cache-Control", cacheControlDuration)
+	w.Header().Set("Content-Type", "image/png")
+	if _, err = w.Write(payload); err != nil {
+		logger.Error("unable to write image from cache: %s", err)
+	}
+
+	return true
+}
+
+func storeInCache(redisApp redis.App, id, from, caption string, image image.Image) {
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	if err := png.Encode(buffer, image); err != nil {
+		logger.Error("unable to encode image for cache: %s", err)
+	} else if err = redisApp.Store(context.Background(), getCacheKey(id, from, caption), base64.RawStdEncoding.EncodeToString(buffer.Bytes()), cacheDuration); err != nil {
+		logger.Error("unable to write image to cache: %s", err)
+	}
 }
 
 func getCacheKey(id, from, caption string) string {
