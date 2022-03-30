@@ -60,6 +60,7 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 				if _, err = w.Write(payload); err != nil {
 					logger.Error("unable to write image from cache: %s", err)
 				}
+				return
 			}
 		}
 
