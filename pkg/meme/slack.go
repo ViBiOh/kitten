@@ -22,6 +22,11 @@ var cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 
 // SlackCommand handler
 func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
+	if len(caption) == 0 {
+		httpjson.Write(w, http.StatusOK, slack.NewEphemeralMessage("You must provide a caption"))
+		return
+	}
+
 	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, search, caption))
 }
 
@@ -59,7 +64,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 }
 
 func (a App) getKittenResponse(search string, image unsplash.Image, caption, user string) slack.Response {
-	content := slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on git", caption))
+	content := slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption))
 
 	if len(user) == 0 {
 		return slack.Response{
@@ -68,7 +73,7 @@ func (a App) getKittenResponse(search string, image unsplash.Image, caption, use
 			Blocks: []slack.Block{
 				content,
 				slack.NewActions(search, cancelButton, slack.NewButtonElement("Another?", nextValue, caption, ""),
-					slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s@%s", image.ID, caption), "primary")),
+					slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s", image.ID, caption), "primary")),
 			},
 		}
 	}
@@ -84,7 +89,7 @@ func (a App) getKittenResponse(search string, image unsplash.Image, caption, use
 }
 
 func parseBlockID(value string) (string, string) {
-	parts := strings.SplitN(value, "@", 2)
+	parts := strings.SplitN(value, ":", 2)
 	if len(parts) > 1 {
 		return parts[0], parts[1]
 	}
