@@ -152,10 +152,6 @@ func (a App) returnEphemeral(w http.ResponseWriter, message string) {
 }
 
 func (a App) send(url string, message Response) {
-	if payload, err := json.Marshal(message); err == nil {
-		fmt.Printf("%s\n", payload)
-	}
-
 	_, err := request.Post(url).JSON(context.Background(), message)
 	if err != nil {
 		logger.Error("unable to send response: %s", err)
