@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"io"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/request"
@@ -11,7 +12,10 @@ import (
 	"github.com/fogleman/gg"
 )
 
-const fontSize float64 = 64
+const (
+	fontSize    float64 = 64
+	maxBodySize int64   = 2 << 20
+)
 
 // App of package
 type App struct {
@@ -73,9 +77,9 @@ func getImage(ctx context.Context, imageURL string) (image.Image, error) {
 		return nil, fmt.Errorf("unable to fetch URL `%s`: %s", imageURL, err)
 	}
 
-	output, _, err := image.Decode(resp.Body)
+	output, _, err := image.Decode(io.LimitReader(resp.Body, maxBodySize))
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode image: %s", err)
+		return nil, fmt.Errorf("unable to decode image, perhaps it exceeded the %d bytes length: %s", maxBodySize, err)
 	}
 
 	return output, nil
