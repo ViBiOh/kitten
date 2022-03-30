@@ -86,8 +86,9 @@ func main() {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	memeApp := meme.New(unsplash.New(unsplashConfig, redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)), rendererApp.PublicURL(""))
-	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp))
+	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
+	memeApp := meme.New(unsplash.New(unsplashConfig, redisApp), rendererApp.PublicURL(""))
+	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, redisApp))
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
