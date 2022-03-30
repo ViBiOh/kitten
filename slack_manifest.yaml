@@ -26,6 +26,11 @@ features:
       description: Get a trout meme
       usage_hint: "[caption text]"
       should_escape: false
+    - command: /squirrel
+      url: https://kitten.vibioh.fr/slack/squirrel
+      description: Get a squirrel meme
+      usage_hint: "[caption text]"
+      should_escape: false
 oauth_config:
   redirect_urls:
     - https://kitten.vibioh.fr/slack/oauth
