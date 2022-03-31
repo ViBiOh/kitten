@@ -1,37 +1,37 @@
-# apiVersion: helm.toolkit.fluxcd.io/v2beta1
-# kind: HelmRelease
-# metadata:
-#   name: kitten-discord
-#   namespace: default
-# spec:
-#   interval: 120m
-#   chart:
-#     spec:
-#       chart: job
-#       version: "0.0.8"
-#       sourceRef:
-#         kind: HelmRepository
-#         name: vibioh
-#       interval: 120m
-#   install:
-#     skipCRDs: true
-#   maxHistory: 3
-#   upgrade:
-#     remediation:
-#       retries: 3
-#   rollback:
-#     cleanupOnFail: true
-#   values:
-#     nameOverride: kitten-discord
-#     image:
-#       name: vibioh/kitten
-#       tag: "latest" # {"$imagepolicy": "default:flux-kitten-api:tag"}
-#     command:
-#       - /discord
-#     config:
-#       DISCORD_APPLICATION_ID: "959191057835393044"
-#       DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
-#       DISCORD_LOGGER_JSON: "true"
-#     secrets:
-#       DISCORD_CLIENT_ID: AgCVP/adsY+AZOVagpqokKFtM0scZyFAxbH/BGzu1nFjxhGtcCRbReh2SoE7HuRAcN6eDZ45/6/Q/UgqNmcU8t+p04DPvGudfT/kAx2y9if3uis8i4A7Jssu48jqtAS/ZYWQ0niu3y6kz4qjxQ+80Odb7qtiKp69vhMxIMi2nJvufWN/9/ydYZMI5G2/NHisZvIy2pKLVeiArOeicwzggk2o860MUN8nNudxFxyNOEyZE6TGsXWmWWoUGMuoj3gk+Kz7JJS5NdWKSUKVtj8eo2xPPuvjjrb73u/H69Vc3OHKrsVoZ/5wuoZg0oonDvXhdDqvZEkCWsqryCaLWBIRpH0tfw+xxLPF/fcd2Q4GVv01LYcuCBPEGsaqWabqWNMbNLTxGXoto4iZKO/AycH5jwcQ6ovCOt6DgyCnZuYyCAiHdPWgoE64tBrWrNQqrs24XoPilid9oYj/AUneuWnCoZ0tHFFbwl6CyPnfHK+By4SgsPPESttFgttoTBqEdit+Ef/aOwLY6i9sALH1lL1Cvj/DHMC/7bavxWgvUIYh1BLiSDvFgm1RojAyo5S4Z2QrEnA1Dr8rEz32+TDHUiDjBmkYisiQKpWGaJrZxFiF4WBAo9sO6y3L/hXxcc6zUTq4LG//O8SE+p+jA9WgEf7liHBK1kv1X0cq/uth1Cu+jFWwi7OtScnGtDMona6GQ1bjPQnifBXmr6iGf9aoA9vd7BPY7ZE=
-#       DISCORD_CLIENT_SECRET: AgBywt4zSjwKOjZ7FibOodwFAwAcDebA8ZauG8kRhiUDFkOXRZlYw2oqswinqT/l0Wy3hNUG5wb5H/YHMM0UWVsnTOFyxZUm9w161wAuER+Cqol5YRyDFPx6Jz1JSV59/rcgWESkdGn8BcQD8xflz4quYNvXdHl6fYQKpcPHV/cGBv4idBpk467VgpNAlx4Q/yDOkGdzeRfaNgY8dyfqydGoaaaLE/WP3rds6pKUe4U7q260KYNJUyNEmYzarJ2J1Zt1yQOV8wQOli3Ylnlp1GvnakRWCxYtM6PyU8KSxjAW8K6fXUFYlHR+ACLsWrrkwW0FHHG8sZ0BXcyweULu8MplAvIW+yJCZCYNQ6Xh9e7+zgqSJHwKxL8F1vUP7UREqacKQvMz/Y2zxU7n6I1HJIE7ycZlAl7lpwdHSkMe1rWniryEbZO73IdEcSiNYDxDdwa4hGHevYlDXOkGsfvUxOdrkG6PhIQzHVWxPe8AcHUwqtQvzfQDXsZm202+GEPtIVVm2PEFesSWhYY8BAJuDVTCbK/0wo4CwByO4AgmYOjrSMjWz936SZjrek1kFxTO4SNb3ZqlGVdWN87psQhhFM4ObTwA5HNLaGKAirSKtulIIhhjuXeHXsNc4X0u8nFfOGg308hTrPwCQrh+Jpsuc1Gcz+2HgA1fdsbbmh2LblTAYSC6Ok+xMZi8fcYpWYqzS4VuyLLxVuCJwrbfcUMpvwH1qZ6zXGw2695OfXlOLB4JPQ==
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kitten-discord
+  namespace: default
+spec:
+  interval: 120m
+  chart:
+    spec:
+      chart: job
+      version: "0.0.8"
+      sourceRef:
+        kind: HelmRepository
+        name: vibioh
+      interval: 120m
+  install:
+    skipCRDs: true
+  maxHistory: 3
+  upgrade:
+    remediation:
+      retries: 3
+  rollback:
+    cleanupOnFail: true
+  values:
+    nameOverride: kitten-discord
+    image:
+      name: vibioh/kitten
+      tag: "latest" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+    command:
+      - /discord
+    config:
+      DISCORD_APPLICATION_ID: "959191057835393044"
+      DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
+      DISCORD_LOGGER_JSON: "true"
+    secrets:
+      DISCORD_CLIENT_ID: AgCVP/adsY+AZOVagpqokKFtM0scZyFAxbH/BGzu1nFjxhGtcCRbReh2SoE7HuRAcN6eDZ45/6/Q/UgqNmcU8t+p04DPvGudfT/kAx2y9if3uis8i4A7Jssu48jqtAS/ZYWQ0niu3y6kz4qjxQ+80Odb7qtiKp69vhMxIMi2nJvufWN/9/ydYZMI5G2/NHisZvIy2pKLVeiArOeicwzggk2o860MUN8nNudxFxyNOEyZE6TGsXWmWWoUGMuoj3gk+Kz7JJS5NdWKSUKVtj8eo2xPPuvjjrb73u/H69Vc3OHKrsVoZ/5wuoZg0oonDvXhdDqvZEkCWsqryCaLWBIRpH0tfw+xxLPF/fcd2Q4GVv01LYcuCBPEGsaqWabqWNMbNLTxGXoto4iZKO/AycH5jwcQ6ovCOt6DgyCnZuYyCAiHdPWgoE64tBrWrNQqrs24XoPilid9oYj/AUneuWnCoZ0tHFFbwl6CyPnfHK+By4SgsPPESttFgttoTBqEdit+Ef/aOwLY6i9sALH1lL1Cvj/DHMC/7bavxWgvUIYh1BLiSDvFgm1RojAyo5S4Z2QrEnA1Dr8rEz32+TDHUiDjBmkYisiQKpWGaJrZxFiF4WBAo9sO6y3L/hXxcc6zUTq4LG//O8SE+p+jA9WgEf7liHBK1kv1X0cq/uth1Cu+jFWwi7OtScnGtDMona6GQ1bjPQnifBXmr6iGf9aoA9vd7BPY7ZE=
+      DISCORD_CLIENT_SECRET: AgBywt4zSjwKOjZ7FibOodwFAwAcDebA8ZauG8kRhiUDFkOXRZlYw2oqswinqT/l0Wy3hNUG5wb5H/YHMM0UWVsnTOFyxZUm9w161wAuER+Cqol5YRyDFPx6Jz1JSV59/rcgWESkdGn8BcQD8xflz4quYNvXdHl6fYQKpcPHV/cGBv4idBpk467VgpNAlx4Q/yDOkGdzeRfaNgY8dyfqydGoaaaLE/WP3rds6pKUe4U7q260KYNJUyNEmYzarJ2J1Zt1yQOV8wQOli3Ylnlp1GvnakRWCxYtM6PyU8KSxjAW8K6fXUFYlHR+ACLsWrrkwW0FHHG8sZ0BXcyweULu8MplAvIW+yJCZCYNQ6Xh9e7+zgqSJHwKxL8F1vUP7UREqacKQvMz/Y2zxU7n6I1HJIE7ycZlAl7lpwdHSkMe1rWniryEbZO73IdEcSiNYDxDdwa4hGHevYlDXOkGsfvUxOdrkG6PhIQzHVWxPe8AcHUwqtQvzfQDXsZm202+GEPtIVVm2PEFesSWhYY8BAJuDVTCbK/0wo4CwByO4AgmYOjrSMjWz936SZjrek1kFxTO4SNb3ZqlGVdWN87psQhhFM4ObTwA5HNLaGKAirSKtulIIhhjuXeHXsNc4X0u8nFfOGg308hTrPwCQrh+Jpsuc1Gcz+2HgA1fdsbbmh2LblTAYSC6Ok+xMZi8fcYpWYqzS4VuyLLxVuCJwrbfcUMpvwH1qZ6zXGw2695OfXlOLB4JPQ==
