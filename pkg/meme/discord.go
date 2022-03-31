@@ -43,28 +43,30 @@ var Commands = map[string]discord.Command{
 
 // DiscordHandler handle discord request
 func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest) discord.InteractionResponse {
-	id, search, caption, err := a.parseQuery(webhook)
+	replace, id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
-		return discord.NewEphemeral(true, err.Error())
+		return discord.NewEphemeral(replace, err.Error())
 	}
 
 	if len(id) != 0 {
 		image, err := a.unsplashApp.GetImage(r.Context(), id)
 		if err != nil {
-			return discord.NewEphemeral(true, err.Error())
+			return discord.NewEphemeral(replace, err.Error())
 		}
 		return a.memeResponse(webhook.Member.User.ID, search, caption, image)
 	}
 
 	if len(search) != 0 {
-		return a.handleSearch(r.Context(), search, caption, true)
+		return a.handleSearch(r.Context(), search, caption, replace)
 	}
 
-	return discord.NewEphemeral(true, "Ok, not now.")
+	return discord.NewEphemeral(replace, "Ok, not now.")
 }
 
-func (a App) parseQuery(webhook discord.InteractionRequest) (id string, search string, caption string, err error) {
+func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
+		replace = true
+
 		for _, option := range webhook.Data.Options {
 			if strings.EqualFold(option.Name, searchParam) {
 				search = option.Value
