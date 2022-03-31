@@ -34,6 +34,8 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of kitten:
   -address string
         [server] Listen address {KITTEN_ADDRESS}
+  -apiTmpFolder string
+        [api] Folder used for temporary files storage {KITTEN_API_TMP_FOLDER} (default "/tmp")
   -cert string
         [server] Certificate file {KITTEN_CERT}
   -corsCredentials

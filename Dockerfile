@@ -6,6 +6,8 @@ EXPOSE 1080
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY impact.ttf /impact.ttf
 
+VOLUME /tmp
+
 HEALTHCHECK --retries=5 CMD [ "/kitten", "-url", "http://localhost:1080/health" ]
 ENTRYPOINT [ "/kitten" ]
 
