@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -19,7 +20,7 @@ import (
 )
 
 // OnMessage handle message event
-type OnMessage func(w http.ResponseWriter, r *http.Request, webhook InteractionRequest)
+type OnMessage func(r *http.Request, webhook InteractionRequest) InteractionResponse
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
 
@@ -135,5 +136,11 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.handler(w, r, message)
+	response := a.handler(r, message)
+
+	if payload, err := json.Marshal(response); err == nil {
+		fmt.Printf("%s\n", payload)
+	}
+
+	httpjson.Write(w, http.StatusOK, a.handler(r, message))
 }

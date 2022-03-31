@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -43,24 +42,25 @@ var Commands = map[string]discord.Command{
 }
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(w http.ResponseWriter, r *http.Request, webhook discord.InteractionRequest) {
+func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest) discord.InteractionResponse {
 	id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
-		respond(w, discord.NewEphemeral(true, err.Error()))
+		return discord.NewEphemeral(true, err.Error())
 	}
 
 	if len(id) != 0 {
 		image, err := a.unsplashApp.GetImage(r.Context(), id)
 		if err != nil {
-			respond(w, discord.NewEphemeral(true, err.Error()))
-			return
+			return discord.NewEphemeral(true, err.Error())
 		}
-		respond(w, a.memeResponse(webhook.Member.User.ID, search, caption, image))
-	} else if len(search) != 0 {
-		respond(w, a.handleSearch(r.Context(), search, caption, true))
-	} else {
-		respond(w, discord.NewEphemeral(true, "Ok, not now."))
+		return a.memeResponse(webhook.Member.User.ID, search, caption, image)
 	}
+
+	if len(search) != 0 {
+		return a.handleSearch(r.Context(), search, caption, true)
+	}
+
+	return discord.NewEphemeral(true, "Ok, not now.")
 }
 
 func (a App) parseQuery(webhook discord.InteractionRequest) (id string, search string, caption string, err error) {
@@ -151,8 +151,4 @@ func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord
 			},
 		},
 	}
-}
-
-func respond(w http.ResponseWriter, response discord.InteractionResponse) {
-	httpjson.Write(w, http.StatusOK, response)
 }
