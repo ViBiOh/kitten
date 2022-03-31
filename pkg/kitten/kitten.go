@@ -2,20 +2,20 @@ package kitten
 
 import (
 	"bytes"
-	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/kitten/pkg/meme"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
@@ -33,7 +33,7 @@ var (
 )
 
 // Handler for Hello request. Should be use with net/http
-func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
+func Handler(memeApp meme.App, tmpFolder string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -51,9 +51,9 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 			return
 		}
 
-		// if serveCached(r.Context(), redisApp, w, id, from, caption) {
-		// 	return
-		// }
+		if serveCached(w, tmpFolder, id, from, caption) {
+			return
+		}
 
 		var image image.Image
 		var details unsplash.Image
@@ -90,44 +90,43 @@ func Handler(memeApp meme.App, redisApp redis.App) http.Handler {
 			return
 		}
 
-		// go storeInCache(redisApp, id, from, caption, image)
+		go storeInCache(tmpFolder, id, from, caption, image)
 	})
 }
 
-func serveCached(ctx context.Context, redisApp redis.App, w http.ResponseWriter, id, from, caption string) bool {
-	content, err := redisApp.Load(ctx, getCacheKey(id, from, caption))
+func serveCached(w http.ResponseWriter, tmpFolder, id, from, caption string) bool {
+	file, err := os.OpenFile(filepath.Join(tmpFolder, getCacheKey(id, from, caption)+".png"), os.O_RDONLY, 0o600)
 	if err != nil {
-		logger.Error("unable to load image from cache: %s", err)
+		if !os.IsNotExist(err) {
+			logger.Error("unable to open image from local cache: %s", err)
+		}
+
 		return false
 	}
 
-	if len(content) == 0 {
-		return false
-	}
-
-	payload, err := base64.RawStdEncoding.DecodeString(content)
-	if err != nil {
-		logger.Error("unable to decode image from cache: %s", err)
-		return false
-	}
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
 
 	w.Header().Add("Cache-Control", cacheControlDuration)
 	w.Header().Set("Content-Type", "image/png")
-	if _, err = w.Write(payload); err != nil {
-		logger.Error("unable to write image from cache: %s", err)
+
+	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
+		logger.Error("unable to write image from local cache: %s", err)
+		return false
 	}
 
 	return true
 }
 
-func storeInCache(redisApp redis.App, id, from, caption string, image image.Image) {
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
+func storeInCache(tmpFolder, id, from, caption string, image image.Image) {
+	file, err := os.OpenFile(filepath.Join(tmpFolder, getCacheKey(id, from, caption)+".png"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		logger.Error("unable to open image to local cache: %s", err)
+		return
+	}
 
-	if err := png.Encode(buffer, image); err != nil {
-		logger.Error("unable to encode image for cache: %s", err)
-	} else if err = redisApp.Store(context.Background(), getCacheKey(id, from, caption), base64.RawStdEncoding.EncodeToString(buffer.Bytes()), cacheDuration); err != nil {
-		logger.Error("unable to write image to cache: %s", err)
+	if err := png.Encode(file, image); err != nil {
+		logger.Error("unable to write image to local cache: %s", err)
 	}
 }
 

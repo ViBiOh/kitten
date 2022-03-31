@@ -59,6 +59,8 @@ func main() {
 	slackConfig := slack.Flags(fs, "slack")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
 
+	tmpFolder := flags.String(fs, "api", "kitten", "TmpFolder", "Folder used for temporary files storage", "/tmp", nil)
+
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
 	alcotest.DoAndExit(alcotestConfig)
@@ -88,7 +90,7 @@ func main() {
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
 	memeApp := meme.New(unsplash.New(unsplashConfig, redisApp), rendererApp.PublicURL(""))
-	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, redisApp))
+	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, strings.TrimSpace(*tmpFolder)))
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
