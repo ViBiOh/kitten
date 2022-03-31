@@ -25,9 +25,9 @@ spec:
     nameOverride: kitten-discord
     image:
       name: vibioh/kitten
-      tag: "latest" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202203312054" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     command:
-      - /discord
+    - /discord
     config:
       DISCORD_APPLICATION_ID: "959191057835393044"
       DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
