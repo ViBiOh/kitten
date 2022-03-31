@@ -45,7 +45,7 @@ func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.R
 		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 	}
 
-	image, err := a.unsplashApp.GetRandomImage(ctx, caption)
+	image, err := a.unsplashApp.GetRandomImage(ctx, search)
 	if err != nil {
 		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
