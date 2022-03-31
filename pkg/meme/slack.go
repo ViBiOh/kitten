@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
@@ -18,7 +19,10 @@ const (
 	sendValue   = "send"
 )
 
-var cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
+var (
+	customSearch = regexp.MustCompile("#[a-zA-Z]+")
+	cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
+)
 
 // SlackCommand handler
 func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
@@ -31,7 +35,17 @@ func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, ca
 }
 
 func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
-	image, err := a.unsplashApp.GetRandomImage(ctx, search)
+	unsplashSearch := search
+	if search == "custom" {
+		matches := customSearch.FindStringSubmatch(caption)
+		if len(matches) == 0 {
+			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value #horse`")
+		}
+
+		unsplashSearch = matches[0]
+	}
+
+	image, err := a.unsplashApp.GetRandomImage(ctx, unsplashSearch)
 	if err != nil {
 		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}

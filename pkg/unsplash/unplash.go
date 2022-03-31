@@ -100,7 +100,7 @@ func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 
 // GetRandomImage from unsplash for given keyword
 func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
-	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s", url.QueryEscape(query))).Send(ctx, nil)
+	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 			return Image{}, ErrRateLimitExceeded

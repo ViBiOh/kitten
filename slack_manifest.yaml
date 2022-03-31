@@ -31,6 +31,11 @@ features:
       description: Get a squirrel meme
       usage_hint: "[caption text]"
       should_escape: false
+    - command: /custom
+      url: https://kitten.vibioh.fr/slack/custom
+      description: Get a custom meme from a custom image query
+      usage_hint: "[caption text] #imageQuery"
+      should_escape: false
 oauth_config:
   redirect_urls:
     - https://kitten.vibioh.fr/slack/oauth
