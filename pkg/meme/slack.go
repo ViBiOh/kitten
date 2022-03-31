@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	customSearch = regexp.MustCompile("#[a-zA-Z]+")
+	customSearch = regexp.MustCompile("#([a-zA-Z ]+)$")
 	cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 )
 
@@ -35,17 +35,17 @@ func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, ca
 }
 
 func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
-	unsplashSearch := search
 	if search == "custom" {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
 			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value #horse`")
 		}
 
-		unsplashSearch = matches[0]
+		search = matches[1]
+		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 	}
 
-	image, err := a.unsplashApp.GetRandomImage(ctx, unsplashSearch)
+	image, err := a.unsplashApp.GetRandomImage(ctx, caption)
 	if err != nil {
 		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
