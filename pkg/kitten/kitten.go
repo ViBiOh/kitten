@@ -2,7 +2,6 @@ package kitten
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -47,7 +46,7 @@ func Handler(memeApp meme.App, tmpFolder string) http.Handler {
 		caption := strings.TrimSpace(query.Get("caption"))
 
 		if len(caption) == 0 {
-			httperror.BadRequest(w, errors.New("caption param is required"))
+			httperror.BadRequest(w, fmt.Errorf("caption param is required for url `%s`", r.URL.String()))
 			return
 		}
 
@@ -64,7 +63,7 @@ func Handler(memeApp meme.App, tmpFolder string) http.Handler {
 		if len(from) != 0 {
 			image, err = memeApp.GetFromURL(r.Context(), from, caption)
 		} else if len(id) == 0 && len(search) == 0 {
-			httperror.BadRequest(w, errors.New("search param is required"))
+			httperror.BadRequest(w, fmt.Errorf("search param is required for url `%s`", r.URL.String()))
 		} else {
 			image, details, err = memeApp.GetFromUnsplash(r.Context(), id, search, caption)
 		}
