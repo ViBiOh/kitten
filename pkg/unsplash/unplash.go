@@ -3,6 +3,7 @@ package unsplash
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -48,7 +49,12 @@ const (
 	unsplashRoot = "https://api.unsplash.com"
 )
 
-var cacheDuration = time.Hour * 24
+var (
+	// ErrRateLimitExceeded occurs when rate limit is exceeded
+	ErrRateLimitExceeded = errors.New("rate limit exceeded")
+
+	cacheDuration = time.Hour * 24
+)
 
 // App of package
 type App struct {
@@ -81,6 +87,10 @@ func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Image, error) {
 		resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
 		if err != nil {
+			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
+				return Image{}, ErrRateLimitExceeded
+			}
+
 			return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
 		}
 
@@ -92,7 +102,11 @@ func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
-		return Image{}, fmt.Errorf("unable to get random image: %s", err)
+		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
+			return Image{}, ErrRateLimitExceeded
+		}
+
+		return Image{}, fmt.Errorf("unable to get random image for `%s`: %s", query, err)
 	}
 
 	image, err := getImageFromResponse(ctx, resp)
