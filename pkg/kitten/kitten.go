@@ -75,7 +75,7 @@ func Handler(memeApp meme.App, tmpFolder string) http.Handler {
 		}
 
 		if !details.IsZero() {
-			// id = details.ID
+			id = details.ID
 
 			w.Header().Set("X-Image-ID", details.ID)
 			w.Header().Set("X-Image-Author", details.Author)
@@ -95,7 +95,7 @@ func Handler(memeApp meme.App, tmpFolder string) http.Handler {
 }
 
 func serveCached(w http.ResponseWriter, tmpFolder, id, from, caption string) bool {
-	file, err := os.OpenFile(filepath.Join(tmpFolder, getCacheKey(id, from, caption)+".png"), os.O_RDONLY, 0o600)
+	file, err := os.OpenFile(filepath.Join(tmpFolder, getRequestHash(id, from, caption)+".png"), os.O_RDONLY, 0o600)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			logger.Error("unable to open image from local cache: %s", err)
@@ -109,6 +109,7 @@ func serveCached(w http.ResponseWriter, tmpFolder, id, from, caption string) boo
 
 	w.Header().Add("Cache-Control", cacheControlDuration)
 	w.Header().Set("Content-Type", "image/png")
+	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
 		logger.Error("unable to write image from local cache: %s", err)
@@ -119,7 +120,7 @@ func serveCached(w http.ResponseWriter, tmpFolder, id, from, caption string) boo
 }
 
 func storeInCache(tmpFolder, id, from, caption string, image image.Image) {
-	file, err := os.OpenFile(filepath.Join(tmpFolder, getCacheKey(id, from, caption)+".png"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	file, err := os.OpenFile(filepath.Join(tmpFolder, getRequestHash(id, from, caption)+".png"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		logger.Error("unable to open image to local cache: %s", err)
 		return
@@ -130,6 +131,6 @@ func storeInCache(tmpFolder, id, from, caption string, image image.Image) {
 	}
 }
 
-func getCacheKey(id, from, caption string) string {
-	return "kitten:" + sha.New(fmt.Sprintf("%s:%s:%s", id, from, caption))
+func getRequestHash(id, from, caption string) string {
+	return sha.New(fmt.Sprintf("%s:%s:%s", id, from, caption))
 }
