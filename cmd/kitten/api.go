@@ -25,6 +25,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/kitten"
 	"github.com/ViBiOh/kitten/pkg/meme"
 	"github.com/ViBiOh/kitten/pkg/slack"
@@ -35,8 +36,9 @@ import (
 var content embed.FS
 
 const (
-	apiPrefix   = "/api"
-	slackPrefix = "/slack"
+	apiPrefix     = "/api"
+	slackPrefix   = "/slack"
+	discordPrefix = "/discord"
 )
 
 func main() {
@@ -57,6 +59,7 @@ func main() {
 
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
 	slackConfig := slack.Flags(fs, "slack")
+	discordConfig := discord.Flags(fs, "discord")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
 
 	tmpFolder := flags.String(fs, "api", "kitten", "TmpFolder", "Folder used for temporary files storage", "/tmp", nil)
@@ -93,6 +96,10 @@ func main() {
 	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, strings.TrimSpace(*tmpFolder)))
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
 
+	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), memeApp.DiscordHandler)
+	logger.Fatal(err)
+	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
+
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, apiPrefix) {
 			apiHandler.ServeHTTP(w, r)
@@ -101,6 +108,11 @@ func main() {
 
 		if strings.HasPrefix(r.URL.Path, slackPrefix) {
 			slackHandler.ServeHTTP(w, r)
+			return
+		}
+
+		if strings.HasPrefix(r.URL.Path, discordPrefix) {
+			discordHandler.ServeHTTP(w, r)
 			return
 		}
 
