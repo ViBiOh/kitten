@@ -41,9 +41,15 @@ spec:
       enabled: true
       compress: true
       hosts:
-      - kitten.vibioh.fr
+        - kitten.vibioh.fr
     pprof:
       enabled: true
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
+    volumes:
+      - name: tmp
+        emptyDir: {}
+    volumeMounts:
+      - name: tmp
+        mountPath: /tmp
