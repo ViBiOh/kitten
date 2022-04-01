@@ -10,6 +10,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
+	"golang.org/x/image/font"
 )
 
 const (
@@ -20,15 +21,22 @@ const (
 // App of package
 type App struct {
 	unsplashApp unsplash.App
+	fontFace    font.Face
 	website     string
 }
 
 // New creates new App from Config
-func New(unsplashApp unsplash.App, website string) App {
+func New(unsplashApp unsplash.App, website string) (App, error) {
+	impactFace, err := gg.LoadFontFace("impact.ttf", fontSize)
+	if err != nil {
+		return App{}, fmt.Errorf("unable to load font face: %s", err)
+	}
+
 	return App{
 		unsplashApp: unsplashApp,
+		fontFace:    impactFace,
 		website:     website,
-	}
+	}, nil
 }
 
 // GetFromUnsplash a meme caption to the given image name from unsplash
@@ -50,7 +58,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 
 	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
 
-	output, err = captionImage(output, caption, fontSize)
+	output, err = a.captionImage(output, caption, fontSize)
 	if err != nil {
 		return nil, unsplashImage, fmt.Errorf("unable to caption image: %s", err)
 	}
@@ -65,7 +73,7 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Im
 		return nil, fmt.Errorf("unable to get image from url: %s", err)
 	}
 
-	image, err = captionImage(image, caption, fontSize)
+	image, err = a.captionImage(image, caption, fontSize)
 	if err != nil {
 		return nil, fmt.Errorf("unable to caption image: %s", err)
 	}
@@ -87,11 +95,9 @@ func getImage(ctx context.Context, imageURL string) (image.Image, error) {
 	return output, nil
 }
 
-func captionImage(source image.Image, text string, fontSize float64) (image.Image, error) {
+func (a App) captionImage(source image.Image, text string, fontSize float64) (image.Image, error) {
 	imageCtx := gg.NewContextForImage(source)
-	if err := imageCtx.LoadFontFace("impact.ttf", fontSize); err != nil {
-		return nil, fmt.Errorf("unable to load font: %s", err)
-	}
+	imageCtx.SetFontFace(a.fontFace)
 
 	imageCtx.SetRGB(1, 1, 1)
 	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
