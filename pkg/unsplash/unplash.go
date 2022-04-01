@@ -150,7 +150,7 @@ func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (out
 	}
 
 	output.ID = imageContent.ID
-	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
+	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=clip", imageContent.URLs["raw"])
 	output.URL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.Links["html"], url.QueryEscape(a.appName))
 	output.DownloadURL = imageContent.Links["download_location"]
 	output.Author = imageContent.User.Name
