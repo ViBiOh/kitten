@@ -92,7 +92,9 @@ func main() {
 	})
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
-	memeApp := meme.New(unsplash.New(unsplashConfig, redisApp), rendererApp.PublicURL(""))
+	memeApp, err := meme.New(unsplash.New(unsplashConfig, redisApp), rendererApp.PublicURL(""))
+	logger.Fatal(err)
+
 	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, strings.TrimSpace(*tmpFolder)))
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
 
