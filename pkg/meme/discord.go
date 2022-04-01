@@ -135,7 +135,7 @@ func (a App) interactiveResponse(search, caption string, image unsplash.Image, r
 
 func (a App) memeResponse(user, search, caption string, image unsplash.Image) discord.InteractionResponse {
 	instance := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
-	instance.Data.Content = fmt.Sprintf("<@!%s> shares an image of <%s?utm_source=SayIt&utm_medium=referral|%s> from <%s?utm_source=SayIt&utm_medium=referral|Unsplash>", user, image.AuthorURL, image.Author, image.URL)
+	instance.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
 	instance.Data.AllowedMentions = discord.AllowedMention{
 		Parse: []string{},
 	}
@@ -147,10 +147,16 @@ func (a App) memeResponse(user, search, caption string, image unsplash.Image) di
 func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord.Embed {
 	return discord.Embed{
 		Title: search,
-		Images: []discord.Image{
-			{
-				URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)),
-			},
+		Image: discord.Image{
+			URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)),
+		},
+		Author: discord.Author{
+			Name: image.Author,
+			URL:  image.AuthorURL,
+		},
+		Provider: discord.Author{
+			Name: "Unsplash",
+			URL:  image.URL,
 		},
 	}
 }

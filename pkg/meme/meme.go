@@ -49,6 +49,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
 	}
 
+	logger.Info("Calling download location `%s`", unsplashImage.DownloadURL)
 	if resp, err := request.Get(unsplashImage.DownloadURL).Send(ctx, nil); err != nil {
 		logger.Error("unable to send download request to unsplash: %s", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
