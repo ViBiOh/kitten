@@ -110,6 +110,12 @@ type Image struct {
 	URL string `json:"url,omitempty"`
 }
 
+// Author content
+type Author struct {
+	Name string `json:"name,omitempty"`
+	URL  string `json:"url,omitempty"`
+}
+
 // Embed of content
 type Embed struct {
 	Thumbnail   *Embed  `json:"thumbnail,omitempty"`
@@ -117,7 +123,9 @@ type Embed struct {
 	Description string  `json:"description,omitempty"`
 	URL         string  `json:"url,omitempty"`
 	Fields      []Field `json:"fields,omitempty"`
-	Images      []Image `json:"images,omitempty"`
+	Image       Image   `json:"image,omitempty"`
+	Provider    Author  `json:"provider,omitempty"`
+	Author      Author  `json:"author,omitempty"`
 	Color       int     `json:"color,omitempty"`
 }
 
