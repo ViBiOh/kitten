@@ -146,6 +146,7 @@ func (a App) memeResponse(user, search, caption string, image unsplash.Image) di
 
 func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord.Embed {
 	return discord.Embed{
+		Title:       "Meme",
 		Description: "Unsplash image",
 		URL:         image.URL,
 		Image: discord.Image{
