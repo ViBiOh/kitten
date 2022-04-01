@@ -48,7 +48,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
 	}
 
-	go a.unsplashApp.SendDownload(ctx, unsplashImage)
+	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
 
 	output, err = captionImage(output, caption, fontSize)
 	if err != nil {
