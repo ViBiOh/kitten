@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
@@ -46,6 +47,12 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 	output, err = getImage(ctx, unsplashImage.Raw)
 	if err != nil {
 		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
+	}
+
+	if resp, err := request.Get(unsplashImage.DownloadURL).Send(ctx, nil); err != nil {
+		logger.Error("unable to send download request to unsplash: %s", err)
+	} else if err = request.DiscardBody(resp.Body); err != nil {
+		logger.Error("unable to discard download body: %s", err)
 	}
 
 	output, err = captionImage(output, caption, fontSize)

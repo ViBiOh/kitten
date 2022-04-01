@@ -65,8 +65,6 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 
 func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
-		replace = true
-
 		for _, option := range webhook.Data.Options {
 			if strings.EqualFold(option.Name, searchParam) {
 				search = option.Value
@@ -79,6 +77,8 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	}
 
 	if webhook.Type == discord.MessageComponentInteraction {
+		replace = true
+
 		parts := strings.Split(webhook.Data.CustomID, contentSeparator)
 
 		switch parts[0] {
