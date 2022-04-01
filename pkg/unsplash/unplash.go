@@ -156,10 +156,6 @@ func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (out
 	output.Author = imageContent.User.Name
 	output.AuthorURL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", a.appName, imageContent.User.Links["html"])
 
-	for key, value := range imageContent.Links {
-		fmt.Printf("%s: %s\n", key, value)
-	}
-
 	return
 }
 
