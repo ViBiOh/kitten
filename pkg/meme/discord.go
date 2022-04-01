@@ -146,7 +146,7 @@ func (a App) memeResponse(user, search, caption string, image unsplash.Image) di
 
 func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord.Embed {
 	return discord.Embed{
-		Description: fmt.Sprintf("`%s` from Unsplash", search),
+		Description: "Unsplash image",
 		URL:         image.URL,
 		Image: discord.Image{
 			URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)),

@@ -96,7 +96,7 @@ func (a App) getKittenResponse(search string, image unsplash.Image, caption, use
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s?utm_source=SayIt&utm_medium=referral|%s> from <%s?utm_source=SayIt&utm_medium=referral|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
 			content,
 		},
 	}
