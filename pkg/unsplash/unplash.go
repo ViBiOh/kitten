@@ -21,11 +21,12 @@ import (
 
 // Image describe an image use by app
 type Image struct {
-	ID        string
-	Raw       string
-	URL       string
-	Author    string
-	AuthorURL string
+	ID          string
+	Raw         string
+	URL         string
+	DownloadURL string
+	Author      string
+	AuthorURL   string
 }
 
 // IsZero checks if instance has value
@@ -136,6 +137,7 @@ func getImageFromResponse(ctx context.Context, resp *http.Response) (output Imag
 	output.ID = imageContent.ID
 	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
 	output.URL = imageContent.Links["html"]
+	output.DownloadURL = imageContent.Links["download"]
 	output.Author = imageContent.User.Name
 	output.AuthorURL = imageContent.User.Links["html"]
 
