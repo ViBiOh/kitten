@@ -62,17 +62,20 @@ type App struct {
 	unplashReq  request.Request
 	downloadReq request.Request
 	redisApp    redis.App
+	appName     string
 }
 
 // Config of package
 type Config struct {
+	appName           *string
 	unsplashAccessKey *string
 }
 
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		unsplashAccessKey: flags.String(fs, prefix, "unsplash", "UnsplashAccessKey", "Unsplash Access Key", "", overrides),
+		appName:           flags.String(fs, prefix, "unsplash", "Name", "Unsplash App name", "SayIt", overrides),
+		unsplashAccessKey: flags.String(fs, prefix, "unsplash", "AccessKey", "Unsplash Access Key", "", overrides),
 	}
 }
 
@@ -82,6 +85,7 @@ func New(config Config, redisApp redis.App) App {
 		unplashReq:  request.Get(unsplashRoot).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
 		redisApp:    redisApp,
+		appName:     strings.TrimSpace(*config.appName),
 	}
 }
 
@@ -106,7 +110,7 @@ func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 			return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
 		}
 
-		return getImageFromResponse(ctx, resp)
+		return a.getImageFromResponse(ctx, resp)
 	}, cacheDuration)
 }
 
@@ -121,7 +125,7 @@ func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 		return Image{}, fmt.Errorf("unable to get random image for `%s`: %s", query, err)
 	}
 
-	image, err := getImageFromResponse(ctx, resp)
+	image, err := a.getImageFromResponse(ctx, resp)
 	if err != nil {
 		go func() {
 			payload, err := json.Marshal(image)
@@ -138,7 +142,7 @@ func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 	return image, err
 }
 
-func getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
+func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("unable to parse random response: %s", err)
@@ -147,10 +151,14 @@ func getImageFromResponse(ctx context.Context, resp *http.Response) (output Imag
 
 	output.ID = imageContent.ID
 	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
-	output.URL = imageContent.Links["html"]
+	output.URL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", a.appName, imageContent.Links["html"])
 	output.DownloadURL = imageContent.Links["download_location"]
 	output.Author = imageContent.User.Name
-	output.AuthorURL = imageContent.User.Links["html"]
+	output.AuthorURL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", a.appName, imageContent.User.Links["html"])
+
+	for key, value := range imageContent.Links {
+		fmt.Printf("%s: %s\n", key, value)
+	}
 
 	return
 }
