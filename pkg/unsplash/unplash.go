@@ -137,7 +137,7 @@ func getImageFromResponse(ctx context.Context, resp *http.Response) (output Imag
 	output.ID = imageContent.ID
 	output.Raw = fmt.Sprintf("%s?fm=png&w=800&fit=max", imageContent.URLs["raw"])
 	output.URL = imageContent.Links["html"]
-	output.DownloadURL = imageContent.Links["download"]
+	output.DownloadURL = imageContent.Links["download_location"]
 	output.Author = imageContent.User.Name
 	output.AuthorURL = imageContent.User.Links["html"]
 
