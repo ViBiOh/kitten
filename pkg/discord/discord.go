@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -134,12 +133,6 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	if message.Type == pingInteraction {
 		httpjson.Write(w, http.StatusOK, InteractionResponse{Type: pongCallback})
 		return
-	}
-
-	response := a.handler(r, message)
-
-	if payload, err := json.Marshal(response); err == nil {
-		fmt.Printf("%s\n", payload)
 	}
 
 	httpjson.Write(w, http.StatusOK, a.handler(r, message))

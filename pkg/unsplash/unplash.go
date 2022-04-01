@@ -59,8 +59,9 @@ var (
 
 // App of package
 type App struct {
-	unplashReq request.Request
-	redisApp   redis.App
+	unplashReq  request.Request
+	downloadReq request.Request
+	redisApp    redis.App
 }
 
 // Config of package
@@ -78,8 +79,18 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 // New creates new App from Config
 func New(config Config, redisApp redis.App) App {
 	return App{
-		unplashReq: request.Get(unsplashRoot).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
-		redisApp:   redisApp,
+		unplashReq:  request.Get(unsplashRoot).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
+		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
+		redisApp:    redisApp,
+	}
+}
+
+// SendDownload send download event
+func (a App) SendDownload(ctx context.Context, content Image) {
+	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
+		logger.Error("unable to send download request to unsplash: %s", err)
+	} else if err = request.DiscardBody(resp.Body); err != nil {
+		logger.Error("unable to discard download body: %s", err)
 	}
 }
 
