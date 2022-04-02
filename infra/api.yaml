@@ -25,7 +25,7 @@ spec:
     nameOverride: kitten
     image:
       name: vibioh/kitten
-      tag: "202204021220" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202204021251" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     config:
       KITTEN_DISCORD_APPLICATION_ID: "959191057835393044"
       KITTEN_DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
@@ -45,7 +45,7 @@ spec:
       enabled: true
       compress: true
       hosts:
-        - kitten.vibioh.fr
+      - kitten.vibioh.fr
     pprof:
       enabled: true
     resources:
@@ -55,8 +55,8 @@ spec:
       runAsGroup: 1000
       runAsUser: 1000
     volumes:
-      - name: tmp
-        emptyDir: {}
+    - name: tmp
+      emptyDir: {}
     volumeMounts:
-      - name: tmp
-        mountPath: /tmp
+    - name: tmp
+      mountPath: /tmp
