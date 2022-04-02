@@ -6,7 +6,7 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/discord"
-	"github.com/ViBiOh/kitten/pkg/meme"
+	"github.com/ViBiOh/kitten/pkg/kitten"
 )
 
 func main() {
@@ -23,5 +23,5 @@ func main() {
 	discordApp, err := discord.New(discordConfig, "", nil)
 	logger.Fatal(err)
 
-	logger.Fatal(discordApp.Start(meme.Commands))
+	logger.Fatal(discordApp.Start(kitten.Commands))
 }

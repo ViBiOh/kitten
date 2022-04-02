@@ -27,7 +27,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/kitten"
-	"github.com/ViBiOh/kitten/pkg/meme"
 	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -57,12 +56,11 @@ func main() {
 
 	redisConfig := redis.Flags(fs, "redis")
 
+	kittenConfig := kitten.Flags(fs, "kitten")
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
 	slackConfig := slack.Flags(fs, "slack")
 	discordConfig := discord.Flags(fs, "discord")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
-
-	tmpFolder := flags.String(fs, "api", "kitten", "TmpFolder", "Folder used for temporary files storage", "/tmp", nil)
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
@@ -92,12 +90,12 @@ func main() {
 	})
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
-	memeApp := meme.New(unsplash.New(unsplashConfig, redisApp), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
-	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), memeApp.DiscordHandler)
+	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp), prometheusApp.Registerer(), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
+	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler)
 	logger.Fatal(err)
 
-	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, strings.TrimSpace(*tmpFolder)))
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
+	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

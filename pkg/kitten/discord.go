@@ -1,4 +1,4 @@
-package meme
+package kitten
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -53,7 +54,7 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 		if err != nil {
 			return discord.NewEphemeral(replace, err.Error())
 		}
-		return a.memeResponse(webhook.Member.User.ID, search, caption, image)
+		return a.memeResponse(r.Context(), webhook.Member.User.ID, search, caption, image)
 	}
 
 	if len(search) != 0 {
@@ -107,19 +108,17 @@ func (a App) handleSearch(ctx context.Context, search, caption string, replace b
 		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
 
-	return a.interactiveResponse(search, caption, image, replace)
+	return a.interactiveResponse(ctx, search, caption, image, replace)
 }
 
-func (a App) interactiveResponse(search, caption string, image unsplash.Image, replace bool) discord.InteractionResponse {
-	webhookType := discord.ChannelMessageWithSourceCallback
+func (a App) interactiveResponse(ctx context.Context, search, caption string, image unsplash.Image, replace bool) discord.InteractionResponse {
+	response := a.basicResponse(ctx, search, caption, image)
+	response.Data.Flags = discord.EphemeralMessage
 	if replace {
-		webhookType = discord.UpdateMessageCallback
+		response.Type = discord.UpdateMessageCallback
 	}
 
-	instance := discord.InteractionResponse{Type: webhookType}
-	instance.Data.Flags = discord.EphemeralMessage
-	instance.Data.Embeds = []discord.Embed{a.getImageEmbed(search, caption, image)}
-	instance.Data.Components = []discord.Component{
+	response.Data.Components = []discord.Component{
 		{
 			Type: discord.ActionRowType,
 			Components: []discord.Component{
@@ -130,21 +129,36 @@ func (a App) interactiveResponse(search, caption string, image unsplash.Image, r
 		},
 	}
 
-	return instance
+	return response
 }
 
-func (a App) memeResponse(user, search, caption string, image unsplash.Image) discord.InteractionResponse {
+func (a App) memeResponse(ctx context.Context, user, search, caption string, image unsplash.Image) discord.InteractionResponse {
+	response := a.basicResponse(ctx, search, caption, image)
+	response.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
+
+	return response
+}
+
+func (a App) basicResponse(ctx context.Context, search, caption string, image unsplash.Image) discord.InteractionResponse {
 	instance := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
-	instance.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
 	instance.Data.AllowedMentions = discord.AllowedMention{
 		Parse: []string{},
 	}
-	instance.Data.Embeds = []discord.Embed{a.getImageEmbed(search, caption, image)}
+	instance.Data.Embeds = []discord.Embed{a.getImageEmbed(ctx, search, caption, image)}
 
 	return instance
 }
 
-func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord.Embed {
+func (a App) getImageEmbed(ctx context.Context, search, caption string, image unsplash.Image) discord.Embed {
+	go func() {
+		output, err := a.generateImage(ctx, image.Raw, caption)
+		if err != nil {
+			logger.Error("unable to generate image for id `%s`: %s", image.ID, err)
+		} else {
+			a.storeInCache(image.ID, "", caption, output)
+		}
+	}()
+
 	return discord.Embed{
 		Title: "Unsplash image",
 		URL:   image.URL,

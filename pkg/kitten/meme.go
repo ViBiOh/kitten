@@ -1,4 +1,4 @@
-package meme
+package kitten
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/image/font"
 )
 
@@ -28,22 +27,6 @@ var fontFacePool = sync.Pool{
 
 		return impactFace
 	},
-}
-
-// App of package
-type App struct {
-	unsplashApp unsplash.App
-	tracer      trace.Tracer
-	website     string
-}
-
-// New creates new App from Config
-func New(unsplashApp unsplash.App, tracer trace.Tracer, website string) App {
-	return App{
-		unsplashApp: unsplashApp,
-		tracer:      tracer,
-		website:     website,
-	}
 }
 
 // GetFromUnsplash a meme caption to the given image name from unsplash
@@ -63,18 +46,9 @@ func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (out
 		return nil, unsplashImage, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}
 
-	output, err = getImage(ctx, unsplashImage.Raw)
-	if err != nil {
-		return nil, unsplashImage, fmt.Errorf("unable to get image: %s", err)
-	}
-
 	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
 
-	output, err = a.captionImage(ctx, output, caption)
-	if err != nil {
-		return nil, unsplashImage, fmt.Errorf("unable to caption image: %s", err)
-	}
-
+	output, err = a.generateImage(ctx, unsplashImage.Raw, caption)
 	return
 }
 
@@ -85,9 +59,13 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Im
 		defer span.End()
 	}
 
-	image, err := getImage(ctx, imageURL)
+	return a.generateImage(ctx, imageURL, caption)
+}
+
+func (a App) generateImage(ctx context.Context, from, caption string) (image.Image, error) {
+	image, err := getImage(ctx, from)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get image from url: %s", err)
+		return nil, fmt.Errorf("unable to get image: %s", err)
 	}
 
 	image, err = a.captionImage(ctx, image, caption)
