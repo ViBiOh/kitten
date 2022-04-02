@@ -6,10 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -56,20 +54,6 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 		if err != nil {
 			return discord.NewEphemeral(replace, err.Error()), nil
 		}
-
-		go func() {
-			time.Sleep(time.Second * 10)
-
-			resp, err := request.Delete(fmt.Sprintf("https://discord.com/api/v8/webhooks/%s/%s/messages/@original", webhook.ApplicationID, webhook.Token)).Send(context.Background(), nil)
-			if err != nil {
-				logger.Error("unable to delete original response: %s", err)
-				return
-			}
-
-			if err = request.DiscardBody(resp.Body); err != nil {
-				logger.Error("unable to discard delete body: %s", err)
-			}
-		}()
 
 		return a.memeResponse(webhook.Member.User.ID, search, caption, image), nil
 	}
