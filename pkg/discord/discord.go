@@ -141,9 +141,10 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if asyncFn != nil {
 		go func() {
-			resp, err := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token)).JSON(context.Background(), asyncFn())
+			resp, err := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token)).JSON(context.Background(), asyncFn().Data)
 			if err != nil {
 				logger.Error("unable to send async response: %s", err)
+				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
