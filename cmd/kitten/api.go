@@ -56,7 +56,7 @@ func main() {
 
 	redisConfig := redis.Flags(fs, "redis")
 
-	kittenConfig := kitten.Flags(fs, "kitten")
+	kittenConfig := kitten.Flags(fs, "")
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
 	slackConfig := slack.Flags(fs, "slack")
 	discordConfig := discord.Flags(fs, "discord")

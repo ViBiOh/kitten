@@ -53,7 +53,7 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder: flags.String(fs, prefix, "kitten", "TmpFolder", "/tmp", "", overrides),
+		tmpFolder: flags.String(fs, prefix, "kitten", "TmpFolder", "Temp folder for storing cache image", "/tmp", overrides),
 	}
 }
 

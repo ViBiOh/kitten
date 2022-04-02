@@ -54,7 +54,7 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 		if err != nil {
 			return discord.NewEphemeral(replace, err.Error())
 		}
-		return a.memeResponse(r.Context(), webhook.Member.User.ID, search, caption, image)
+		return a.memeResponse(webhook.Member.User.ID, search, caption, image)
 	}
 
 	if len(search) != 0 {
@@ -108,11 +108,11 @@ func (a App) handleSearch(ctx context.Context, search, caption string, replace b
 		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
 
-	return a.interactiveResponse(ctx, search, caption, image, replace)
+	return a.interactiveResponse(search, caption, image, replace)
 }
 
-func (a App) interactiveResponse(ctx context.Context, search, caption string, image unsplash.Image, replace bool) discord.InteractionResponse {
-	response := a.basicResponse(ctx, search, caption, image)
+func (a App) interactiveResponse(search, caption string, image unsplash.Image, replace bool) discord.InteractionResponse {
+	response := a.basicResponse(search, caption, image)
 	response.Data.Flags = discord.EphemeralMessage
 	if replace {
 		response.Type = discord.UpdateMessageCallback
@@ -132,26 +132,26 @@ func (a App) interactiveResponse(ctx context.Context, search, caption string, im
 	return response
 }
 
-func (a App) memeResponse(ctx context.Context, user, search, caption string, image unsplash.Image) discord.InteractionResponse {
-	response := a.basicResponse(ctx, search, caption, image)
+func (a App) memeResponse(user, search, caption string, image unsplash.Image) discord.InteractionResponse {
+	response := a.basicResponse(search, caption, image)
 	response.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
 
 	return response
 }
 
-func (a App) basicResponse(ctx context.Context, search, caption string, image unsplash.Image) discord.InteractionResponse {
+func (a App) basicResponse(search, caption string, image unsplash.Image) discord.InteractionResponse {
 	instance := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
 	instance.Data.AllowedMentions = discord.AllowedMention{
 		Parse: []string{},
 	}
-	instance.Data.Embeds = []discord.Embed{a.getImageEmbed(ctx, search, caption, image)}
+	instance.Data.Embeds = []discord.Embed{a.getImageEmbed(search, caption, image)}
 
 	return instance
 }
 
-func (a App) getImageEmbed(ctx context.Context, search, caption string, image unsplash.Image) discord.Embed {
+func (a App) getImageEmbed(search, caption string, image unsplash.Image) discord.Embed {
 	go func() {
-		output, err := a.generateImage(ctx, image.Raw, caption)
+		output, err := a.generateImage(context.Background(), image.Raw, caption)
 		if err != nil {
 			logger.Error("unable to generate image for id `%s`: %s", image.ID, err)
 		} else {

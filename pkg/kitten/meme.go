@@ -23,7 +23,9 @@ const (
 var fontFacePool = sync.Pool{
 	New: func() any {
 		impactFace, err := gg.LoadFontFace("impact.ttf", fontSize)
-		logger.Error("unable to load font face: %s", err)
+		if err != nil {
+			logger.Error("unable to load font face: %s", err)
+		}
 
 		return impactFace
 	},

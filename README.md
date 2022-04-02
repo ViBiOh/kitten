@@ -34,8 +34,6 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of kitten:
   -address string
         [server] Listen address {KITTEN_ADDRESS}
-  -apiTmpFolder string
-        [api] Folder used for temporary files storage {KITTEN_API_TMP_FOLDER} (default "/tmp")
   -cert string
         [server] Certificate file {KITTEN_CERT}
   -corsCredentials
@@ -130,12 +128,16 @@ Usage of kitten:
         [slack] Signing secret {KITTEN_SLACK_SIGNING_SECRET}
   -title string
         Application title {KITTEN_TITLE} (default "KittenBot")
+  -tmpFolder string
+        [kitten] Temp folder for storing cache image {KITTEN_TMP_FOLDER} (default "/tmp")
   -tracerRate string
         [tracer] Jaeger sample rate, 'always', 'never' or a float value {KITTEN_TRACER_RATE} (default "always")
   -tracerURL string
         [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {KITTEN_TRACER_URL}
-  -unsplashUnsplashAccessKey string
-        [unsplash] Unsplash Access Key {KITTEN_UNSPLASH_UNSPLASH_ACCESS_KEY}
+  -unsplashAccessKey string
+        [unsplash] Unsplash Access Key {KITTEN_UNSPLASH_ACCESS_KEY}
+  -unsplashName string
+        [unsplash] Unsplash App name {KITTEN_UNSPLASH_NAME} (default "SayIt")
   -url string
         [alcotest] URL to check {KITTEN_URL}
   -userAgent string
