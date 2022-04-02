@@ -197,7 +197,6 @@ func (a App) overrideResponse(user, id, caption string) discord.InteractionRespo
 	response.Data.Embeds = []discord.Embed{
 		{
 			Title: id,
-			URL:   a.getOverride(id),
 			Image: discord.Image{
 				URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)),
 			},
