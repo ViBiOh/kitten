@@ -6,19 +6,15 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -41,19 +37,22 @@ type App struct {
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
+	idsOverrides map[string]string
 	website      string
 	tmpFolder    string
 }
 
 // Config of package
 type Config struct {
-	tmpFolder *string
+	idsOverrides *string
+	tmpFolder    *string
 }
 
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder: flags.String(fs, prefix, "kitten", "TmpFolder", "Temp folder for storing cache image", "/tmp", overrides),
+		tmpFolder:    flags.String(fs, prefix, "kitten", "TmpFolder", "Temp folder for storing cache image", "/tmp", overrides),
+		idsOverrides: flags.String(fs, prefix, "kitten", "IdsOverrides", "Ids overrides in the form key1|http1~key2|http2", "", overrides),
 	}
 }
 
@@ -66,6 +65,7 @@ func New(config Config, unsplashApp unsplash.App, prometheusRegisterer prometheu
 		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),
 		servedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "served"),
 		tmpFolder:    strings.TrimSpace(*config.tmpFolder),
+		idsOverrides: parseIdsOverrides(strings.TrimSpace(*config.idsOverrides)),
 	}
 }
 
@@ -77,32 +77,22 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		query := r.URL.Query()
-
-		id := strings.TrimSpace(query.Get("id"))
-		from := strings.TrimSpace(query.Get("from"))
-		caption := strings.TrimSpace(query.Get("caption"))
-
-		if len(caption) == 0 {
-			httperror.BadRequest(w, fmt.Errorf("caption param is required for url `%s`", r.URL.String()))
+		id, caption, err := parseRequest(r.URL.Query())
+		if err != nil {
+			httperror.BadRequest(w, err)
 			return
 		}
 
-		if a.serveCached(w, id, from, caption) {
+		if a.serveCached(w, id, caption) {
 			return
 		}
 
 		var image image.Image
-		var err error
 
-		search := strings.TrimSpace(query.Get("search"))
-
-		if len(from) != 0 {
-			image, err = a.GetFromURL(r.Context(), from, caption)
-		} else if len(id) == 0 && len(search) == 0 {
-			httperror.BadRequest(w, fmt.Errorf("search param is required for url `%s`", r.URL.String()))
+		if override := a.getOverride(id); len(override) != 0 {
+			image, err = a.GetFromURL(r.Context(), override, caption)
 		} else {
-			image, _, err = a.GetFromUnsplash(r.Context(), id, search, caption)
+			image, err = a.GetFromUnsplash(r.Context(), id, caption)
 		}
 
 		if err != nil {
@@ -120,49 +110,20 @@ func (a App) Handler() http.Handler {
 
 		a.increaseServed()
 
-		go a.storeInCache(id, from, caption, image)
+		go a.storeInCache(id, caption, image)
 	})
 }
 
-func (a App) serveCached(w http.ResponseWriter, id, from, caption string) bool {
-	file, err := os.OpenFile(filepath.Join(a.tmpFolder, getRequestHash(id, from, caption)+".png"), os.O_RDONLY, 0o600)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			logger.Error("unable to open image from local cache: %s", err)
-		}
-
-		return false
+func parseRequest(query url.Values) (string, string, error) {
+	id := strings.TrimSpace(query.Get("id"))
+	if len(id) == 0 {
+		return "", "", fmt.Errorf("id param is required")
 	}
 
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	w.Header().Add("Cache-Control", cacheControlDuration)
-	w.Header().Set("Content-Type", "image/png")
-	w.WriteHeader(http.StatusOK)
-
-	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
-		logger.Error("unable to write image from local cache: %s", err)
-		return false
+	caption := strings.TrimSpace(query.Get("caption"))
+	if len(caption) == 0 {
+		return "", "", fmt.Errorf("caption param is required")
 	}
 
-	a.increaseCached()
-
-	return true
-}
-
-func (a App) storeInCache(id, from, caption string, image image.Image) {
-	file, err := os.OpenFile(filepath.Join(a.tmpFolder, getRequestHash(id, from, caption)+".png"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		logger.Error("unable to open image to local cache: %s", err)
-		return
-	}
-
-	if err := png.Encode(file, image); err != nil {
-		logger.Error("unable to write image to local cache: %s", err)
-	}
-}
-
-func getRequestHash(id, from, caption string) string {
-	return sha.New(fmt.Sprintf("%s:%s:%s", id, from, caption))
+	return id, caption, nil
 }

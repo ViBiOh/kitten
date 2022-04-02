@@ -10,7 +10,6 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
 	"golang.org/x/image/font"
 )
@@ -31,27 +30,21 @@ var fontFacePool = sync.Pool{
 	},
 }
 
-// GetFromUnsplash a meme caption to the given image name from unsplash
-func (a App) GetFromUnsplash(ctx context.Context, id, name, caption string) (output image.Image, unsplashImage unsplash.Image, err error) {
+// GetFromUnsplash generates a meme from the given id with caption text
+func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
 	if a.tracer != nil {
 		_, span := a.tracer.Start(ctx, "GetFromUnsplash")
 		defer span.End()
 	}
 
-	if len(id) != 0 {
-		unsplashImage, err = a.unsplashApp.GetImage(ctx, id)
-	} else {
-		unsplashImage, err = a.unsplashApp.GetRandomImage(ctx, name)
-	}
-
+	unsplashImage, err := a.unsplashApp.GetImage(ctx, id)
 	if err != nil {
-		return nil, unsplashImage, fmt.Errorf("unable to get image from unsplash: %s", err)
+		return nil, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}
 
 	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
 
-	output, err = a.generateImage(ctx, unsplashImage.Raw, caption)
-	return
+	return a.generateImage(ctx, unsplashImage.Raw, caption)
 }
 
 // GetFromURL a meme caption to the given image name from unsplash
