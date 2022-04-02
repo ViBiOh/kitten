@@ -129,6 +129,8 @@ func (a App) asyncResponse(replace bool) discord.InteractionResponse {
 		response.Type = discord.DeferredUpdateMessageCallback
 	}
 
+	response.Data.Flags = discord.EphemeralMessage
+
 	return response
 }
 
