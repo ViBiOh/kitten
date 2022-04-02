@@ -24,7 +24,7 @@ import (
 )
 
 // CommandHandler for handling when user send a slash command
-type CommandHandler func(ctx context.Context, w http.ResponseWriter, pathName, text string)
+type CommandHandler func(ctx context.Context, w http.ResponseWriter, user, pathName, text string)
 
 // InteractHandler for handling when user interact with a button
 type InteractHandler func(ctx context.Context, user string, actions []InteractiveAction) Response
@@ -89,7 +89,7 @@ func (a App) Handler() http.Handler {
 			if r.URL.Path == "/interactive" {
 				a.handleInteract(w, r)
 			} else {
-				a.onCommand(r.Context(), w, strings.TrimPrefix(r.URL.Path, "/"), r.FormValue("text"))
+				a.onCommand(r.Context(), w, r.FormValue("user_id"), strings.TrimPrefix(r.FormValue("command"), "/"), r.FormValue("text"))
 			}
 
 			return

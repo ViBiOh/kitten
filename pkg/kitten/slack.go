@@ -25,7 +25,7 @@ var (
 )
 
 // SlackCommand handler
-func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, search, caption string) {
+func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, user, search, caption string) {
 	if len(caption) == 0 {
 		httpjson.Write(w, http.StatusOK, slack.NewEphemeralMessage("You must provide a caption"))
 		return
@@ -50,7 +50,7 @@ func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.R
 		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
 
-	return a.getKittenResponse(search, image, caption, "")
+	return a.getUnsplashResponse(search, image, caption, "")
 }
 
 // SlackInteract handler
@@ -67,7 +67,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 			return slack.NewEphemeralMessage(fmt.Sprintf("Unable to find asked image: %s", err))
 		}
 
-		return a.getKittenResponse(action.BlockID, image, caption, user)
+		return a.getUnsplashResponse(action.BlockID, image, caption, user)
 	}
 
 	if action.ActionID == nextValue {
@@ -77,7 +77,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getKittenResponse(search string, image unsplash.Image, caption, user string) slack.Response {
+func (a App) getUnsplashResponse(search string, image unsplash.Image, caption, user string) slack.Response {
 	content := slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption))
 
 	if len(user) == 0 {
