@@ -21,6 +21,7 @@ func parseIdsOverrides(value string) map[string]string {
 		}
 
 		output[parts[0]] = parts[1]
+		logger.Info("Override for `%s` loaded.", parts[0])
 	}
 
 	return output
