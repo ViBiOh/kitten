@@ -45,15 +45,18 @@ spec:
       enabled: true
       compress: true
       hosts:
-      - kitten.vibioh.fr
+        - kitten.vibioh.fr
     pprof:
       enabled: true
+    resources:
+      requests:
+        cpu: 500m
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
     volumes:
-    - name: tmp
-      emptyDir: {}
+      - name: tmp
+        emptyDir: {}
     volumeMounts:
-    - name: tmp
-      mountPath: /tmp
+      - name: tmp
+        mountPath: /tmp
