@@ -6,7 +6,9 @@ import (
 	"image"
 	"io"
 	"strings"
+	"sync"
 
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
@@ -19,27 +21,29 @@ const (
 	maxBodySize int64   = 2 << 20
 )
 
+var fontFacePool = sync.Pool{
+	New: func() any {
+		impactFace, err := gg.LoadFontFace("impact.ttf", fontSize)
+		logger.Error("unable to load font face: %s", err)
+
+		return impactFace
+	},
+}
+
 // App of package
 type App struct {
 	unsplashApp unsplash.App
 	tracer      trace.Tracer
-	fontFace    font.Face
 	website     string
 }
 
 // New creates new App from Config
-func New(unsplashApp unsplash.App, tracer trace.Tracer, website string) (App, error) {
-	impactFace, err := gg.LoadFontFace("impact.ttf", fontSize)
-	if err != nil {
-		return App{}, fmt.Errorf("unable to load font face: %s", err)
-	}
-
+func New(unsplashApp unsplash.App, tracer trace.Tracer, website string) App {
 	return App{
 		unsplashApp: unsplashApp,
 		tracer:      tracer,
-		fontFace:    impactFace,
 		website:     website,
-	}, nil
+	}
 }
 
 // GetFromUnsplash a meme caption to the given image name from unsplash
@@ -115,7 +119,11 @@ func (a App) captionImage(ctx context.Context, source image.Image, text string) 
 	}
 
 	imageCtx := gg.NewContextForImage(source)
-	imageCtx.SetFontFace(a.fontFace)
+
+	fontFace := fontFacePool.Get().(font.Face)
+	defer fontFacePool.Put(fontFace)
+
+	imageCtx.SetFontFace(fontFace)
 
 	imageCtx.SetRGB(1, 1, 1)
 	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)

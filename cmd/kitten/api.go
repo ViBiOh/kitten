@@ -92,14 +92,12 @@ func main() {
 	})
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
-	memeApp, err := meme.New(unsplash.New(unsplashConfig, redisApp), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
+	memeApp := meme.New(unsplash.New(unsplashConfig, redisApp), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
+	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), memeApp.DiscordHandler)
 	logger.Fatal(err)
 
 	apiHandler := http.StripPrefix(apiPrefix, kitten.Handler(memeApp, strings.TrimSpace(*tmpFolder)))
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, memeApp.SlackCommand, memeApp.SlackInteract).Handler())
-
-	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), memeApp.DiscordHandler)
-	logger.Fatal(err)
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
