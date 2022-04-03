@@ -45,16 +45,17 @@ func (a App) getKittenBlock(ctx context.Context, user, search, caption string) s
 		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 	}
 
-	if a.isOverride(search) {
-		return a.getOverrideResponse(search, caption, user)
+	var image unsplash.Image
+	var err error
+
+	if !a.isOverride(search) {
+		image, err = a.unsplashApp.GetRandomImage(ctx, search)
+		if err != nil {
+			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
+		}
 	}
 
-	image, err := a.unsplashApp.GetRandomImage(ctx, search)
-	if err != nil {
-		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
-	}
-
-	return a.getUnsplashResponse(search, image, caption, "")
+	return a.getSlackResponse(image, search, caption, "")
 }
 
 // SlackInteract handler
@@ -71,7 +72,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 			return slack.NewEphemeralMessage(fmt.Sprintf("Unable to find asked image: %s", err))
 		}
 
-		return a.getUnsplashResponse(action.BlockID, image, caption, user)
+		return a.getSlackResponse(image, action.BlockID, caption, user)
 	}
 
 	if action.ActionID == nextValue {
@@ -81,17 +82,22 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getUnsplashResponse(search string, image unsplash.Image, caption, user string) slack.Response {
-	content := slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption))
-
+func (a App) getSlackResponse(image unsplash.Image, search, caption, user string) slack.Response {
 	if len(user) == 0 {
+		elements := []slack.Element{cancelButton}
+
+		if !a.isOverride(search) {
+			elements = append(elements, slack.NewButtonElement("Another?", nextValue, caption, ""))
+		}
+
+		elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s", image.ID, caption), "primary"))
+
 		return slack.Response{
 			ResponseType:    "ephemeral",
 			ReplaceOriginal: true,
 			Blocks: []slack.Block{
-				content,
-				slack.NewActions(search, cancelButton, slack.NewButtonElement("Another?", nextValue, caption, ""),
-					slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s", image.ID, caption), "primary")),
+				a.getMemeContent(image, search, caption),
+				slack.NewActions(search, elements...),
 			},
 		}
 	}
@@ -100,22 +106,30 @@ func (a App) getUnsplashResponse(search string, image unsplash.Image, caption, u
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
-			content,
+			a.getSlackTitle(image, search, user),
+			a.getMemeContent(image, search, caption),
 		},
 	}
 }
 
-func (a App) getOverrideResponse(id, caption, user string) slack.Response {
-	return slack.Response{
-		ResponseType:    "in_channel",
-		ReplaceOriginal: true,
-		DeleteOriginal:  true,
-		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil),
-			slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption)),
-		},
+func (a App) getSlackTitle(image unsplash.Image, user, search string) slack.Block {
+	if a.isOverride(search) {
+		return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil)
 	}
+
+	return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil)
+}
+
+func (a App) getMemeContent(image unsplash.Image, search, caption string) *slack.Accessory {
+	var imageID string
+
+	if !a.isOverride(search) {
+		imageID = image.ID
+	} else {
+		imageID = search
+	}
+
+	return slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(imageID), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption))
 }
 
 func parseBlockID(value string) (string, string) {
