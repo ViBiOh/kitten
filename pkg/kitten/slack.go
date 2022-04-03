@@ -31,10 +31,10 @@ func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, user, sear
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, search, caption))
+	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, user, search, caption))
 }
 
-func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
+func (a App) getKittenBlock(ctx context.Context, user, search, caption string) slack.Response {
 	if search == "custom" {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
@@ -43,6 +43,10 @@ func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.R
 
 		search = matches[1]
 		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
+	}
+
+	if a.isOverride(search) {
+		return a.getOverrideResponse(search, caption, user)
 	}
 
 	image, err := a.unsplashApp.GetRandomImage(ctx, search)
@@ -71,7 +75,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	}
 
 	if action.ActionID == nextValue {
-		return a.getKittenBlock(ctx, action.BlockID, action.Value)
+		return a.getKittenBlock(ctx, "", action.BlockID, action.Value)
 	}
 
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
@@ -98,6 +102,16 @@ func (a App) getUnsplashResponse(search string, image unsplash.Image, caption, u
 		Blocks: []slack.Block{
 			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
 			content,
+		},
+	}
+}
+
+func (a App) getOverrideResponse(id, caption, user string) slack.Response {
+	return slack.Response{
+		ResponseType: "in_channel",
+		Blocks: []slack.Block{
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil),
+			slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption)),
 		},
 	}
 }
