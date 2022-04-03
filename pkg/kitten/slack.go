@@ -86,11 +86,13 @@ func (a App) getSlackResponse(image unsplash.Image, search, caption, user string
 	if len(user) == 0 {
 		elements := []slack.Element{cancelButton}
 
+		imageID := search
 		if !a.isOverride(search) {
 			elements = append(elements, slack.NewButtonElement("Another?", nextValue, caption, ""))
+			imageID = image.ID
 		}
 
-		elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s", image.ID, caption), "primary"))
+		elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s", imageID, caption), "primary"))
 
 		return slack.Response{
 			ResponseType:    "ephemeral",
