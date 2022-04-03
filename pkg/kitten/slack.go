@@ -66,10 +66,16 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	}
 
 	if action.ActionID == sendValue {
+		var image unsplash.Image
 		id, caption := parseBlockID(action.Value)
-		image, err := a.unsplashApp.GetImage(ctx, id)
-		if err != nil {
-			return slack.NewEphemeralMessage(fmt.Sprintf("Unable to find asked image: %s", err))
+
+		if !a.isOverride(id) {
+			var err error
+
+			image, err = a.unsplashApp.GetImage(ctx, id)
+			if err != nil {
+				return slack.NewEphemeralMessage(fmt.Sprintf("unable to find asked image: %s", err))
+			}
 		}
 
 		return a.getSlackResponse(image, action.BlockID, caption, user)
