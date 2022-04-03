@@ -114,7 +114,7 @@ func (a App) getSlackResponse(image unsplash.Image, search, caption, user string
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			a.getSlackTitle(image, search, user),
+			a.getSlackTitle(image, user, search),
 			a.getMemeContent(image, search, caption),
 		},
 	}
