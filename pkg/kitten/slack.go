@@ -108,7 +108,8 @@ func (a App) getUnsplashResponse(search string, image unsplash.Image, caption, u
 
 func (a App) getOverrideResponse(id, caption, user string) slack.Response {
 	return slack.Response{
-		ResponseType: "in_channel",
+		ResponseType:   "in_channel",
+		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil),
 			slack.NewAccessory(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption)),
