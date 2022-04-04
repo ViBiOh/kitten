@@ -16,10 +16,6 @@ const (
 	pongCallback callbackType = 1
 	// ChannelMessageWithSourceCallback answer to user
 	ChannelMessageWithSourceCallback callbackType = 4
-	// DeferredChannelMessageWithSourceCallback answer to user asynchronously
-	DeferredChannelMessageWithSourceCallback callbackType = 5
-	// DeferredUpdateMessageCallback in place asynchronously
-	DeferredUpdateMessageCallback callbackType = 6
 	// UpdateMessageCallback in place
 	UpdateMessageCallback callbackType = 7
 )

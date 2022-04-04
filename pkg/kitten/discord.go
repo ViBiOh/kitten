@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -43,30 +42,30 @@ var Commands = map[string]discord.Command{
 }
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest) (discord.InteractionResponse, func() discord.InteractionResponse) {
+func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest) discord.InteractionResponse {
 	replace, id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
-		return discord.NewEphemeral(replace, err.Error()), nil
+		return discord.NewEphemeral(replace, err.Error())
 	}
 
 	if a.isOverride(search) {
-		return a.overrideResponse(webhook.Member.User.ID, search, caption), nil
+		return a.overrideResponse(webhook.Member.User.ID, search, caption)
 	}
 
 	if len(id) != 0 {
 		image, err := a.unsplashApp.GetImage(r.Context(), id)
 		if err != nil {
-			return discord.NewEphemeral(replace, err.Error()), nil
+			return discord.NewEphemeral(replace, err.Error())
 		}
 
-		return a.memeResponse(webhook.Member.User.ID, caption, image), nil
+		return a.memeResponse(webhook.Member.User.ID, caption, image)
 	}
 
 	if len(search) != 0 {
 		return a.handleSearch(r.Context(), webhook.Token, search, caption, replace)
 	}
 
-	return discord.NewEphemeral(replace, "Ok, not now."), nil
+	return discord.NewEphemeral(replace, "Ok, not now.")
 }
 
 func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
@@ -107,39 +106,12 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	return
 }
 
-func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) (discord.InteractionResponse, func() discord.InteractionResponse) {
+func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
 	image, err := a.unsplashApp.GetRandomImage(ctx, search)
 	if err != nil {
-		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err)), nil
+		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
 
-	return a.asyncResponse(replace), func() discord.InteractionResponse {
-		output, err := a.generateImage(context.Background(), image.Raw, caption)
-		if err != nil {
-			logger.Error("unable to generate image for id `%s`: %s", image.ID, err)
-		} else {
-			a.storeInCache(image.ID, caption, output)
-		}
-
-		return a.interactiveResponse(search, caption, image, replace)
-	}
-}
-
-func (a App) asyncResponse(replace bool) discord.InteractionResponse {
-	response := discord.InteractionResponse{
-		Type: discord.DeferredChannelMessageWithSourceCallback,
-	}
-
-	if replace {
-		response.Type = discord.DeferredUpdateMessageCallback
-	}
-
-	response.Data.Flags = discord.EphemeralMessage
-
-	return response
-}
-
-func (a App) interactiveResponse(search, caption string, image unsplash.Image, replace bool) discord.InteractionResponse {
 	response := a.unsplashResponse(caption, image)
 	response.Data.Flags = discord.EphemeralMessage
 	if replace {
