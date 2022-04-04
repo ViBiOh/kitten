@@ -35,7 +35,7 @@ func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, user, sear
 }
 
 func (a App) getKittenBlock(ctx context.Context, user, search, caption string) slack.Response {
-	if search == "custom" {
+	if search == "meme" {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
 			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value #horse`")
