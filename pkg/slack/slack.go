@@ -23,10 +23,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
-const (
-	slackAPI = "https://slack.com/api"
-)
-
 // CommandHandler for handling when user send a slash command
 type CommandHandler func(context.Context, http.ResponseWriter, InteractivePayload) Response
 
@@ -88,7 +84,6 @@ func (a App) Handler() http.Handler {
 		switch r.Method {
 		case http.MethodOptions:
 			w.WriteHeader(http.StatusOK)
-			return
 
 		case http.MethodPost:
 			if r.URL.Path == "/interactive" {
@@ -105,8 +100,6 @@ func (a App) Handler() http.Handler {
 
 				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), w, payload))
 			}
-
-			return
 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
