@@ -23,8 +23,12 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
+const (
+	slackAPI = "https://slack.com/api"
+)
+
 // CommandHandler for handling when user send a slash command
-type CommandHandler func(ctx context.Context, w http.ResponseWriter, user, pathName, text string)
+type CommandHandler func(context.Context, http.ResponseWriter, InteractivePayload)
 
 // InteractHandler for handling when user interact with a button
 type InteractHandler func(ctx context.Context, user string, actions []InteractiveAction) Response
@@ -34,6 +38,7 @@ type Config struct {
 	clientID      *string
 	clientSecret  *string
 	signingSecret *string
+	accessToken   *string
 }
 
 // App of package
@@ -43,6 +48,7 @@ type App struct {
 
 	clientID      string
 	clientSecret  string
+	accessToken   string
 	signingSecret []byte
 }
 
@@ -52,6 +58,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		clientID:      flags.String(fs, prefix, "slack", "ClientID", "ClientID", "", overrides),
 		clientSecret:  flags.String(fs, prefix, "slack", "ClientSecret", "ClientSecret", "", overrides),
 		signingSecret: flags.String(fs, prefix, "slack", "SigningSecret", "Signing secret", "", overrides),
+		accessToken:   flags.String(fs, prefix, "slack", "AccessToken", "Access Token", "", overrides),
 	}
 }
 
@@ -60,6 +67,7 @@ func New(config Config, command CommandHandler, interact InteractHandler) App {
 	return App{
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
+		accessToken:   *config.accessToken,
 		signingSecret: []byte(*config.signingSecret),
 
 		onCommand:  command,
@@ -89,7 +97,17 @@ func (a App) Handler() http.Handler {
 			if r.URL.Path == "/interactive" {
 				a.handleInteract(w, r)
 			} else {
-				a.onCommand(r.Context(), w, r.FormValue("user_id"), strings.TrimPrefix(r.FormValue("command"), "/"), r.FormValue("text"))
+				payload := InteractivePayload{
+					ChannelID:   r.FormValue("channel_id"),
+					Command:     strings.TrimPrefix(r.FormValue("command"), "/"),
+					ResponseURL: r.FormValue("response_url"),
+					Text:        r.FormValue("text"),
+					Token:       r.FormValue("token"),
+					TriggerID:   r.FormValue("trigger_id"),
+					UserID:      r.FormValue("user_id"),
+				}
+
+				a.onCommand(r.Context(), w, payload)
 			}
 
 			return
@@ -98,6 +116,20 @@ func (a App) Handler() http.Handler {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
+}
+
+// OpenModal on the client
+func (a App) OpenModal(ctx context.Context, triggerID string, view View) error {
+	resp, err := request.Post(fmt.Sprintf("%s/views.open", slackAPI)).Header("Authorization: %s", a.accessToken).JSON(ctx, NewModal(triggerID, view))
+	if err != nil {
+		return fmt.Errorf("unable to open modal: %s", err)
+	}
+
+	if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
+		return fmt.Errorf("unable to discard modal body: %s", err)
+	}
+
+	return nil
 }
 
 func (a App) checkSignature(r *http.Request) bool {

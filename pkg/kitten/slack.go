@@ -25,16 +25,16 @@ var (
 )
 
 // SlackCommand handler
-func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, user, search, caption string) {
-	if len(caption) == 0 {
+func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, payload slack.InteractivePayload) {
+	if len(payload.Text) == 0 {
 		httpjson.Write(w, http.StatusOK, slack.NewEphemeralMessage("You must provide a caption"))
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, user, search, caption))
+	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, payload.Command, payload.Text))
 }
 
-func (a App) getKittenBlock(ctx context.Context, user, search, caption string) slack.Response {
+func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {
 	if search == "meme" {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
@@ -82,7 +82,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 	}
 
 	if action.ActionID == nextValue {
-		return a.getKittenBlock(ctx, "", action.BlockID, action.Value)
+		return a.getKittenBlock(ctx, action.BlockID, action.Value)
 	}
 
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
