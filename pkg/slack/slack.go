@@ -103,7 +103,6 @@ func (a App) Handler() http.Handler {
 					ResponseURL: r.FormValue("response_url"),
 					Text:        r.FormValue("text"),
 					Token:       r.FormValue("token"),
-					TriggerID:   r.FormValue("trigger_id"),
 					UserID:      r.FormValue("user_id"),
 				}
 
@@ -116,20 +115,6 @@ func (a App) Handler() http.Handler {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
-}
-
-// OpenModal on the client
-func (a App) OpenModal(ctx context.Context, triggerID string, view View) error {
-	resp, err := request.Post(fmt.Sprintf("%s/views.open", slackAPI)).Header("Authorization: %s", a.accessToken).JSON(ctx, NewModal(triggerID, view))
-	if err != nil {
-		return fmt.Errorf("unable to open modal: %s", err)
-	}
-
-	if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-		return fmt.Errorf("unable to discard modal body: %s", err)
-	}
-
-	return nil
 }
 
 func (a App) checkSignature(r *http.Request) bool {

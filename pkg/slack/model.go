@@ -99,38 +99,6 @@ func NewSection(text Text, accessory *Accessory) Block {
 	}
 }
 
-// Modal describes a modal
-type Modal struct {
-	TriggerID string `json:"trigger_id"`
-	View      View   `json:"view"`
-}
-
-// NewModal creates a modal
-func NewModal(triggerID string, view View) Modal {
-	return Modal{
-		TriggerID: triggerID,
-		View:      view,
-	}
-}
-
-// View describes a modal content
-type View struct {
-	Type       string  `json:"type"`
-	CallbackID string  `json:"callback_id"`
-	Title      Text    `json:"title"`
-	Blocks     []Block `json:"blocks"`
-}
-
-// NewView creates a modal view
-func NewView(callbackID string, title Text, blocks ...Block) View {
-	return View{
-		Type:       "modal",
-		CallbackID: callbackID,
-		Title:      title,
-		Blocks:     blocks,
-	}
-}
-
 // Response response content
 type Response struct {
 	ResponseType    string  `json:"response_type,omitempty"`
@@ -147,7 +115,6 @@ type InteractivePayload struct {
 	ResponseURL string `json:"response_url"`
 	Text        string `json:"text"`
 	Token       string `json:"token"`
-	TriggerID   string `json:"trigger_id"`
 	UserID      string `json:"user_id"`
 }
 
