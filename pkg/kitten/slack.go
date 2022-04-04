@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -25,13 +24,12 @@ var (
 )
 
 // SlackCommand handler
-func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, payload slack.InteractivePayload) {
+func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, payload slack.InteractivePayload) slack.Response {
 	if len(payload.Text) == 0 {
-		httpjson.Write(w, http.StatusOK, slack.NewEphemeralMessage("You must provide a caption"))
-		return
+		return slack.NewEphemeralMessage("You must provide a caption")
 	}
 
-	httpjson.Write(w, http.StatusOK, a.getKittenBlock(ctx, payload.Command, payload.Text))
+	return a.getKittenBlock(ctx, payload.Command, payload.Text)
 }
 
 func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.Response {

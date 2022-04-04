@@ -28,7 +28,7 @@ const (
 )
 
 // CommandHandler for handling when user send a slash command
-type CommandHandler func(context.Context, http.ResponseWriter, InteractivePayload)
+type CommandHandler func(context.Context, http.ResponseWriter, InteractivePayload) Response
 
 // InteractHandler for handling when user interact with a button
 type InteractHandler func(ctx context.Context, user string, actions []InteractiveAction) Response
@@ -103,7 +103,7 @@ func (a App) Handler() http.Handler {
 					UserID:      r.FormValue("user_id"),
 				}
 
-				a.onCommand(r.Context(), w, payload)
+				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), w, payload))
 			}
 
 			return
@@ -150,19 +150,13 @@ func (a App) checkSignature(r *http.Request) bool {
 }
 
 func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
-	rawPayload := r.FormValue("payload")
 	var payload Interactive
-
-	if err := json.Unmarshal([]byte(rawPayload), &payload); err != nil {
-		a.returnEphemeral(w, fmt.Sprintf("cannot unmarshall payload: %v", err))
+	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
+		httpjson.Write(w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
 		return
 	}
 
-	a.send(payload.ResponseURL, a.onInteract(r.Context(), payload.User.ID, payload.Actions))
-}
-
-func (a App) returnEphemeral(w http.ResponseWriter, message string) {
-	httpjson.Write(w, http.StatusOK, NewEphemeralMessage(message))
+	httpjson.Write(w, http.StatusOK, a.onInteract(r.Context(), payload.User.ID, payload.Actions))
 }
 
 func (a App) send(url string, message Response) {
