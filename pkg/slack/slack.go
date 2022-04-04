@@ -149,12 +149,12 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, a.onInteract(r.Context(), payload.User.ID, payload.Actions))
-}
+	w.WriteHeader(http.StatusOK)
 
-func (a App) send(url string, message Response) {
-	_, err := request.Post(url).JSON(context.Background(), message)
+	resp, err := request.Post(payload.ResponseURL).JSON(context.Background(), a.onInteract(r.Context(), payload.User.ID, payload.Actions))
 	if err != nil {
-		logger.Error("unable to send response: %s", err)
+		logger.Error("unable to send interact on response_url: %s", err)
+	} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
+		logger.Error("unable to discard interact body on response_url: %s", err)
 	}
 }
