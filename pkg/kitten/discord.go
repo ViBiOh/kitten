@@ -85,7 +85,7 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	if webhook.Type == discord.MessageComponentInteraction {
 		replace = true
 
-		parts := strings.Split(webhook.Data.CustomID, contentSeparator)
+		parts := strings.SplitN(webhook.Data.CustomID, contentSeparator, 3)
 
 		switch parts[0] {
 		case "send":

@@ -142,7 +142,7 @@ func (a App) getMemeContent(image unsplash.Image, search, caption string) *slack
 
 func parseBlockID(value string) (string, string) {
 	parts := strings.SplitN(value, ":", 2)
-	if len(parts) > 1 {
+	if len(parts) == 2 {
 		return parts[0], parts[1]
 	}
 
