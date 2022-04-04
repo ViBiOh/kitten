@@ -28,7 +28,7 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
 	defer bufferPool.Put(buffer)
 
 	w.Header().Add("Cache-Control", cacheControlDuration)
-	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/jpeg")
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
@@ -42,7 +42,7 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
 }
 
 func (a App) storeInCache(id, caption string, image image.Image) {
-	file, err := os.OpenFile(filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".png"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	file, err := os.OpenFile(filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".jpeg"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		logger.Error("unable to open image to local cache: %s", err)
 		return

@@ -11,6 +11,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/fogleman/gg"
+	"github.com/go-oss/image/imageutil"
 	"golang.org/x/image/font"
 )
 
@@ -77,9 +78,14 @@ func getImage(ctx context.Context, imageURL string) (image.Image, error) {
 		return nil, fmt.Errorf("unable to fetch URL `%s`: %s", imageURL, err)
 	}
 
-	output, _, err := image.Decode(io.LimitReader(resp.Body, maxBodySize))
+	reader, err := imageutil.RemoveExif(io.LimitReader(resp.Body, maxBodySize))
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode image, perhaps it exceeded the %d bytes length: %s", maxBodySize, err)
+		return nil, fmt.Errorf("unable to remove exif from image, perhaps it exceeded the %d bytes length: %s", maxBodySize, err)
+	}
+
+	output, _, err := image.Decode(reader)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode image: %s", err)
 	}
 
 	return output, nil

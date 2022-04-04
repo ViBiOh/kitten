@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	"image/png"
+	"image/jpeg"
 	"net/http"
 	"net/url"
 	"strings"
@@ -101,9 +101,9 @@ func (a App) Handler() http.Handler {
 		}
 
 		w.Header().Add("Cache-Control", cacheControlDuration)
-		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Content-Type", "image/jpeg")
 		w.WriteHeader(http.StatusOK)
-		if err = png.Encode(w, image); err != nil {
+		if err = jpeg.Encode(w, image, &jpeg.Options{Quality: 80}); err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
