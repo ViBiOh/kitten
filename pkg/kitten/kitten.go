@@ -27,7 +27,7 @@ var (
 		},
 	}
 
-	cacheDuration        = time.Hour * 24
+	cacheDuration        = time.Hour * 24 * 7
 	cacheControlDuration = fmt.Sprintf("public, max-age=%.0f", cacheDuration.Seconds())
 )
 

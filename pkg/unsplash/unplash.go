@@ -54,7 +54,7 @@ var (
 	// ErrRateLimitExceeded occurs when rate limit is exceeded
 	ErrRateLimitExceeded = errors.New("rate limit exceeded")
 
-	cacheDuration = time.Hour * 24
+	cacheDuration = time.Hour * 24 * 7
 )
 
 // App of package
@@ -138,6 +138,17 @@ func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
 			}
 		}()
 	}
+
+	go func() {
+		storeCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
+
+		if payload, err := json.Marshal(image); err != nil {
+			logger.Error("unable to marshal random image to cache: %s", err)
+		} else if err = a.redisApp.Store(storeCtx, cacheID(image.ID), payload, cacheDuration); err != nil {
+			logger.Error("unable to write random image to cache: %s", err)
+		}
+	}()
 
 	return image, err
 }
