@@ -34,7 +34,6 @@ type Config struct {
 	clientID      *string
 	clientSecret  *string
 	signingSecret *string
-	accessToken   *string
 }
 
 // App of package
