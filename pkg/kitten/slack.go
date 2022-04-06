@@ -3,7 +3,6 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -24,7 +23,7 @@ var (
 )
 
 // SlackCommand handler
-func (a App) SlackCommand(ctx context.Context, w http.ResponseWriter, payload slack.InteractivePayload) slack.Response {
+func (a App) SlackCommand(ctx context.Context, payload slack.InteractivePayload) slack.Response {
 	if len(payload.Text) == 0 {
 		return slack.NewEphemeralMessage("You must provide a caption")
 	}

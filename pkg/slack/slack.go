@@ -24,10 +24,10 @@ import (
 )
 
 // CommandHandler for handling when user send a slash command
-type CommandHandler func(context.Context, http.ResponseWriter, InteractivePayload) Response
+type CommandHandler func(context.Context, InteractivePayload) Response
 
 // InteractHandler for handling when user interact with a button
-type InteractHandler func(ctx context.Context, user string, actions []InteractiveAction) Response
+type InteractHandler func(context.Context, string, []InteractiveAction) Response
 
 // Config of package
 type Config struct {
@@ -97,7 +97,7 @@ func (a App) Handler() http.Handler {
 					UserID:      r.FormValue("user_id"),
 				}
 
-				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), w, payload))
+				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), payload))
 			}
 
 		default:

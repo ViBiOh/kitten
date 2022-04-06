@@ -3,7 +3,6 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -42,7 +41,7 @@ var Commands = map[string]discord.Command{
 }
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest) discord.InteractionResponse {
+func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) discord.InteractionResponse {
 	replace, id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
 		return discord.NewEphemeral(replace, err.Error())
@@ -53,7 +52,7 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 	}
 
 	if len(id) != 0 {
-		image, err := a.unsplashApp.GetImage(r.Context(), id)
+		image, err := a.unsplashApp.GetImage(ctx, id)
 		if err != nil {
 			return discord.NewEphemeral(replace, err.Error())
 		}
@@ -62,7 +61,7 @@ func (a App) DiscordHandler(r *http.Request, webhook discord.InteractionRequest)
 	}
 
 	if len(search) != 0 {
-		return a.handleSearch(r.Context(), webhook.Token, search, caption, replace)
+		return a.handleSearch(ctx, webhook.Token, search, caption, replace)
 	}
 
 	return discord.NewEphemeral(replace, "Ok, not now.")
