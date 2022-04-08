@@ -15,6 +15,8 @@ const (
 	searchParam      = "search"
 	contentSeparator = ":"
 
+	idLength = 11
+
 	memeName = "meme"
 )
 
@@ -49,6 +51,12 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 
 	if a.isOverride(search) {
 		return a.overrideResponse(webhook.Member.User.ID, search, caption)
+	}
+
+	if len(search) == idLength {
+		if image, err := a.unsplashApp.GetImage(ctx, search); err == nil {
+			return a.memeResponse(webhook.Member.User.ID, caption, image)
+		}
 	}
 
 	if len(id) != 0 {
