@@ -13,11 +13,11 @@ import (
 const (
 	captionParam     = "caption"
 	searchParam      = "search"
+	idParam          = "id"
 	contentSeparator = ":"
 
-	idLength = 11
-
-	memeName = "meme"
+	memeName       = "meme"
+	memeWithIDName = "memedi"
 )
 
 // Commands configuration
@@ -28,6 +28,24 @@ var Commands = map[string]discord.Command{
 		Options: []discord.CommandOption{
 			{
 				Name:        searchParam,
+				Description: "Searched image",
+				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
+				Required:    true,
+			},
+			{
+				Name:        captionParam,
+				Description: "Caption to add",
+				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
+				Required:    true,
+			},
+		},
+	},
+	memeWithIDName: {
+		Name:        memeWithIDName,
+		Description: "Generate a meme with caption from Unsplash Image ID",
+		Options: []discord.CommandOption{
+			{
+				Name:        idParam,
 				Description: "Searched image",
 				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
 				Required:    true,
@@ -53,12 +71,6 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 		return a.overrideResponse(webhook.Member.User.ID, search, caption)
 	}
 
-	if len(search) == idLength {
-		if image, err := a.unsplashApp.GetImage(ctx, search); err == nil {
-			return a.memeResponse(webhook.Member.User.ID, caption, image)
-		}
-	}
-
 	if len(id) != 0 {
 		image, err := a.unsplashApp.GetImage(ctx, id)
 		if err != nil {
@@ -78,9 +90,12 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
 		for _, option := range webhook.Data.Options {
-			if strings.EqualFold(option.Name, searchParam) {
+			switch option.Name {
+			case idParam:
+				id = option.Value
+			case searchParam:
 				search = option.Value
-			} else if strings.EqualFold(option.Name, captionParam) {
+			case captionParam:
 				caption = option.Value
 			}
 		}
