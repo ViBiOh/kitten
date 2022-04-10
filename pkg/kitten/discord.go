@@ -3,7 +3,6 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 
@@ -80,11 +79,15 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 			return discord.NewError(replace, err), nil
 		}
 
-		return a.memeResponse(webhook.Member.User.ID, caption, image), nil
+		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
+			return a.memeResponse(webhook.Member.User.ID, caption, image)
+		}
 	}
 
 	if len(search) != 0 {
-		return a.handleSearch(ctx, webhook.Token, search, caption, replace), nil
+		return discord.AsyncResponse(replace, true), func() discord.InteractionResponse {
+			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
+		}
 	}
 
 	return discord.NewEphemeral(replace, "Ok, not now."), nil
@@ -137,8 +140,7 @@ func (a App) handleSearch(ctx context.Context, interactionToken, search, caption
 		return discord.NewError(replace, err)
 	}
 
-	response := a.unsplashResponse(caption, image)
-	response.Data.Flags = discord.EphemeralMessage
+	response := a.ephemeralResponse(caption, image)
 	if replace {
 		response.Type = discord.UpdateMessageCallback
 	}
@@ -158,39 +160,78 @@ func (a App) handleSearch(ctx context.Context, interactionToken, search, caption
 }
 
 func (a App) memeResponse(user, caption string, image unsplash.Image) discord.InteractionResponse {
-	response := a.unsplashResponse(caption, image)
-	response.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
-
-	return response
-}
-
-func (a App) unsplashResponse(caption string, image unsplash.Image) discord.InteractionResponse {
-	return discord.NewResponse(discord.ChannelMessageWithSource, "").AddEmbed(discord.Embed{
-		Title: "Unsplash image",
-		URL:   image.URL,
-		Image: discord.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption))),
-		Author: discord.Author{
-			Name: image.Author,
-			URL:  image.AuthorURL,
-		},
-	})
-}
-
-func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
-	image, err := a.generateImage(context.Background(), a.getOverride(id), caption)
+	imagePath, size, err := a.generateAndStoreImage(image.ID, image.Raw, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
 	}
 
-	overrideImage := a.storeInCache(id, caption, image)
-	info, err := os.Stat(overrideImage)
+	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).
+		AddEmbed(discord.Embed{
+			Title: "Unsplash image",
+			URL:   image.URL,
+			Image: discord.NewImage("attachment://image.jpeg"),
+			Author: discord.Author{
+				Name: image.Author,
+				URL:  image.AuthorURL,
+			},
+		}).
+		AddAttachment("image.jpeg", imagePath, size)
+}
+
+func (a App) ephemeralResponse(caption string, image unsplash.Image) discord.InteractionResponse {
+	imagePath, size, err := a.generateAndStoreImage(image.ID, image.Raw, caption)
 	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to get image info: %s", err))
+		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
+	}
+
+	return discord.NewResponse(discord.ChannelMessageWithSource, "").
+		Ephemeral().
+		AddEmbed(discord.Embed{
+			Title: "Unsplash image",
+			URL:   image.URL,
+			Image: discord.NewImage("attachment://image.jpeg"),
+			Author: discord.Author{
+				Name: image.Author,
+				URL:  image.AuthorURL,
+			},
+		}).
+		AddAttachment("image.jpeg", imagePath, size)
+}
+
+func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
+	imagePath, size, err := a.generateAndStoreImage(id, a.getOverride(id), caption)
+	if err != nil {
+		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
 	}
 
 	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).
 		AddEmbed(discord.Embed{
 			Title: id,
 			Image: discord.NewImage("attachment://image.jpeg"),
-		}).AddAttachment("image.jpeg", overrideImage, info.Size())
+		}).AddAttachment("image.jpeg", imagePath, size)
+}
+
+func (a App) generateAndStoreImage(id, from, caption string) (string, int64, error) {
+	imagePath := a.getCacheFilename(id, caption)
+
+	info, err := os.Stat(a.getCacheFilename(id, caption))
+	if err != nil && !os.IsNotExist(err) {
+		return "", 0, err
+	}
+
+	if info == nil {
+		image, err := a.generateImage(context.Background(), from, caption)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to generate image: %s", err)
+		}
+
+		a.storeInCache(id, caption, image)
+
+		info, err = os.Stat(imagePath)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to get image info: %s", err)
+		}
+	}
+
+	return imagePath, info.Size(), nil
 }

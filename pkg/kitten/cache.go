@@ -15,7 +15,7 @@ import (
 )
 
 func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
-	file, err := os.OpenFile(filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".png"), os.O_RDONLY, 0o600)
+	file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDONLY, 0o600)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			logger.Error("unable to open image from local cache: %s", err)
@@ -41,16 +41,16 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
 	return true
 }
 
-func (a App) storeInCache(id, caption string, image image.Image) string {
-	filename := filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".jpeg")
-
-	if file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
+func (a App) storeInCache(id, caption string, image image.Image) {
+	if file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
 		logger.Error("unable to open image to local cache: %s", err)
 	} else if err := jpeg.Encode(file, image, &jpeg.Options{Quality: 80}); err != nil {
 		logger.Error("unable to write image to local cache: %s", err)
 	}
+}
 
-	return filename
+func (a App) getCacheFilename(id, caption string) string {
+	return filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".jpeg")
 }
 
 func getRequestHash(id, caption string) string {
