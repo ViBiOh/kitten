@@ -34,6 +34,7 @@ type Config struct {
 	clientID      *string
 	clientSecret  *string
 	signingSecret *string
+	accessToken   *string
 }
 
 // App of package
@@ -44,6 +45,7 @@ type App struct {
 	clientID      string
 	clientSecret  string
 	signingSecret []byte
+	accessToken   string
 }
 
 // Flags adds flags for configuring package
@@ -52,6 +54,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		clientID:      flags.String(fs, prefix, "slack", "ClientID", "ClientID", "", overrides),
 		clientSecret:  flags.String(fs, prefix, "slack", "ClientSecret", "ClientSecret", "", overrides),
 		signingSecret: flags.String(fs, prefix, "slack", "SigningSecret", "Signing secret", "", overrides),
+		accessToken:   flags.String(fs, prefix, "slack", "AccessToken", "Bot Access Token (begin with xoxb-)", "", overrides),
 	}
 }
 
@@ -60,6 +63,7 @@ func New(config Config, command CommandHandler, interact InteractHandler) App {
 	return App{
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
+		accessToken:   strings.TrimSpace(*config.accessToken),
 		signingSecret: []byte(*config.signingSecret),
 
 		onCommand:  command,
