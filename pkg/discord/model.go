@@ -180,8 +180,8 @@ type Image struct {
 }
 
 // NewImage create an image
-func NewImage(url string) Image {
-	return Image{
+func NewImage(url string) *Image {
+	return &Image{
 		URL: url,
 	}
 }
@@ -192,16 +192,23 @@ type Author struct {
 	URL  string `json:"url,omitempty"`
 }
 
+// NewAuthor create an author
+func NewAuthor(name, url string) *Author {
+	return &Author{
+		Name: name,
+		URL:  url,
+	}
+}
+
 // Embed of content
 type Embed struct {
 	Thumbnail   *Embed  `json:"thumbnail,omitempty"`
+	Image       *Image  `json:"image,omitempty"`
+	Author      *Author `json:"author,omitempty"`
 	Title       string  `json:"title,omitempty"`
 	Description string  `json:"description,omitempty"`
 	URL         string  `json:"url,omitempty"`
 	Fields      []Field `json:"fields,omitempty"`
-	Image       Image   `json:"image,omitempty"`
-	Provider    Author  `json:"provider,omitempty"`
-	Author      Author  `json:"author,omitempty"`
 	Color       int     `json:"color,omitempty"`
 }
 

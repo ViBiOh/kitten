@@ -80,7 +80,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 		}
 
 		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.memeResponse(webhook.Member.User.ID, caption, image)
+			return a.unsplashResponse(fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
 		}
 	}
 
@@ -140,7 +140,7 @@ func (a App) handleSearch(interactionToken, search, caption string, replace bool
 		return discord.NewError(replace, err)
 	}
 
-	response := a.ephemeralResponse(caption, image)
+	response := a.unsplashResponse("", true, image, caption)
 	if replace {
 		response.Type = discord.UpdateMessageCallback
 	}
@@ -159,43 +159,24 @@ func (a App) handleSearch(interactionToken, search, caption string, replace bool
 	return response
 }
 
-func (a App) memeResponse(user, caption string, image unsplash.Image) discord.InteractionResponse {
+func (a App) unsplashResponse(content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
 	imagePath, size, err := a.generateAndStoreImage(image.ID, image.Raw, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
 	}
 
-	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).
-		AddEmbed(discord.Embed{
-			Title: "Unsplash image",
-			URL:   image.URL,
-			Image: discord.NewImage("attachment://image.jpeg"),
-			Author: discord.Author{
-				Name: image.Author,
-				URL:  image.AuthorURL,
-			},
-		}).
-		AddAttachment("image.jpeg", imagePath, size)
-}
+	resp := discord.NewResponse(discord.ChannelMessageWithSource, content)
 
-func (a App) ephemeralResponse(caption string, image unsplash.Image) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreImage(image.ID, image.Raw, caption)
-	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
+	if ephemeral {
+		resp = resp.Ephemeral()
 	}
 
-	return discord.NewResponse(discord.ChannelMessageWithSource, "").
-		Ephemeral().
-		AddEmbed(discord.Embed{
-			Title: "Unsplash image",
-			URL:   image.URL,
-			Image: discord.NewImage("attachment://image.jpeg"),
-			Author: discord.Author{
-				Name: image.Author,
-				URL:  image.AuthorURL,
-			},
-		}).
-		AddAttachment("image.jpeg", imagePath, size)
+	return resp.AddAttachment("image.jpeg", imagePath, size).AddEmbed(discord.Embed{
+		Title:  "Unsplash image",
+		URL:    image.URL,
+		Image:  discord.NewImage("attachment://image.jpeg"),
+		Author: discord.NewAuthor(image.Author, image.AuthorURL),
+	})
 }
 
 func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
@@ -214,7 +195,7 @@ func (a App) overrideResponse(user, id, caption string) discord.InteractionRespo
 func (a App) generateAndStoreImage(id, from, caption string) (string, int64, error) {
 	imagePath := a.getCacheFilename(id, caption)
 
-	info, err := os.Stat(a.getCacheFilename(id, caption))
+	info, err := os.Stat(imagePath)
 	if err != nil && !os.IsNotExist(err) {
 		return "", 0, err
 	}

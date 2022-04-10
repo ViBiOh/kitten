@@ -50,9 +50,5 @@ func (a App) storeInCache(id, caption string, image image.Image) {
 }
 
 func (a App) getCacheFilename(id, caption string) string {
-	return filepath.Join(a.tmpFolder, getRequestHash(id, caption)+".jpeg")
-}
-
-func getRequestHash(id, caption string) string {
-	return sha.New(fmt.Sprintf("%s:%s", id, caption))
+	return filepath.Join(a.tmpFolder, sha.New(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
 }
