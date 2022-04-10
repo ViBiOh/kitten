@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/ViBiOh/kitten/pkg/discord"
@@ -68,7 +69,9 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	}
 
 	if a.isOverride(search) {
-		return a.overrideResponse(webhook.Member.User.ID, search, caption), nil
+		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
+			return a.overrideResponse(webhook.Member.User.ID, search, caption)
+		}
 	}
 
 	if len(id) != 0 {
@@ -174,8 +177,20 @@ func (a App) unsplashResponse(caption string, image unsplash.Image) discord.Inte
 }
 
 func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
-	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).AddEmbed(discord.Embed{
-		Title: id,
-		Image: discord.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption))),
-	})
+	image, err := a.generateImage(context.Background(), a.getOverride(id), caption)
+	if err != nil {
+		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
+	}
+
+	overrideImage := a.storeInCache(id, caption, image)
+	info, err := os.Stat(overrideImage)
+	if err != nil {
+		return discord.NewError(false, fmt.Errorf("unable to get image info: %s", err))
+	}
+
+	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).
+		AddEmbed(discord.Embed{
+			Title: id,
+			Image: discord.NewImage("attachment://image.jpeg"),
+		}).AddAttachment("image.jpeg", overrideImage, info.Size())
 }

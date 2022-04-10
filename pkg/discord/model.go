@@ -81,14 +81,18 @@ type Member struct {
 
 // InteractionResponse for responding to user
 type InteractionResponse struct {
-	Data struct {
-		Content         string          `json:"content,omitempty"`
-		AllowedMentions AllowedMentions `json:"allowed_mentions"`
-		Embeds          []Embed         `json:"embeds"`
-		Components      []Component     `json:"components"`
-		Flags           int             `json:"flags"`
-	} `json:"data,omitempty"`
+	Data InteractionDataResponse `json:"data,omitempty"`
 	Type InteractionCallbackType `json:"type,omitempty"`
+}
+
+// InteractionDataResponse for responding to user
+type InteractionDataResponse struct {
+	Content         string          `json:"content,omitempty"`
+	AllowedMentions AllowedMentions `json:"allowed_mentions"`
+	Embeds          []Embed         `json:"embeds"`
+	Components      []Component     `json:"components"`
+	Attachments     []Attachment    `json:"attachments"`
+	Flags           int             `json:"flags"`
 }
 
 // NewResponse creates a response
@@ -104,7 +108,13 @@ func NewResponse(iType InteractionCallbackType, content string) InteractionRespo
 	return resp
 }
 
-// AddEmbed add givenembed to response
+// Ephemeral set response to ephemeral
+func (i InteractionResponse) Ephemeral() InteractionResponse {
+	i.Data.Flags = EphemeralMessage
+	return i
+}
+
+// AddEmbed add given embed to response
 func (i InteractionResponse) AddEmbed(embed Embed) InteractionResponse {
 	if i.Data.Embeds == nil {
 		i.Data.Embeds = []Embed{embed}
@@ -115,8 +125,14 @@ func (i InteractionResponse) AddEmbed(embed Embed) InteractionResponse {
 	return i
 }
 
+// AddAttachment add given attachment to response
+func (i InteractionResponse) AddAttachment(filename, filepath string, size int64) InteractionResponse {
+	i.Data.Attachments = append(i.Data.Attachments, newAttachment(len(i.Data.Attachments), size, filename, filepath, i.Data.Flags&EphemeralMessage != 0))
+	return i
+}
+
 // AsyncResponse to the user
-func (a App) AsyncResponse(replace, ephemeral bool) InteractionResponse {
+func AsyncResponse(replace, ephemeral bool) InteractionResponse {
 	response := InteractionResponse{
 		Type: DeferredChannelMessageWithSource,
 	}
@@ -227,6 +243,25 @@ func NewButton(style buttonStyle, label, customID string) Component {
 		Style:    style,
 		Label:    label,
 		CustomID: customID,
+	}
+}
+
+// Attachment for file upload
+type Attachment struct {
+	ID        int    `json:"id"`
+	Filename  string `json:"filename"`
+	Size      int64  `json:"size,omitempty"`
+	Ephemeral bool   `json:"ephemeral"`
+	filepath  string
+}
+
+func newAttachment(id int, size int64, filename, filepath string, ephemeral bool) Attachment {
+	return Attachment{
+		ID:        id,
+		Filename:  filename,
+		Size:      size,
+		filepath:  filepath,
+		Ephemeral: ephemeral,
 	}
 }
 

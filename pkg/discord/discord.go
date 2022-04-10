@@ -5,11 +5,15 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"os"
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
@@ -143,7 +147,16 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		go func() {
 			deferredResponse := asyncFn()
 
-			resp, err := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token)).JSON(context.Background(), deferredResponse.Data)
+			req := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token))
+
+			var resp *http.Response
+			var err error
+			if len(deferredResponse.Data.Attachments) > 0 {
+				resp, err = req.Multipart(context.Background(), writeMultipart(deferredResponse.Data))
+			} else {
+				resp, err = req.JSON(context.Background(), deferredResponse.Data)
+			}
+
 			if err != nil {
 				logger.Error("unable to send async response: %s", err)
 				return
@@ -154,4 +167,53 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 	}
+}
+
+func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error {
+	return func(mw *multipart.Writer) error {
+		header := textproto.MIMEHeader{}
+		header.Set("Content-Disposition", `form-data; name="payload_json"`)
+		header.Set("Content-Type", "application/json")
+		partWriter, err := mw.CreatePart(header)
+		if err != nil {
+			return fmt.Errorf("unable to create payload part: %s", err)
+		}
+
+		if err = json.NewEncoder(partWriter).Encode(data); err != nil {
+			return fmt.Errorf("unable to encode payload part: %s", err)
+		}
+
+		for _, file := range data.Attachments {
+			if err = addAttachment(mw, file); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+func addAttachment(mw *multipart.Writer, file Attachment) error {
+	partWriter, err := mw.CreateFormFile(fmt.Sprintf("files[%d]", file.ID), file.Filename)
+	if err != nil {
+		return fmt.Errorf("unable to create file part: %s", err)
+	}
+
+	var fileReader io.ReadCloser
+	fileReader, err = os.Open(file.filepath)
+	if err != nil {
+		return fmt.Errorf("unable to open file part: %s", err)
+	}
+
+	defer func() {
+		if closeErr := fileReader.Close(); closeErr != nil {
+			logger.Error("unable to close file part: %s", closeErr)
+		}
+	}()
+
+	if _, err = io.Copy(partWriter, fileReader); err != nil {
+		return fmt.Errorf("unable to copy file part: %s", err)
+	}
+
+	return nil
 }
