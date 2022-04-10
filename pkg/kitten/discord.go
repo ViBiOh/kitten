@@ -1,11 +1,8 @@
 package kitten
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
-	"image/jpeg"
 	"net/url"
 	"strings"
 
@@ -71,7 +68,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	}
 
 	if a.isOverride(search) {
-		return a.overrideResponse(ctx, webhook.Member.User.ID, search, caption)
+		return a.overrideResponse(webhook.Member.User.ID, search, caption)
 	}
 
 	if len(id) != 0 {
@@ -134,7 +131,7 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
 	image, err := a.unsplashApp.GetRandomImage(ctx, search)
 	if err != nil {
-		return discord.NewError(replace, err)
+		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	}
 
 	response := a.unsplashResponse(caption, image)
@@ -186,19 +183,7 @@ func (a App) unsplashResponse(caption string, image unsplash.Image) discord.Inte
 	return response
 }
 
-func (a App) overrideResponse(ctx context.Context, user, id, caption string) discord.InteractionResponse {
-	image, err := a.generateImage(ctx, a.getOverride(id), caption)
-	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
-	}
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	if err = jpeg.Encode(base64.NewEncoder(base64.StdEncoding, buffer), image, &jpeg.Options{Quality: 80}); err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to encode image: %s", err))
-	}
-
+func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
 	response := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
 	response.Data.AllowedMentions = discord.AllowedMention{
 		Parse: []string{},
@@ -207,7 +192,7 @@ func (a App) overrideResponse(ctx context.Context, user, id, caption string) dis
 		{
 			Title: id,
 			Image: discord.Image{
-				URL: fmt.Sprintf("data:image/jpeg;base64,%s", buffer.Bytes()),
+				URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)),
 			},
 		},
 	}
