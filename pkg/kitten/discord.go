@@ -131,7 +131,7 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
 	image, err := a.unsplashApp.GetRandomImage(ctx, search)
 	if err != nil {
-		return discord.NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
+		return discord.NewError(replace, err)
 	}
 
 	response := a.unsplashResponse(caption, image)

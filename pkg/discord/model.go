@@ -1,5 +1,7 @@
 package discord
 
+import "fmt"
+
 type interactionType uint
 
 const (
@@ -82,6 +84,11 @@ type InteractionResponse struct {
 		Flags           int            `json:"flags"`
 	} `json:"data,omitempty"`
 	Type callbackType `json:"type,omitempty"`
+}
+
+// NewError creates an error response
+func NewError(replace bool, err error) InteractionResponse {
+	return NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 }
 
 // NewEphemeral creates an ephemeral response
