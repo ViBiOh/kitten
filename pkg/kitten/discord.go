@@ -86,7 +86,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 
 	if len(search) != 0 {
 		return discord.AsyncResponse(replace, true), func() discord.InteractionResponse {
-			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
+			return a.handleSearch(webhook.Token, search, caption, replace)
 		}
 	}
 
@@ -134,8 +134,8 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	return
 }
 
-func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
-	image, err := a.unsplashApp.GetRandomImage(ctx, search)
+func (a App) handleSearch(interactionToken, search, caption string, replace bool) discord.InteractionResponse {
+	image, err := a.unsplashApp.GetRandomImage(context.Background(), search)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
