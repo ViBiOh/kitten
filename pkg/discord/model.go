@@ -163,6 +163,13 @@ type Image struct {
 	URL string `json:"url,omitempty"`
 }
 
+// NewImage create an image
+func NewImage(url string) Image {
+	return Image{
+		URL: url,
+	}
+}
+
 // Author content
 type Author struct {
 	Name string `json:"name,omitempty"`

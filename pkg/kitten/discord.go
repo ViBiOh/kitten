@@ -162,32 +162,20 @@ func (a App) memeResponse(user, caption string, image unsplash.Image) discord.In
 }
 
 func (a App) unsplashResponse(caption string, image unsplash.Image) discord.InteractionResponse {
-	response := discord.InteractionResponse{Type: discord.ChannelMessageWithSource}
-	response.Data.AllowedMentions = discord.AllowedMentions{
-		Parse: []string{},
-	}
-	response.Data.Embeds = []discord.Embed{
-		{
-			Title: "Unsplash image",
-			URL:   image.URL,
-			Image: discord.Image{
-				URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption)),
-			},
-			Author: discord.Author{
-				Name: image.Author,
-				URL:  image.AuthorURL,
-			},
+	return discord.NewResponse(discord.ChannelMessageWithSource, "").AddEmbed(discord.Embed{
+		Title: "Unsplash image",
+		URL:   image.URL,
+		Image: discord.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(image.ID), url.QueryEscape(caption))),
+		Author: discord.Author{
+			Name: image.Author,
+			URL:  image.AuthorURL,
 		},
-	}
-
-	return response
+	})
 }
 
 func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
 	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).AddEmbed(discord.Embed{
 		Title: id,
-		Image: discord.Image{
-			URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)),
-		},
+		Image: discord.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption))),
 	})
 }
