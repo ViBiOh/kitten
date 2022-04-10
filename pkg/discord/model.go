@@ -12,14 +12,19 @@ const (
 	MessageComponentInteraction interactionType = 3
 )
 
-type callbackType uint
+// InteractionCallbackType defines types of possible answer
+type InteractionCallbackType uint
 
 const (
-	pongCallback callbackType = 1
-	// ChannelMessageWithSourceCallback answer to user
-	ChannelMessageWithSourceCallback callbackType = 4
+	pongCallback InteractionCallbackType = 1
+	// ChannelMessageWithSource answer
+	ChannelMessageWithSource InteractionCallbackType = 4
+	// DeferredChannelMessageWithSource deferred answer
+	DeferredChannelMessageWithSource InteractionCallbackType = 5
+	// DeferredUpdateMessage deferred in-place
+	DeferredUpdateMessage InteractionCallbackType = 6
 	// UpdateMessageCallback in place
-	UpdateMessageCallback callbackType = 7
+	UpdateMessageCallback InteractionCallbackType = 7
 )
 
 type componentType uint
@@ -77,13 +82,54 @@ type Member struct {
 // InteractionResponse for responding to user
 type InteractionResponse struct {
 	Data struct {
-		Content         string         `json:"content,omitempty"`
-		AllowedMentions AllowedMention `json:"allowed_mentions"`
-		Embeds          []Embed        `json:"embeds"`
-		Components      []Component    `json:"components"`
-		Flags           int            `json:"flags"`
+		Content         string          `json:"content,omitempty"`
+		AllowedMentions AllowedMentions `json:"allowed_mentions"`
+		Embeds          []Embed         `json:"embeds"`
+		Components      []Component     `json:"components"`
+		Flags           int             `json:"flags"`
 	} `json:"data,omitempty"`
-	Type callbackType `json:"type,omitempty"`
+	Type InteractionCallbackType `json:"type,omitempty"`
+}
+
+// NewResponse creates a response
+func NewResponse(iType InteractionCallbackType, content string) InteractionResponse {
+	resp := InteractionResponse{
+		Type: iType,
+	}
+	resp.Data.Content = content
+	resp.Data.AllowedMentions = AllowedMentions{
+		Parse: []string{},
+	}
+
+	return resp
+}
+
+// AddEmbed add givenembed to response
+func (i InteractionResponse) AddEmbed(embed Embed) InteractionResponse {
+	if i.Data.Embeds == nil {
+		i.Data.Embeds = []Embed{embed}
+	} else {
+		i.Data.Embeds = append(i.Data.Embeds, embed)
+	}
+
+	return i
+}
+
+// AsyncResponse to the user
+func (a App) AsyncResponse(replace, ephemeral bool) InteractionResponse {
+	response := InteractionResponse{
+		Type: DeferredChannelMessageWithSource,
+	}
+
+	if replace {
+		response.Type = DeferredUpdateMessage
+	}
+
+	if ephemeral {
+		response.Data.Flags = EphemeralMessage
+	}
+
+	return response
 }
 
 // NewError creates an error response
@@ -93,7 +139,7 @@ func NewError(replace bool, err error) InteractionResponse {
 
 // NewEphemeral creates an ephemeral response
 func NewEphemeral(replace bool, content string) InteractionResponse {
-	callback := ChannelMessageWithSourceCallback
+	callback := ChannelMessageWithSource
 	if replace {
 		callback = UpdateMessageCallback
 	}
@@ -107,8 +153,8 @@ func NewEphemeral(replace bool, content string) InteractionResponse {
 	return instance
 }
 
-// AllowedMention list
-type AllowedMention struct {
+// AllowedMentions list
+type AllowedMentions struct {
 	Parse []string `json:"parse"`
 }
 

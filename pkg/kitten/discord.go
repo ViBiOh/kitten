@@ -61,30 +61,30 @@ var Commands = map[string]discord.Command{
 }
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) discord.InteractionResponse {
+func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func() discord.InteractionResponse) {
 	replace, id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
-		return discord.NewEphemeral(replace, err.Error())
+		return discord.NewError(replace, err), nil
 	}
 
 	if a.isOverride(search) {
-		return a.overrideResponse(webhook.Member.User.ID, search, caption)
+		return a.overrideResponse(webhook.Member.User.ID, search, caption), nil
 	}
 
 	if len(id) != 0 {
 		image, err := a.unsplashApp.GetImage(ctx, id)
 		if err != nil {
-			return discord.NewEphemeral(replace, err.Error())
+			return discord.NewError(replace, err), nil
 		}
 
-		return a.memeResponse(webhook.Member.User.ID, caption, image)
+		return a.memeResponse(webhook.Member.User.ID, caption, image), nil
 	}
 
 	if len(search) != 0 {
-		return a.handleSearch(ctx, webhook.Token, search, caption, replace)
+		return a.handleSearch(ctx, webhook.Token, search, caption, replace), nil
 	}
 
-	return discord.NewEphemeral(replace, "Ok, not now.")
+	return discord.NewEphemeral(replace, "Ok, not now."), nil
 }
 
 func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
@@ -162,8 +162,8 @@ func (a App) memeResponse(user, caption string, image unsplash.Image) discord.In
 }
 
 func (a App) unsplashResponse(caption string, image unsplash.Image) discord.InteractionResponse {
-	response := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
-	response.Data.AllowedMentions = discord.AllowedMention{
+	response := discord.InteractionResponse{Type: discord.ChannelMessageWithSource}
+	response.Data.AllowedMentions = discord.AllowedMentions{
 		Parse: []string{},
 	}
 	response.Data.Embeds = []discord.Embed{
@@ -184,19 +184,10 @@ func (a App) unsplashResponse(caption string, image unsplash.Image) discord.Inte
 }
 
 func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
-	response := discord.InteractionResponse{Type: discord.ChannelMessageWithSourceCallback}
-	response.Data.AllowedMentions = discord.AllowedMention{
-		Parse: []string{},
-	}
-	response.Data.Embeds = []discord.Embed{
-		{
-			Title: id,
-			Image: discord.Image{
-				URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)),
-			},
+	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).AddEmbed(discord.Embed{
+		Title: id,
+		Image: discord.Image{
+			URL: fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)),
 		},
-	}
-	response.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
-
-	return response
+	})
 }

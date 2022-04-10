@@ -20,7 +20,7 @@ import (
 )
 
 // OnMessage handle message event
-type OnMessage func(context.Context, InteractionRequest) InteractionResponse
+type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, func() InteractionResponse)
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
 
@@ -136,5 +136,22 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, a.handler(r.Context(), message))
+	response, asyncFn := a.handler(r.Context(), message)
+
+	httpjson.Write(w, http.StatusOK, response)
+	if asyncFn != nil {
+		go func() {
+			deferredResponse := asyncFn()
+
+			resp, err := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token)).JSON(context.Background(), deferredResponse.Data)
+			if err != nil {
+				logger.Error("unable to send async response: %s", err)
+				return
+			}
+
+			if err = request.DiscardBody(resp.Body); err != nil {
+				logger.Error("unable to discard async body: %s", err)
+			}
+		}()
+	}
 }
