@@ -1,5 +1,7 @@
 package discord
 
+import "fmt"
+
 type interactionType uint
 
 const (
@@ -98,6 +100,11 @@ func NewEphemeral(replace bool, content string) InteractionResponse {
 	instance.Data.Components = []Component{}
 
 	return instance
+}
+
+// NewError create an ephemeral response
+func NewError(replace bool, err error) InteractionResponse {
+	return NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 }
 
 // AllowedMention list
