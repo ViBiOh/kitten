@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"image/jpeg"
 	"net/url"
@@ -213,9 +212,6 @@ func (a App) overrideResponse(ctx context.Context, user, id, caption string) dis
 		},
 	}
 	response.Data.Content = fmt.Sprintf("<@!%s> shares a meme", user)
-
-	payload, _ := json.Marshal(response)
-	fmt.Printf("%s", payload)
 
 	return response
 }
