@@ -42,7 +42,6 @@ oauth_config:
   scopes:
     bot:
       - commands
-      - files:write
 settings:
   interactivity:
     is_enabled: true
