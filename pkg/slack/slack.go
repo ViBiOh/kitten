@@ -188,6 +188,8 @@ func writeMultipart(file File) func(*multipart.Writer) error {
 			return err
 		}
 
+		logger.Info("Uploading `%s` with file `%s` to channel `%s`", file.InitialComment, file.Filepath, file.Channels)
+
 		if err := addAttachment(mw, file); err != nil {
 			return err
 		}
@@ -197,7 +199,7 @@ func writeMultipart(file File) func(*multipart.Writer) error {
 }
 
 func addAttachment(mw *multipart.Writer, file File) error {
-	partWriter, err := mw.CreateFormFile("file", file.Filename)
+	partWriter, err := mw.CreateFormField("file")
 	if err != nil {
 		return fmt.Errorf("unable to create file part: %s", err)
 	}
