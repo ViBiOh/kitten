@@ -3,7 +3,6 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/ViBiOh/kitten/pkg/discord"
@@ -69,7 +68,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 
 	if a.isOverride(search) {
 		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.overrideResponse(webhook.Member.User.ID, search, caption)
+			return a.getDiscordOverrideResponse(ctx, webhook.Member.User.ID, search, caption)
 		}
 	}
 
@@ -80,13 +79,13 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 		}
 
 		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.unsplashResponse(fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
 		}
 	}
 
 	if len(search) != 0 {
 		return discord.AsyncResponse(replace, true), func() discord.InteractionResponse {
-			return a.handleSearch(webhook.Token, search, caption, replace)
+			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
 		}
 	}
 
@@ -134,13 +133,13 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	return
 }
 
-func (a App) handleSearch(interactionToken, search, caption string, replace bool) discord.InteractionResponse {
-	image, err := a.unsplashApp.GetRandomImage(context.Background(), search)
+func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
+	image, err := a.unsplashApp.GetRandomImage(ctx, search)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
 
-	response := a.unsplashResponse("", true, image, caption)
+	response := a.getDiscordUnsplashResponse(ctx, "", true, image, caption)
 	if replace {
 		response.Type = discord.UpdateMessageCallback
 	}
@@ -159,8 +158,8 @@ func (a App) handleSearch(interactionToken, search, caption string, replace bool
 	return response
 }
 
-func (a App) unsplashResponse(content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreImage(image.ID, image.Raw, caption)
+func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
+	imagePath, size, err := a.generateAndStoreImage(ctx, image.ID, image.Raw, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
 	}
@@ -179,8 +178,8 @@ func (a App) unsplashResponse(content string, ephemeral bool, image unsplash.Ima
 	})
 }
 
-func (a App) overrideResponse(user, id, caption string) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreImage(id, a.getOverride(id), caption)
+func (a App) getDiscordOverrideResponse(ctx context.Context, user, id, caption string) discord.InteractionResponse {
+	imagePath, size, err := a.generateAndStoreImage(ctx, id, a.getOverride(id), caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
 	}
@@ -190,29 +189,4 @@ func (a App) overrideResponse(user, id, caption string) discord.InteractionRespo
 			Title: id,
 			Image: discord.NewImage("attachment://image.jpeg"),
 		}).AddAttachment("image.jpeg", imagePath, size)
-}
-
-func (a App) generateAndStoreImage(id, from, caption string) (string, int64, error) {
-	imagePath := a.getCacheFilename(id, caption)
-
-	info, err := os.Stat(imagePath)
-	if err != nil && !os.IsNotExist(err) {
-		return "", 0, err
-	}
-
-	if info == nil {
-		image, err := a.generateImage(context.Background(), from, caption)
-		if err != nil {
-			return "", 0, fmt.Errorf("unable to generate image: %s", err)
-		}
-
-		a.storeInCache(id, caption, image)
-
-		info, err = os.Stat(imagePath)
-		if err != nil {
-			return "", 0, fmt.Errorf("unable to get image info: %s", err)
-		}
-	}
-
-	return imagePath, info.Size(), nil
 }

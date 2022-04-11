@@ -2,6 +2,7 @@ package kitten
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -51,4 +52,29 @@ func (a App) storeInCache(id, caption string, image image.Image) {
 
 func (a App) getCacheFilename(id, caption string) string {
 	return filepath.Join(a.tmpFolder, sha.New(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
+}
+
+func (a App) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
+	imagePath := a.getCacheFilename(id, caption)
+
+	info, err := os.Stat(imagePath)
+	if err != nil && !os.IsNotExist(err) {
+		return "", 0, err
+	}
+
+	if info == nil {
+		image, err := a.generateImage(ctx, from, caption)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to generate image: %s", err)
+		}
+
+		a.storeInCache(id, caption, image)
+
+		info, err = os.Stat(imagePath)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to get image info: %s", err)
+		}
+	}
+
+	return imagePath, info.Size(), nil
 }

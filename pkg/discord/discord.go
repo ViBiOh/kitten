@@ -141,10 +141,11 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, asyncFn := a.handler(r.Context(), message)
-
 	httpjson.Write(w, http.StatusOK, response)
+
 	if asyncFn != nil {
 		go func() {
+			ctx := context.Background()
 			deferredResponse := asyncFn()
 
 			req := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token))
@@ -152,9 +153,9 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			var resp *http.Response
 			var err error
 			if len(deferredResponse.Data.Attachments) > 0 {
-				resp, err = req.Multipart(context.Background(), writeMultipart(deferredResponse.Data))
+				resp, err = req.Multipart(ctx, writeMultipart(deferredResponse.Data))
 			} else {
-				resp, err = req.JSON(context.Background(), deferredResponse.Data)
+				resp, err = req.JSON(ctx, deferredResponse.Data)
 			}
 
 			if err != nil {
