@@ -11,9 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -43,7 +41,6 @@ type Config struct {
 type App struct {
 	onCommand  CommandHandler
 	onInteract InteractHandler
-	slackReq   request.Request
 
 	clientID      string
 	clientSecret  string
@@ -56,7 +53,6 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		clientID:      flags.String(fs, prefix, "slack", "ClientID", "ClientID", "", overrides),
 		clientSecret:  flags.String(fs, prefix, "slack", "ClientSecret", "ClientSecret", "", overrides),
 		signingSecret: flags.String(fs, prefix, "slack", "SigningSecret", "Signing secret", "", overrides),
-		accessToken:   flags.String(fs, prefix, "slack", "AccessToken", "Bot Access Token (begin with xoxb-)", "", overrides),
 	}
 }
 
@@ -65,7 +61,6 @@ func New(config Config, command CommandHandler, interact InteractHandler) App {
 	return App{
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
-		slackReq:      request.Post("https://slack.com/api/").Header("Authorization", fmt.Sprintf("Bearer %s", strings.TrimSpace(*config.accessToken))),
 		signingSecret: []byte(*config.signingSecret),
 
 		onCommand:  command,
@@ -166,57 +161,5 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
 			logger.Error("unable to discard interact body on response_url: %s", err)
 		}
-
-		if slackResponse.File != nil {
-			resp, err := a.slackReq.Path("files.upload").Multipart(ctx, writeMultipart(*slackResponse.File))
-			if err != nil {
-				logger.Error("unable to upload file: %s", err)
-			} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-				logger.Error("unable to discard file upload body: %s", err)
-			}
-		}
 	}()
-}
-
-func writeMultipart(file File) func(*multipart.Writer) error {
-	return func(mw *multipart.Writer) error {
-		if err := mw.WriteField("initial_comment", file.InitialComment); err != nil {
-			return err
-		}
-
-		if err := mw.WriteField("channels", strings.Join(file.Channels, ",")); err != nil {
-			return err
-		}
-
-		if err := addAttachment(mw, file); err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
-func addAttachment(mw *multipart.Writer, file File) error {
-	partWriter, err := mw.CreateFormField("file")
-	if err != nil {
-		return fmt.Errorf("unable to create file part: %s", err)
-	}
-
-	var fileReader io.ReadCloser
-	fileReader, err = os.Open(file.Filepath)
-	if err != nil {
-		return fmt.Errorf("unable to open file part: %s", err)
-	}
-
-	defer func() {
-		if closeErr := fileReader.Close(); closeErr != nil {
-			logger.Error("unable to close file part: %s", closeErr)
-		}
-	}()
-
-	if _, err = io.Copy(partWriter, fileReader); err != nil {
-		return fmt.Errorf("unable to copy file part: %s", err)
-	}
-
-	return nil
 }

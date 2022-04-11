@@ -101,17 +101,8 @@ func NewSection(text Text, accessory *Accessory) Block {
 	}
 }
 
-// File file for upload
-type File struct {
-	Channels       []string
-	Filename       string
-	Filepath       string
-	InitialComment string
-}
-
 // Response response content
 type Response struct {
-	File            *File   `json:"-"`
 	ResponseType    string  `json:"response_type,omitempty"`
 	Text            string  `json:"text,omitempty"`
 	Blocks          []Block `json:"blocks,omitempty"`
