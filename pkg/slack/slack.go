@@ -24,10 +24,10 @@ import (
 )
 
 // CommandHandler for handling when user send a slash command
-type CommandHandler func(context.Context, InteractivePayload) Response
+type CommandHandler func(context.Context, SlashPayload) Response
 
 // InteractHandler for handling when user interact with a button
-type InteractHandler func(context.Context, string, []InteractiveAction) Response
+type InteractHandler func(context.Context, InteractivePayload) Response
 
 // Config of package
 type Config struct {
@@ -92,7 +92,7 @@ func (a App) Handler() http.Handler {
 			if r.URL.Path == "/interactive" {
 				a.handleInteract(w, r)
 			} else {
-				payload := InteractivePayload{
+				payload := SlashPayload{
 					ChannelID:   r.FormValue("channel_id"),
 					Command:     strings.TrimPrefix(r.FormValue("command"), "/"),
 					ResponseURL: r.FormValue("response_url"),
@@ -146,7 +146,7 @@ func (a App) checkSignature(r *http.Request) bool {
 }
 
 func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
-	var payload Interactive
+	var payload InteractivePayload
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
 		httpjson.Write(w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
 		return
@@ -154,7 +154,7 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	resp, err := request.Post(payload.ResponseURL).JSON(context.Background(), a.onInteract(r.Context(), payload.User.ID, payload.Actions))
+	resp, err := request.Post(payload.ResponseURL).JSON(context.Background(), a.onInteract(r.Context(), payload))
 	if err != nil {
 		logger.Error("unable to send interact on response_url: %s", err)
 	} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {

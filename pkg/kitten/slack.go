@@ -23,7 +23,7 @@ var (
 )
 
 // SlackCommand handler
-func (a App) SlackCommand(ctx context.Context, payload slack.InteractivePayload) slack.Response {
+func (a App) SlackCommand(ctx context.Context, payload slack.SlashPayload) slack.Response {
 	if len(payload.Text) == 0 {
 		return slack.NewEphemeralMessage("You must provide a caption")
 	}
@@ -75,8 +75,14 @@ func (a App) getSlackInteractResponse(id, search, caption string) slack.Response
 }
 
 // SlackInteract handler
-func (a App) SlackInteract(ctx context.Context, user string, actions []slack.InteractiveAction) slack.Response {
-	action := actions[0]
+func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload) slack.Response {
+	if len(payload.Actions) == 0 {
+		return slack.NewEphemeralMessage("No action provided")
+	}
+
+	fmt.Println(payload.Container.ChannelID)
+
+	action := payload.Actions[0]
 	if action.ActionID == cancelValue {
 		return slack.NewEphemeralMessage("Ok, not now.")
 	}
@@ -93,7 +99,7 @@ func (a App) SlackInteract(ctx context.Context, user string, actions []slack.Int
 			}
 		}
 
-		return a.getSlackResponse(image, action.BlockID, caption, user)
+		return a.getSlackResponse(image, action.BlockID, caption, payload.User.ID)
 	}
 
 	if action.ActionID == nextValue {
