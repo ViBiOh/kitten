@@ -47,7 +47,7 @@ func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.R
 	if a.isOverride(search) {
 		id = search
 	} else if image, err := a.unsplashApp.GetRandomImage(ctx, search); err != nil {
-		return slack.NewError(err)
+		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	} else {
 		id = image.ID
 	}
@@ -80,6 +80,8 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 		return slack.NewEphemeralMessage("No action provided")
 	}
 
+	fmt.Println(payload.Container.ChannelID)
+
 	action := payload.Actions[0]
 	if action.ActionID == cancelValue {
 		return slack.NewEphemeralMessage("Ok, not now.")
@@ -88,16 +90,16 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 	if action.ActionID == sendValue {
 		id, caption := parseBlockID(action.Value)
 
-		if a.isOverride(id) {
-			return a.getSlackOverrideResponse(ctx, id, caption, payload.User.ID, payload.Container.ChannelID)
+		var image unsplash.Image
+		var err error
+		if !a.isOverride(id) {
+			image, err = a.unsplashApp.GetImage(ctx, id)
+			if err != nil {
+				return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
+			}
 		}
 
-		image, err := a.unsplashApp.GetImage(ctx, id)
-		if err != nil {
-			return slack.NewError(err)
-		}
-
-		return a.getSlackUnsplashResponse(ctx, image, caption, payload.User.ID, payload.Container.ChannelID)
+		return a.getSlackResponse(image, action.BlockID, caption, payload.User.ID)
 	}
 
 	if action.ActionID == nextValue {
@@ -107,38 +109,23 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getSlackUnsplashResponse(ctx context.Context, image unsplash.Image, caption, user, channelID string) slack.Response {
-	imagePath, _, err := a.generateAndStoreImage(ctx, image.ID, image.Raw, caption)
-	if err != nil {
-		return slack.NewError(fmt.Errorf("unable to generate image: %s", err))
-	}
-
+func (a App) getSlackResponse(image unsplash.Image, search, caption, user string) slack.Response {
 	return slack.Response{
+		ResponseType:   "in_channel",
 		DeleteOriginal: true,
-		File: &slack.File{
-			Channels:       []string{channelID},
-			Filename:       "image.jpeg",
-			Filepath:       imagePath,
-			InitialComment: fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL),
+		Blocks: []slack.Block{
+			a.getSlackTitle(image, user, search),
+			a.getMemeContent(image.ID, caption),
 		},
 	}
 }
 
-func (a App) getSlackOverrideResponse(ctx context.Context, id, caption, user, channelID string) slack.Response {
-	imagePath, _, err := a.generateAndStoreImage(ctx, id, a.getOverride(id), caption)
-	if err != nil {
-		return slack.NewError(fmt.Errorf("unable to generate image: %s", err))
+func (a App) getSlackTitle(image unsplash.Image, user, search string) slack.Block {
+	if a.isOverride(search) {
+		return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil)
 	}
 
-	return slack.Response{
-		DeleteOriginal: true,
-		File: &slack.File{
-			Channels:       []string{channelID},
-			Filename:       "image.jpeg",
-			Filepath:       imagePath,
-			InitialComment: fmt.Sprintf("<@%s> shares a meme", user),
-		},
-	}
+	return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil)
 }
 
 func (a App) getMemeContent(id, caption string) *slack.Accessory {
