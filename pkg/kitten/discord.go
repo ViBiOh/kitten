@@ -79,13 +79,13 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 		}
 
 		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+			return a.getDiscordUnsplashResponse(context.Background(), fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
 		}
 	}
 
 	if len(search) != 0 {
 		return discord.AsyncResponse(replace, true), func() discord.InteractionResponse {
-			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
+			return a.handleSearch(context.Background(), webhook.Token, search, caption, replace)
 		}
 	}
 
