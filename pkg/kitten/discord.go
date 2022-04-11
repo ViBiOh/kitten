@@ -68,7 +68,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 
 	if a.isOverride(search) {
 		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.getDiscordOverrideResponse(ctx, webhook.Member.User.ID, search, caption)
+			return a.getDiscordOverrideResponse(context.Background(), webhook.Member.User.ID, search, caption)
 		}
 	}
 
