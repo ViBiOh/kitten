@@ -60,15 +60,15 @@ var Commands = map[string]discord.Command{
 }
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func() discord.InteractionResponse) {
+func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
 	replace, id, search, caption, err := a.parseQuery(webhook)
 	if err != nil {
 		return discord.NewError(replace, err), nil
 	}
 
 	if a.isOverride(search) {
-		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.getDiscordOverrideResponse(context.Background(), webhook.Member.User.ID, search, caption)
+		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+			return a.getDiscordOverrideResponse(ctx, webhook.Member.User.ID, search, caption)
 		}
 	}
 
@@ -78,14 +78,14 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 			return discord.NewError(replace, err), nil
 		}
 
-		return discord.AsyncResponse(false, false), func() discord.InteractionResponse {
-			return a.getDiscordUnsplashResponse(context.Background(), fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
 		}
 	}
 
 	if len(search) != 0 {
-		return discord.AsyncResponse(replace, true), func() discord.InteractionResponse {
-			return a.handleSearch(context.Background(), webhook.Token, search, caption, replace)
+		return discord.AsyncResponse(replace, true), func(ctx context.Context) discord.InteractionResponse {
+			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
 		}
 	}
 

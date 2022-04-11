@@ -24,7 +24,7 @@ import (
 )
 
 // OnMessage handle message event
-type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, func() InteractionResponse)
+type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, func(context.Context) InteractionResponse)
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
 
@@ -146,7 +146,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	if asyncFn != nil {
 		go func() {
 			ctx := context.Background()
-			deferredResponse := asyncFn()
+			deferredResponse := asyncFn(ctx)
 
 			req := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token))
 
