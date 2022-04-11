@@ -188,8 +188,6 @@ func writeMultipart(file File) func(*multipart.Writer) error {
 			return err
 		}
 
-		logger.Info("Uploading `%s` with file `%s` to channel `%s`", file.InitialComment, file.Filepath, file.Channels)
-
 		if err := addAttachment(mw, file); err != nil {
 			return err
 		}
