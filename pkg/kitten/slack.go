@@ -80,8 +80,6 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 		return slack.NewEphemeralMessage("No action provided")
 	}
 
-	fmt.Println(payload.Container.ChannelID)
-
 	action := payload.Actions[0]
 	if action.ActionID == cancelValue {
 		return slack.NewEphemeralMessage("Ok, not now.")
@@ -98,7 +96,7 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 			return slack.NewError(err)
 		}
 
-		return a.getSlackResponse(image, action.BlockID, caption, payload.User.ID)
+		return a.getSlackResponse(image, caption, payload.User.ID)
 	}
 
 	if action.ActionID == nextValue {
@@ -108,7 +106,7 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getSlackResponse(image unsplash.Image, search, caption, user string) slack.Response {
+func (a App) getSlackResponse(image unsplash.Image, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
