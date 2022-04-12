@@ -33,18 +33,35 @@ func (a App) Start(commands map[string]Command) error {
 	}
 
 	bearer := content["access_token"].(string)
-	url := fmt.Sprintf("/applications/%s/commands", a.applicationID)
+	rootURL := fmt.Sprintf("/applications/%s", a.applicationID)
 
 	for name, command := range commands {
-		logger.WithField("command", name).Info("Configuring with URL `%s`", url)
+		for _, url := range getRegisterURLs(command) {
+			url := rootURL + url
+			logger.WithField("command", name).Info("Configuring with URL `%s`", url)
 
-		_, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).JSON(ctx, command)
-		if err != nil {
-			return fmt.Errorf("unable to configure `%s` command: %s", name, err)
+			_, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).JSON(ctx, command)
+			if err != nil {
+				return fmt.Errorf("unable to configure `%s` command: %s", name, err)
+			}
 		}
 
 		logger.Info("Command `%s` configured!", name)
 	}
 
 	return nil
+}
+
+func getRegisterURLs(command Command) []string {
+	if len(command.Guilds) == 0 {
+		return []string{"/commands"}
+	}
+
+	urls := make([]string, len(command.Guilds))
+
+	for i, guild := range command.Guilds {
+		urls[i] = fmt.Sprintf("/guilds/%s/commands", guild)
+	}
+
+	return urls
 }

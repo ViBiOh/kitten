@@ -202,7 +202,7 @@ func NewAuthor(name, url string) *Author {
 
 // Embed of content
 type Embed struct {
-	Thumbnail   *Embed  `json:"thumbnail,omitempty"`
+	Thumbnail   *Image  `json:"thumbnail,omitempty"`
 	Image       *Image  `json:"image,omitempty"`
 	Author      *Author `json:"author,omitempty"`
 	Title       string  `json:"title,omitempty"`
@@ -277,6 +277,7 @@ type Command struct {
 	Name        string          `json:"name,omitempty"`
 	Description string          `json:"description,omitempty"`
 	Options     []CommandOption `json:"options,omitempty"`
+	Guilds      []string        `json:"-"`
 }
 
 // CommandOption configuration option
