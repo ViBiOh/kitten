@@ -89,14 +89,13 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 
 	if action.ActionID == sendValue {
 		id, caption := parseBlockID(action.Value)
+		if a.isOverride(id) {
+			return a.getSlackOverrideResponse(id, caption, payload.User.ID)
+		}
 
-		var image unsplash.Image
-		var err error
-		if !a.isOverride(id) {
-			image, err = a.unsplashApp.GetImage(ctx, id)
-			if err != nil {
-				return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
-			}
+		image, err := a.unsplashApp.GetImage(ctx, id)
+		if err != nil {
+			return slack.NewError(err)
 		}
 
 		return a.getSlackResponse(image, action.BlockID, caption, payload.User.ID)
@@ -114,18 +113,21 @@ func (a App) getSlackResponse(image unsplash.Image, search, caption, user string
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			a.getSlackTitle(image, user, search),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
 			a.getMemeContent(image.ID, caption),
 		},
 	}
 }
 
-func (a App) getSlackTitle(image unsplash.Image, user, search string) slack.Block {
-	if a.isOverride(search) {
-		return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil)
+func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
+	return slack.Response{
+		ResponseType:   "in_channel",
+		DeleteOriginal: true,
+		Blocks: []slack.Block{
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil),
+			a.getMemeContent(id, caption),
+		},
 	}
-
-	return slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil)
 }
 
 func (a App) getMemeContent(id, caption string) *slack.Accessory {
