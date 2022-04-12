@@ -25,7 +25,7 @@ spec:
     nameOverride: kitten-discord
     image:
       name: vibioh/kitten
-      tag: "202204120741" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202204122029" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     command:
     - /discord
     config:
