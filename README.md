@@ -122,8 +122,6 @@ Usage of kitten:
         [redis] Redis Username, if any {KITTEN_REDIS_USERNAME}
   -shutdownTimeout string
         [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default "10s")
-  -slackAccessToken string
-        [slack] Bot Access Token (begin with xoxb-) {KITTEN_SLACK_ACCESS_TOKEN}
   -slackClientID string
         [slack] ClientID {KITTEN_SLACK_CLIENT_ID}
   -slackClientSecret string
