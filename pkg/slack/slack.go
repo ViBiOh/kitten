@@ -39,6 +39,7 @@ type Config struct {
 
 // App of package
 type App struct {
+	db         Database
 	onCommand  CommandHandler
 	onInteract InteractHandler
 
@@ -57,8 +58,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, command CommandHandler, interact InteractHandler) App {
+func New(config Config, db Database, command CommandHandler, interact InteractHandler) App {
 	return App{
+		db: db,
+
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
 		signingSecret: []byte(*config.signingSecret),

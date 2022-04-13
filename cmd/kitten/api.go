@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -14,6 +15,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
 	"github.com/ViBiOh/httputils/v4/pkg/cors"
+	"github.com/ViBiOh/httputils/v4/pkg/db"
 	"github.com/ViBiOh/httputils/v4/pkg/health"
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -54,6 +56,7 @@ func main() {
 	owaspConfig := owasp.Flags(fs, "", flags.NewOverride("Csp", "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com"))
 	corsConfig := cors.Flags(fs, "cors")
 
+	dbConfig := db.Flags(fs, "db")
 	redisConfig := redis.Flags(fs, "redis")
 
 	kittenConfig := kitten.Flags(fs, "")
@@ -77,6 +80,12 @@ func main() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
+	dbApp, err := db.New(dbConfig, tracerApp)
+	if !errors.Is(err, db.ErrNoHost) {
+		logger.Fatal(err)
+	}
+	defer dbApp.Close()
+
 	appServer := server.New(appServerConfig)
 	promServer := server.New(promServerConfig)
 	prometheusApp := prometheus.New(prometheusConfig)
@@ -95,7 +104,7 @@ func main() {
 	logger.Fatal(err)
 
 	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract).Handler())
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, dbApp, kittenApp.SlackCommand, kittenApp.SlackInteract).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
