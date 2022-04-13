@@ -90,12 +90,13 @@ func (a App) Handler() http.Handler {
 				a.handleInteract(w, r)
 			} else {
 				payload := SlashPayload{
-					ChannelID:   r.FormValue("channel_id"),
-					Command:     strings.TrimPrefix(r.FormValue("command"), "/"),
-					ResponseURL: r.FormValue("response_url"),
-					Text:        r.FormValue("text"),
-					Token:       r.FormValue("token"),
-					UserID:      r.FormValue("user_id"),
+					EntrepriseID: r.FormValue("enterprise_id"),
+					TeamID:       r.FormValue("team_id"),
+					ChannelID:    r.FormValue("channel_id"),
+					Command:      strings.TrimPrefix(r.FormValue("command"), "/"),
+					ResponseURL:  r.FormValue("response_url"),
+					Text:         r.FormValue("text"),
+					UserID:       r.FormValue("user_id"),
 				}
 
 				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), payload))

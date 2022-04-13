@@ -112,12 +112,13 @@ type Response struct {
 
 // SlashPayload receives by a slash command
 type SlashPayload struct {
-	ChannelID   string `json:"channel_id"`
-	Command     string `json:"command"`
-	ResponseURL string `json:"response_url"`
-	Text        string `json:"text"`
-	Token       string `json:"token"`
-	UserID      string `json:"user_id"`
+	EntrepriseID string `json:"enterprise_id"`
+	TeamID       string `json:"team_id"`
+	ChannelID    string `json:"channel_id"`
+	UserID       string `json:"user_id"`
+	Command      string `json:"command"`
+	Text         string `json:"text"`
+	ResponseURL  string `json:"response_url"`
 }
 
 // InteractiveAction response from slack
@@ -130,12 +131,15 @@ type InteractiveAction struct {
 
 // InteractivePayload response from slack
 type InteractivePayload struct {
+	Team struct {
+		ID string `json:"id"`
+	} `json:"team"`
+	Channel struct {
+		ID string `json:"id"`
+	} `json:"channel"`
 	User struct {
 		ID string `json:"id"`
 	} `json:"user"`
-	Container struct {
-		ChannelID string `json:"channel_id"`
-	} `json:"container"`
 	Type        string              `json:"type"`
 	ResponseURL string              `json:"response_url"`
 	Actions     []InteractiveAction `json:"actions"`
