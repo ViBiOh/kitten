@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ViBiOh/kitten/pkg/slack"
+	"github.com/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 

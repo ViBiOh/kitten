@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ViBiOh/kitten/pkg/discord"
+	"github.com/ViBiOh/ChatPotte/discord"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -14,50 +14,7 @@ const (
 	searchParam      = "search"
 	idParam          = "id"
 	contentSeparator = ":"
-
-	memeName       = "meme"
-	memeWithIDName = "memedi"
 )
-
-// Commands configuration
-var Commands = map[string]discord.Command{
-	memeName: {
-		Name:        memeName,
-		Description: "Generate a meme with caption from Unsplash",
-		Options: []discord.CommandOption{
-			{
-				Name:        searchParam,
-				Description: "Searched image",
-				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
-				Required:    true,
-			},
-			{
-				Name:        captionParam,
-				Description: "Caption to add",
-				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
-				Required:    true,
-			},
-		},
-	},
-	memeWithIDName: {
-		Name:        memeWithIDName,
-		Description: "Generate a meme with caption from Unsplash Image ID",
-		Options: []discord.CommandOption{
-			{
-				Name:        idParam,
-				Description: "Searched image",
-				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
-				Required:    true,
-			},
-			{
-				Name:        captionParam,
-				Description: "Caption to add",
-				Type:        3, // https://discord.com/developers/docs/interactions/slash-commands#applicationcommandoptiontype
-				Required:    true,
-			},
-		},
-	},
-}
 
 // DiscordHandler handle discord request
 func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {

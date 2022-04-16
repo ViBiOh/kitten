@@ -11,6 +11,8 @@ import (
 
 	_ "net/http/pprof"
 
+	"github.com/ViBiOh/ChatPotte/discord"
+	"github.com/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
 	"github.com/ViBiOh/httputils/v4/pkg/cors"
@@ -25,9 +27,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
-	"github.com/ViBiOh/kitten/pkg/discord"
 	"github.com/ViBiOh/kitten/pkg/kitten"
-	"github.com/ViBiOh/kitten/pkg/slack"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 

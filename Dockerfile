@@ -16,6 +16,5 @@ ARG TARGETOS
 ARG TARGETARCH
 
 COPY release/kitten_${TARGETOS}_${TARGETARCH} /kitten
-COPY release/discord_${TARGETOS}_${TARGETARCH} /discord
 
 VOLUME /tmp

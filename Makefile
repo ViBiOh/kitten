@@ -14,12 +14,6 @@ ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --
 endif
 
-DISCORD_SOURCE = cmd/discord/discord.go
-DISCORD_RUNNER = go run $(DISCORD_SOURCE)
-ifeq ($(DEBUG), true)
-	DISCORD_RUNNER = dlv debug $(DISCORD_SOURCE) --
-endif
-
 .DEFAULT_GOAL := app
 
 ## help: Display list of commands
@@ -83,7 +77,6 @@ bench:
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -ldflags="-s -w" -installsuffix nocgo -o bin/$(APP_NAME) $(MAIN_SOURCE)
-	CGO_ENABLED=0 go build -ldflags="-s -w" -installsuffix nocgo -o bin/discord $(DISCORD_SOURCE)
 
 ## run: Locally run the application, e.g. node index.js, python -m myapp, go run myapp etc ...
 .PHONY: run
