@@ -82,14 +82,14 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, tracerApp)
+	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, tracerApp.GetTracer("renderer"))
 	logger.Fatal(err)
 
 	kittenHandler := rendererApp.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp)
+	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp.GetTracer("redis"))
 	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp), prometheusApp.Registerer(), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
 	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler)
 	logger.Fatal(err)
