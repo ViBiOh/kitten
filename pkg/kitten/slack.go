@@ -111,7 +111,7 @@ func (a App) getSlackResponse(image unsplash.Image, caption, user string) slack.
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL)), nil),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> from <%s|Unsplash>", user, image.AuthorURL, image.Author, image.URL))),
 			a.getMemeContent(image.ID, caption),
 		},
 	}
@@ -122,7 +122,7 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user)), nil),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a meme", user))),
 			a.getMemeContent(id, caption),
 		},
 	}

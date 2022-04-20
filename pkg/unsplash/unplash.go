@@ -35,15 +35,15 @@ func (i Image) IsZero() bool {
 }
 
 type unsplashUser struct {
-	Name  string            `json:"name"`
 	Links map[string]string `json:"links"`
+	Name  string            `json:"name"`
 }
 
 type unsplashResponse struct {
-	ID    string            `json:"id"`
+	User  unsplashUser      `json:"user"`
 	URLs  map[string]string `json:"urls"`
 	Links map[string]string `json:"links"`
-	User  unsplashUser      `json:"user"`
+	ID    string            `json:"id"`
 }
 
 const (
@@ -59,10 +59,10 @@ var (
 
 // App of package
 type App struct {
-	unplashReq  request.Request
-	downloadReq request.Request
 	redisApp    redis.App
 	appName     string
+	unplashReq  request.Request
+	downloadReq request.Request
 }
 
 // Config of package

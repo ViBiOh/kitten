@@ -33,13 +33,13 @@ var (
 
 // App of package
 type App struct {
-	unsplashApp  unsplash.App
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
 	idsOverrides map[string]string
-	website      string
 	tmpFolder    string
+	website      string
+	unsplashApp  unsplash.App
 }
 
 // Config of package
