@@ -188,7 +188,7 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, caption, user string) slack.
 		Blocks: []slack.Block{
 			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a gif from <%s|%s>", user, image.User.ProfileURL, image.User.Username))),
 			a.getGifContent(image.ID, caption),
-			slack.NewContext().AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/powered_by_giphy.gif", a.website), "powered by giphy")),
+			slack.NewAccessory(fmt.Sprintf("%s/images/powered_by_giphy.gif", a.website), "powered by giphy"),
 		},
 	}
 }

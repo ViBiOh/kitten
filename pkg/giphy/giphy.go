@@ -44,7 +44,7 @@ func (g Gif) IsZero() bool {
 
 type user struct {
 	Username   string `json:"username"`
-	ProfileURL string `json:"url"`
+	ProfileURL string `json:"profile_url"`
 }
 
 type analytic struct {

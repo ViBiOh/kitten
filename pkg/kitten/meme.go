@@ -77,7 +77,7 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 
 	go a.giphyApp.SendAnalytics(context.Background(), giphyImage)
 
-	return a.generateGif(ctx, giphyImage.Images["fixed_width"].URL, caption)
+	return a.generateGif(ctx, giphyImage.Images["downsized"].URL, caption)
 }
 
 // GetFromURL a meme caption to the given image name from unsplash
