@@ -37,6 +37,7 @@ var content embed.FS
 
 const (
 	apiPrefix     = "/api"
+	gifPrefix     = "/gif"
 	slackPrefix   = "/slack"
 	discordPrefix = "/discord"
 )
@@ -97,12 +98,18 @@ func main() {
 	logger.Fatal(err)
 
 	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
+	gifHandler := http.StripPrefix(gifPrefix, kittenApp.GifHandler())
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, apiPrefix) {
 			apiHandler.ServeHTTP(w, r)
+			return
+		}
+
+		if strings.HasPrefix(r.URL.Path, gifPrefix) {
+			gifHandler.ServeHTTP(w, r)
 			return
 		}
 

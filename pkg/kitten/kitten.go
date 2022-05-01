@@ -72,7 +72,7 @@ func New(config Config, unsplashApp unsplash.App, giphyApp giphy.App, prometheus
 	}
 }
 
-// Handler for Hello request. Should be use with net/http
+// Handler for image request. Should be use with net/http
 func (a App) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -86,7 +86,7 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		if a.serveCached(w, id, caption) {
+		if a.serveCached(w, id, caption, false) {
 			return
 		}
 

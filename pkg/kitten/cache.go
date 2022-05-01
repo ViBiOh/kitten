@@ -15,11 +15,18 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
-	file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDONLY, 0o600)
+func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bool {
+	var filename string
+	if gif {
+		filename = a.getGifCacheFilename(id, caption)
+	} else {
+		filename = a.getCacheFilename(id, caption)
+	}
+
+	file, err := os.OpenFile(filename, os.O_RDONLY, 0o600)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			logger.Error("unable to open image from local cache: %s", err)
+			logger.Error("unable to open file from local cache: %s", err)
 		}
 
 		return false
@@ -29,11 +36,15 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string) bool {
 	defer bufferPool.Put(buffer)
 
 	w.Header().Add("Cache-Control", cacheControlDuration)
-	w.Header().Set("Content-Type", "image/jpeg")
+	if gif {
+		w.Header().Set("Content-Type", "image/gif")
+	} else {
+		w.Header().Set("Content-Type", "image/jpeg")
+	}
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
-		logger.Error("unable to write image from local cache: %s", err)
+		logger.Error("unable to write file from local cache: %s", err)
 		return false
 	}
 
