@@ -26,13 +26,20 @@ var cacheDuration = time.Hour * 24 * 7
 // Gif described from giphy API
 type Gif struct {
 	Images    map[string]image    `json:"images"`
+	User      user                `json:"user"`
 	Analytics map[string]analytic `json:"analytics"`
+	URL       string              `json:"url"`
 	ID        string              `json:"id"`
 }
 
 // IsZero checks that instance is hydrated
 func (g Gif) IsZero() bool {
 	return len(g.ID) == 0
+}
+
+type user struct {
+	Username   string `json:"username"`
+	ProfileURL string `json:"url"`
 }
 
 type analytic struct {
@@ -123,7 +130,7 @@ func (a App) Get(ctx context.Context, id string) (Gif, error) {
 
 // SendAnalytics send anonymous analytics event
 func (a App) SendAnalytics(ctx context.Context, content Gif) {
-	analyticURL, ok := content.Analytics["onload"]
+	analytic, ok := content.Analytics["onload"]
 	if !ok {
 		logger.Error("no `onload` analytics URL for giphy")
 		return
@@ -141,7 +148,7 @@ func (a App) SendAnalytics(ctx context.Context, content Gif) {
 		return
 	}
 
-	resp, err = request.Get(fmt.Sprintf("%s&api_key=%s&random_id=%s&ts=%d", analyticURL, a.apiKey, url.QueryEscape(randomID.ID), time.Now().Unix())).Send(ctx, nil)
+	resp, err = request.Get(fmt.Sprintf("%s&api_key=%s&random_id=%s&ts=%d", analytic.URL, a.apiKey, url.QueryEscape(randomID.ID), time.Now().Unix())).Send(ctx, nil)
 	if err != nil {
 		logger.Error("unable to send analytics to giphy: %s", err)
 		return
