@@ -112,7 +112,7 @@ func (a App) Search(ctx context.Context, query string) (Gif, error) {
 // Get gif by id
 func (a App) Get(ctx context.Context, id string) (Gif, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Gif, error) {
-		resp, err := a.req.Path(fmt.Sprintf("/gifs/%s", url.PathEscape(id))).Send(ctx, nil)
+		resp, err := a.req.Path(fmt.Sprintf("/gifs/%s?api_key=%s", url.PathEscape(id), a.apiKey)).Send(ctx, nil)
 		if err != nil {
 			return Gif{}, fmt.Errorf("unable to get gif `%s`: %s", id, err)
 		}

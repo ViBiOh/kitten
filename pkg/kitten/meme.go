@@ -72,7 +72,7 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 
 	giphyImage, err := a.giphyApp.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get image from unsplash: %s", err)
+		return nil, fmt.Errorf("unable to get image from giphy: %s", err)
 	}
 
 	go a.giphyApp.SendAnalytics(context.Background(), giphyImage)
