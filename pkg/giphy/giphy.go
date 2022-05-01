@@ -21,7 +21,12 @@ import (
 
 const root = "https://api.giphy.com/v1"
 
-var cacheDuration = time.Hour * 24 * 7
+var (
+	// ErrNotFound occurs when no git is found
+	ErrNotFound = errors.New("no gif found")
+
+	cacheDuration = time.Hour * 24 * 7
+)
 
 // Gif described from giphy API
 type Gif struct {
@@ -52,7 +57,15 @@ type image struct {
 	URL    string `json:"url"`
 }
 
-type randomResponse struct {
+type searchResponse struct {
+	Data []Gif `json:"data"`
+	Meta struct {
+		Message string `json:"msg"`
+		Status  uint64 `json:"uint64"`
+	} `json:"meta"`
+}
+
+type getResponse struct {
 	Data Gif `json:"data"`
 	Meta struct {
 		Message string `json:"msg"`
@@ -93,13 +106,23 @@ func New(config Config, redisApp redis.App) App {
 }
 
 // Search search from a gif from Giphy
-func (a App) Search(ctx context.Context, query string) (Gif, error) {
-	resp, err := a.req.Path(fmt.Sprintf("/random?api_key=%s&tag=%s", a.apiKey, url.QueryEscape(query))).Send(ctx, nil)
+func (a App) Search(ctx context.Context, query string, offset uint64) (Gif, error) {
+	resp, err := a.req.Path(fmt.Sprintf("/search?api_key=%s&q=%s&limit=1&offset=%d", a.apiKey, url.QueryEscape(query), offset)).Send(ctx, nil)
 	if err != nil {
-		return Gif{}, fmt.Errorf("unable to fetch random gif: %s", err)
+		return Gif{}, fmt.Errorf("unable to search gif: %s", err)
 	}
 
-	gif, err := getGifFromResponse(resp)
+	var search searchResponse
+	if err := httpjson.Read(resp, &search); err != nil {
+		return Gif{}, fmt.Errorf("unable to parse gif response: %s", err)
+	}
+
+	if len(search.Data) == 0 {
+		return Gif{}, ErrNotFound
+	}
+
+	gif := search.Data[0]
+
 	if err != nil {
 		go func() {
 			payload, err := json.Marshal(gif)
@@ -124,7 +147,16 @@ func (a App) Get(ctx context.Context, id string) (Gif, error) {
 			return Gif{}, fmt.Errorf("unable to get gif `%s`: %s", id, err)
 		}
 
-		return getGifFromResponse(resp)
+		var random getResponse
+		if err := httpjson.Read(resp, &random); err != nil {
+			return Gif{}, fmt.Errorf("unable to parse gif response: %s", err)
+		}
+
+		if random.Data.IsZero() {
+			return Gif{}, ErrNotFound
+		}
+
+		return random.Data, nil
 	}, cacheDuration)
 }
 
@@ -157,19 +189,6 @@ func (a App) SendAnalytics(ctx context.Context, content Gif) {
 	if err = request.DiscardBody(resp.Body); err != nil {
 		logger.Error("unable to discard analytics body from giphy: %s", err)
 	}
-}
-
-func getGifFromResponse(resp *http.Response) (Gif, error) {
-	var random randomResponse
-	if err := httpjson.Read(resp, &random); err != nil {
-		return Gif{}, fmt.Errorf("unable to parse gif response: %s", err)
-	}
-
-	if random.Data.IsZero() {
-		return Gif{}, errors.New("no gif found")
-	}
-
-	return random.Data, nil
 }
 
 func cacheID(id string) string {
