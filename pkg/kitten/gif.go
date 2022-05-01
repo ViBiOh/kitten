@@ -9,13 +9,16 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/concurrent"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
+	"github.com/fogleman/gg"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/image/font"
 )
 
 // GifHandler for gif request. Should be use with net/http
@@ -105,15 +108,19 @@ func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 
 	wg := concurrent.NewFailFast(8)
 
-	for i, frame := range source.Image {
-		func(i int, frame *image.Paletted) {
+	textImage, err := a.captionAlpha(ctx, source.Config.Width, source.Config.Height, text)
+	if err != nil {
+		return source, fmt.Errorf("unable to generate text layer: %s", err)
+	}
+	textImageBounds := textImage.Bounds()
+
+	for _, frame := range source.Image {
+		func(frame *image.Paletted) {
 			wg.Go(func() error {
-				img, err := a.captionImage(ctx, frame, text, true)
-				bounds := frame.Bounds()
-				draw.Draw(frame, bounds, img, bounds.Min, draw.Src)
+				draw.DrawMask(frame, textImageBounds, textImage, textImageBounds.Min, textImage, textImageBounds.Min, draw.Over)
 				return err
 			})
-		}(i, frame)
+		}(frame)
 	}
 
 	if err := wg.Wait(); err != nil {
@@ -121,4 +128,40 @@ func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 	}
 
 	return source, nil
+}
+
+func (a App) captionAlpha(ctx context.Context, width, height int, text string) (image.Image, error) {
+	if a.tracer != nil {
+		_, span := a.tracer.Start(ctx, "captionImage")
+		defer span.End()
+	}
+
+	imageCtx := gg.NewContext(width, height)
+
+	fontFace := gifFontFacePool.Get().(font.Face)
+	defer gifFontFacePool.Put(fontFace)
+
+	imageCtx.SetFontFace(fontFace)
+
+	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
+	xAnchor := float64(imageCtx.Width() / 2)
+	yAnchor := gifFontSize / 2
+
+	n := float64(2)
+
+	for _, lineString := range lines {
+		yAnchor += gifFontSize
+
+		imageCtx.SetRGBA(0, 0, 0, 1)
+		for dy := -n; dy <= n; dy++ {
+			for dx := -n; dx <= n; dx++ {
+				imageCtx.DrawStringAnchored(lineString, xAnchor+dx, yAnchor+dy, 0.5, 0.5)
+			}
+		}
+
+		imageCtx.SetRGBA(1, 1, 1, 1)
+		imageCtx.DrawStringAnchored(lineString, xAnchor, yAnchor, 0.5, 0.5)
+	}
+
+	return imageCtx.Image(), nil
 }

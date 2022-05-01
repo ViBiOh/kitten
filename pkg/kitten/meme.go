@@ -77,7 +77,7 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 
 	go a.giphyApp.SendAnalytics(context.Background(), giphyImage)
 
-	return a.generateGif(ctx, giphyImage.Images["downsized"].URL, caption)
+	return a.generateGif(ctx, giphyImage.Images["fixed_width"].URL, caption)
 }
 
 // GetFromURL a meme caption to the given image name from unsplash
@@ -90,7 +90,7 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Im
 	return a.generateImage(ctx, imageURL, caption)
 }
 
-func (a App) captionImage(ctx context.Context, source image.Image, text string, gif bool) (image.Image, error) {
+func (a App) captionImage(ctx context.Context, source image.Image, text string) (image.Image, error) {
 	if a.tracer != nil {
 		_, span := a.tracer.Start(ctx, "captionImage")
 		defer span.End()
@@ -98,30 +98,20 @@ func (a App) captionImage(ctx context.Context, source image.Image, text string, 
 
 	imageCtx := gg.NewContextForImage(source)
 
-	var captionFontSize float64
-	var fontFace font.Face
-
-	if gif {
-		fontFace = gifFontFacePool.Get().(font.Face)
-		defer gifFontFacePool.Put(fontFace)
-		captionFontSize = gifFontSize
-	} else {
-		fontFace = fontFacePool.Get().(font.Face)
-		defer fontFacePool.Put(fontFace)
-		captionFontSize = fontSize
-	}
+	fontFace := fontFacePool.Get().(font.Face)
+	defer fontFacePool.Put(fontFace)
 
 	imageCtx.SetFontFace(fontFace)
 
 	imageCtx.SetRGB(1, 1, 1)
 	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
 	xAnchor := float64(imageCtx.Width() / 2)
-	yAnchor := captionFontSize / 2
+	yAnchor := fontSize / 2
 
 	n := float64(2)
 
 	for _, lineString := range lines {
-		yAnchor += captionFontSize
+		yAnchor += fontSize
 
 		imageCtx.SetRGB(0, 0, 0)
 		for dy := -n; dy <= n; dy++ {
