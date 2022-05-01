@@ -1,17 +1,14 @@
 package kitten
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"image"
 	"image/draw"
 	"image/gif"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/concurrent"
@@ -48,21 +45,11 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		buffer := bufferPool.Get().(*bytes.Buffer)
-		defer bufferPool.Put(buffer)
-
-		buffer.Reset()
-		if err := gif.EncodeAll(buffer, image); err != nil {
-			httperror.InternalServerError(w, err)
-			return
-		}
-
 		w.Header().Add("Cache-Control", cacheControlDuration)
 		w.Header().Set("Content-Type", "image/gif")
-		w.Header().Set("Content-Length", strconv.Itoa(buffer.Len()))
 		w.WriteHeader(http.StatusOK)
 
-		if _, err = io.Copy(w, buffer); err != nil {
+		if err = gif.EncodeAll(w, image); err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
