@@ -144,7 +144,7 @@ func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, 
 			Type: discord.ActionRowType,
 			Components: []discord.Component{
 				discord.NewButton(discord.PrimaryButton, "Send", strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)),
-				discord.NewButton(discord.SecondaryButton, "Another?", strings.Join([]string{"another", string(kind), search, caption, strconv.FormatUint(offset, 10)}, contentSeparator)),
+				discord.NewButton(discord.SecondaryButton, "Another?", strings.Join([]string{"another", string(kind), search, caption, strconv.FormatUint(offset+1, 10)}, contentSeparator)),
 				discord.NewButton(discord.DangerButton, "Cancel", fmt.Sprintf("cancel")),
 			},
 		},
@@ -186,7 +186,7 @@ func (a App) getDiscordGiphyResponse(ctx context.Context, content string, epheme
 	}
 
 	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
-		Title: "Giphy image",
+		Title: "Powered By GIPHY",
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})
