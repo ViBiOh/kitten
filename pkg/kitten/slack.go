@@ -107,11 +107,19 @@ func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string,
 
 	elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s:0", kind, id, caption), "primary"))
 
+	var accessory *slack.Accessory
+	switch kind {
+	case gifKind:
+		accessory = a.getGifContent(id, caption)
+	default:
+		accessory = a.getMemeContent(id, caption)
+	}
+
 	return slack.Response{
 		ResponseType:    "ephemeral",
 		ReplaceOriginal: true,
 		Blocks: []slack.Block{
-			a.getMemeContent(id, caption),
+			accessory,
 			slack.NewActions(search, elements...),
 		},
 	}
@@ -178,8 +186,9 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, caption, user string) slack.
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares an image of <%s|%s> <%s|Powered By GIPHY>", user, image.User.ProfileURL, image.User.Username, image.URL))),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a gif from <%s|%s>", user, image.User.ProfileURL, image.User.Username))),
 			a.getGifContent(image.ID, caption),
+			slack.NewContext().AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/powered_by_giphy.gif", a.website), "powered by giphy")),
 		},
 	}
 }
