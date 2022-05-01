@@ -46,7 +46,7 @@ func (a App) getKittenBlock(ctx context.Context, search, caption string) slack.R
 
 	if a.isOverride(search) {
 		id = search
-	} else if image, err := a.unsplashApp.GetRandomImage(ctx, search); err != nil {
+	} else if image, err := a.unsplashApp.Search(ctx, search); err != nil {
 		return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 	} else {
 		id = image.ID
@@ -91,7 +91,7 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 			return a.getSlackOverrideResponse(id, caption, payload.User.ID)
 		}
 
-		image, err := a.unsplashApp.GetImage(ctx, id)
+		image, err := a.unsplashApp.Get(ctx, id)
 		if err != nil {
 			return slack.NewError(err)
 		}

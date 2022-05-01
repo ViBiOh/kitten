@@ -38,7 +38,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 		defer span.End()
 	}
 
-	unsplashImage, err := a.unsplashApp.GetImage(ctx, id)
+	unsplashImage, err := a.unsplashApp.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get image from unsplash: %s", err)
 	}

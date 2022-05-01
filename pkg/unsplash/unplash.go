@@ -46,9 +46,7 @@ type unsplashResponse struct {
 	ID    string            `json:"id"`
 }
 
-const (
-	unsplashRoot = "https://api.unsplash.com"
-)
+const root = "https://api.unsplash.com"
 
 var (
 	// ErrRateLimitExceeded occurs when rate limit is exceeded
@@ -61,35 +59,35 @@ var (
 type App struct {
 	redisApp    redis.App
 	appName     string
-	unplashReq  request.Request
+	req         request.Request
 	downloadReq request.Request
 }
 
 // Config of package
 type Config struct {
-	appName           *string
-	unsplashAccessKey *string
+	appName   *string
+	accessKey *string
 }
 
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		appName:           flags.String(fs, prefix, "unsplash", "Name", "Unsplash App name", "SayIt", overrides),
-		unsplashAccessKey: flags.String(fs, prefix, "unsplash", "AccessKey", "Unsplash Access Key", "", overrides),
+		appName:   flags.String(fs, prefix, "unsplash", "Name", "Unsplash App name", "SayIt", overrides),
+		accessKey: flags.String(fs, prefix, "unsplash", "AccessKey", "Unsplash Access Key", "", overrides),
 	}
 }
 
 // New creates new App from Config
 func New(config Config, redisApp redis.App) App {
 	return App{
-		unplashReq:  request.Get(unsplashRoot).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
-		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.unsplashAccessKey))),
+		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
+		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
 		redisApp:    redisApp,
 		appName:     strings.TrimSpace(*config.appName),
 	}
 }
 
-// SendDownload send download event
+// SendDownload event
 func (a App) SendDownload(ctx context.Context, content Image) {
 	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
 		logger.Error("unable to send download request to unsplash: %s", err)
@@ -98,10 +96,10 @@ func (a App) SendDownload(ctx context.Context, content Image) {
 	}
 }
 
-// GetImage from unsplash for given keyword
-func (a App) GetImage(ctx context.Context, id string) (Image, error) {
+// Get from unsplash for given id
+func (a App) Get(ctx context.Context, id string) (Image, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Image, error) {
-		resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
+		resp, err := a.req.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 				return Image{}, ErrRateLimitExceeded
@@ -114,9 +112,9 @@ func (a App) GetImage(ctx context.Context, id string) (Image, error) {
 	}, cacheDuration)
 }
 
-// GetRandomImage from unsplash for given keyword
-func (a App) GetRandomImage(ctx context.Context, query string) (Image, error) {
-	resp, err := a.unplashReq.Path(fmt.Sprintf("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query))).Send(ctx, nil)
+// Search from unsplash for given keyword
+func (a App) Search(ctx context.Context, query string) (Image, error) {
+	resp, err := a.req.Path(fmt.Sprintf("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query))).Send(ctx, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 			return Image{}, ErrRateLimitExceeded

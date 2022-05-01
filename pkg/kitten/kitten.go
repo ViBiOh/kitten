@@ -15,6 +15,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
+	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -37,6 +38,7 @@ type App struct {
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
 	idsOverrides map[string]string
+	giphyApp     giphy.App
 	tmpFolder    string
 	website      string
 	unsplashApp  unsplash.App
@@ -57,9 +59,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer, website string) App {
+func New(config Config, unsplashApp unsplash.App, giphyApp giphy.App, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer, website string) App {
 	return App{
 		unsplashApp:  unsplashApp,
+		giphyApp:     giphyApp,
 		tracer:       tracer,
 		website:      website,
 		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),

@@ -27,6 +27,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/kitten"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -58,6 +59,7 @@ func main() {
 
 	kittenConfig := kitten.Flags(fs, "")
 	unsplashConfig := unsplash.Flags(fs, "unsplash")
+	giphyConfig := giphy.Flags(fs, "giphy")
 	slackConfig := slack.Flags(fs, "slack")
 	discordConfig := discord.Flags(fs, "discord")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
@@ -90,7 +92,7 @@ func main() {
 	})
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp.GetTracer("redis"))
-	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp), prometheusApp.Registerer(), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
+	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp), giphy.New(giphyConfig, redisApp), prometheusApp.Registerer(), tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
 	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler)
 	logger.Fatal(err)
 

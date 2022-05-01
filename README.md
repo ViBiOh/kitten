@@ -58,6 +58,8 @@ Usage of kitten:
         [discord] Public Key {KITTEN_DISCORD_PUBLIC_KEY}
   -frameOptions string
         [owasp] X-Frame-Options {KITTEN_FRAME_OPTIONS} (default "deny")
+  -giphyApiKey string
+        [giphy] API Key {KITTEN_GIPHY_API_KEY}
   -graceDuration string
         [http] Grace duration when SIGTERM received {KITTEN_GRACE_DURATION} (default "30s")
   -hsts
