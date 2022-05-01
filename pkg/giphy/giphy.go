@@ -144,6 +144,7 @@ func (a App) SendAnalytics(ctx context.Context, content Gif) {
 	resp, err = request.Get(fmt.Sprintf("%s&api_key=%s&random_id=%s&ts=%d", analyticURL, a.apiKey, url.QueryEscape(randomID.ID), time.Now().Unix())).Send(ctx, nil)
 	if err != nil {
 		logger.Error("unable to send analytics to giphy: %s", err)
+		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
