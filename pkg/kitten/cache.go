@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -21,6 +22,15 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bo
 		filename = a.getGifCacheFilename(id, caption)
 	} else {
 		filename = a.getCacheFilename(id, caption)
+	}
+
+	info, err := os.Stat(filename)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			logger.Error("unable to stat file from local cache: %s", err)
+		}
+
+		return false
 	}
 
 	file, err := os.OpenFile(filename, os.O_RDONLY, 0o600)
@@ -41,6 +51,7 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bo
 	} else {
 		w.Header().Set("Content-Type", "image/jpeg")
 	}
+	w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10))
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
