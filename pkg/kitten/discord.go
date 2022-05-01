@@ -32,26 +32,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	}
 
 	if len(id) != 0 {
-		switch kind {
-		case gifKind:
-			image, err := a.giphyApp.Get(ctx, id)
-			if err != nil {
-				return discord.NewError(replace, err), nil
-			}
-
-			return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
-				return a.getDiscordGiphyResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
-			}
-		case imageKind:
-			image, err := a.unsplashApp.Get(ctx, id)
-			if err != nil {
-				return discord.NewError(replace, err), nil
-			}
-
-			return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
-				return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
-			}
-		}
+		return a.handleSend(ctx, kind, id, caption, webhook.Member.User.ID)
 	}
 
 	if len(search) != 0 {
@@ -112,6 +93,33 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, kind 
 	}
 
 	return
+}
+
+func (a App) handleSend(ctx context.Context, kind memeKind, id, caption, userID string) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
+	switch kind {
+	case gifKind:
+		image, err := a.giphyApp.Get(ctx, id)
+		if err != nil {
+			return discord.NewError(true, err), nil
+		}
+
+		go a.giphyApp.SendAnalytics(ctx, image)
+
+		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+			return a.getDiscordGiphyResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
+		}
+	default:
+		image, err := a.unsplashApp.Get(ctx, id)
+		if err != nil {
+			return discord.NewError(true, err), nil
+		}
+
+		go a.unsplashApp.SendDownload(ctx, image)
+
+		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
+		}
+	}
 }
 
 func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, search, caption string, replace bool, offset uint64) discord.InteractionResponse {
@@ -186,9 +194,10 @@ func (a App) getDiscordGiphyResponse(ctx context.Context, content string, epheme
 	}
 
 	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
-		Title: "Powered By GIPHY",
-		URL:   image.URL,
-		Image: discord.NewImage("attachment://meme.gif"),
+		Title:  "Powered By GIPHY",
+		URL:    image.URL,
+		Image:  discord.NewImage("attachment://meme.gif"),
+		Author: discord.NewAuthor(image.User.Username, image.User.ProfileURL),
 	})
 }
 
