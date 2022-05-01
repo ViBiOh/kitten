@@ -67,6 +67,24 @@ spec:
                 "required": true
               }
             ]
+          },
+          "memegif": {
+            "name": "memegif",
+            "description": "Generate a gif with caption from Giphy",
+            "options": [
+              {
+                "name": "search",
+                "description": "Searched image",
+                "type": 3,
+                "required": true
+              },
+              {
+                "name": "caption",
+                "description": "Caption to add",
+                "type": 3,
+                "required": true
+              }
+            ]
           }
         }
     secrets:

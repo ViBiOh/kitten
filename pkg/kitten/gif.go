@@ -86,6 +86,31 @@ func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, e
 	return image, nil
 }
 
+func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) (string, int64, error) {
+	imagePath := a.getGifCacheFilename(id, caption)
+
+	info, err := os.Stat(imagePath)
+	if err != nil && !os.IsNotExist(err) {
+		return "", 0, err
+	}
+
+	if info == nil {
+		image, err := a.generateGif(ctx, from, caption)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to generate image: %s", err)
+		}
+
+		a.storeGifInCache(id, caption, image)
+
+		info, err = os.Stat(imagePath)
+		if err != nil {
+			return "", 0, fmt.Errorf("unable to get image info: %s", err)
+		}
+	}
+
+	return imagePath, info.Size(), nil
+}
+
 func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	resp, err := request.Get(imageURL).Send(ctx, nil)
 	if err != nil {

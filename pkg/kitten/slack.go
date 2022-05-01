@@ -218,11 +218,7 @@ func parseValue(value string) (memeKind, string, string, uint64) {
 		return parseKind(parts[0]), parts[1], parts[2], 0
 	}
 	if len(parts) == 3 {
-		offset, err := strconv.ParseUint(parts[2], 10, 64)
-		if err != nil {
-			offset = 0
-		}
-
+		offset, _ := strconv.ParseUint(parts[2], 10, 64)
 		return parseKind(parts[0]), "", parts[1], offset
 	}
 

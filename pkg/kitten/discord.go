@@ -3,9 +3,11 @@ package kitten
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/ViBiOh/ChatPotte/discord"
+	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -18,7 +20,7 @@ const (
 
 // DiscordHandler handle discord request
 func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
-	replace, id, search, caption, err := a.parseQuery(webhook)
+	replace, kind, id, search, caption, offset, err := a.parseQuery(webhook)
 	if err != nil {
 		return discord.NewError(replace, err), nil
 	}
@@ -30,27 +32,46 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	}
 
 	if len(id) != 0 {
-		image, err := a.unsplashApp.Get(ctx, id)
-		if err != nil {
-			return discord.NewError(replace, err), nil
-		}
+		switch kind {
+		case gifKind:
+			image, err := a.giphyApp.Get(ctx, id)
+			if err != nil {
+				return discord.NewError(replace, err), nil
+			}
 
-		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
-			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+			return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+				return a.getDiscordGiphyResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+			}
+		case imageKind:
+			image, err := a.unsplashApp.Get(ctx, id)
+			if err != nil {
+				return discord.NewError(replace, err), nil
+			}
+
+			return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+				return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", webhook.Member.User.ID), false, image, caption)
+			}
 		}
 	}
 
 	if len(search) != 0 {
 		return discord.AsyncResponse(replace, true), func(ctx context.Context) discord.InteractionResponse {
-			return a.handleSearch(ctx, webhook.Token, search, caption, replace)
+			return a.handleSearch(ctx, kind, webhook.Token, search, caption, replace, offset)
 		}
 	}
 
 	return discord.NewEphemeral(replace, "Ok, not now."), nil
 }
 
-func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id string, search string, caption string, err error) {
+func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, offset uint64, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
+		switch webhook.Data.Name {
+		case "memegif":
+			kind = gifKind
+		default:
+			kind = imageKind
+		}
+
 		for _, option := range webhook.Data.Options {
 			switch option.Name {
 			case idParam:
@@ -68,21 +89,24 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	if webhook.Type == discord.MessageComponentInteraction {
 		replace = true
 
-		parts := strings.SplitN(webhook.Data.CustomID, contentSeparator, 3)
+		parts := strings.SplitN(webhook.Data.CustomID, contentSeparator, 5)
 
 		switch parts[0] {
 		case "send":
-			if len(parts) != 3 {
+			if len(parts) != 4 {
 				err = fmt.Errorf("invalid format for sending image: `%s`", webhook.Data.CustomID)
 			}
-			id = parts[1]
-			caption = parts[2]
+			kind = parseKind(parts[1])
+			id = parts[2]
+			caption = parts[3]
 		case "another":
-			if len(parts) != 3 {
+			if len(parts) != 5 {
 				err = fmt.Errorf("invalid format for another image: `%s`", webhook.Data.CustomID)
 			}
-			search = parts[1]
-			caption = parts[2]
+			kind = parseKind(parts[1])
+			search = parts[2]
+			caption = parts[3]
+			offset, _ = strconv.ParseUint(parts[4], 10, 64)
 		case "cancel":
 		}
 	}
@@ -90,13 +114,27 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, id st
 	return
 }
 
-func (a App) handleSearch(ctx context.Context, interactionToken, search, caption string, replace bool) discord.InteractionResponse {
-	image, err := a.unsplashApp.Search(ctx, search)
-	if err != nil {
-		return discord.NewError(replace, err)
+func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, search, caption string, replace bool, offset uint64) discord.InteractionResponse {
+	var response discord.InteractionResponse
+	var id string
+
+	switch kind {
+	case gifKind:
+		image, err := a.giphyApp.Search(ctx, search, offset)
+		if err != nil {
+			return discord.NewError(replace, err)
+		}
+		response = a.getDiscordGiphyResponse(ctx, "", true, image, caption)
+		id = image.ID
+	default:
+		image, err := a.unsplashApp.Search(ctx, search)
+		if err != nil {
+			return discord.NewError(replace, err)
+		}
+		response = a.getDiscordUnsplashResponse(ctx, "", true, image, caption)
+		id = image.ID
 	}
 
-	response := a.getDiscordUnsplashResponse(ctx, "", true, image, caption)
 	if replace {
 		response.Type = discord.UpdateMessageCallback
 	}
@@ -105,8 +143,8 @@ func (a App) handleSearch(ctx context.Context, interactionToken, search, caption
 		{
 			Type: discord.ActionRowType,
 			Components: []discord.Component{
-				discord.NewButton(discord.PrimaryButton, "Send", fmt.Sprintf("send%s%s%s%s", contentSeparator, image.ID, contentSeparator, caption)),
-				discord.NewButton(discord.SecondaryButton, "Another?", fmt.Sprintf("another%s%s%s%s", contentSeparator, search, contentSeparator, caption)),
+				discord.NewButton(discord.PrimaryButton, "Send", strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)),
+				discord.NewButton(discord.SecondaryButton, "Another?", strings.Join([]string{"another", string(kind), search, caption, strconv.FormatUint(offset, 10)}, contentSeparator)),
 				discord.NewButton(discord.DangerButton, "Cancel", fmt.Sprintf("cancel")),
 			},
 		},
@@ -132,6 +170,25 @@ func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, eph
 		URL:    image.URL,
 		Image:  discord.NewImage("attachment://image.jpeg"),
 		Author: discord.NewAuthor(image.Author, image.AuthorURL),
+	})
+}
+
+func (a App) getDiscordGiphyResponse(ctx context.Context, content string, ephemeral bool, image giphy.Gif, caption string) discord.InteractionResponse {
+	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images["downsized"].URL, caption)
+	if err != nil {
+		return discord.NewError(false, fmt.Errorf("unable to generate gif: %s", err))
+	}
+
+	resp := discord.NewResponse(discord.ChannelMessageWithSource, content)
+
+	if ephemeral {
+		resp = resp.Ephemeral()
+	}
+
+	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
+		Title: "Giphy image",
+		URL:   image.URL,
+		Image: discord.NewImage("attachment://meme.gif"),
 	})
 }
 
