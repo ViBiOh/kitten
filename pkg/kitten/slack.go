@@ -182,18 +182,19 @@ func (a App) getSlackUnsplashResponse(image unsplash.Image, caption, user string
 }
 
 func (a App) getSlackGiphyResponse(image giphy.Gif, caption, user string) slack.Response {
-	text := fmt.Sprintf("<@%s> shares a gif", user)
+	slackCtx := slack.NewContext().AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_logo.png", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*"))
+
 	if len(image.User.ProfileURL) > 0 {
-		text += fmt.Sprintf(" from <%s|%s>", image.User.ProfileURL, image.User.Username)
+		slackCtx = slackCtx.AddElement(slack.NewText(fmt.Sprintf(" | GIF by <%s|%s>", image.User.ProfileURL, image.User.Username)))
 	}
 
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewSection(slack.NewText(text)),
+			slack.NewSection(slack.NewText(fmt.Sprintf("<@%s> shares a gif", user))),
 			a.getGifContent(image.ID, caption),
-			slack.NewContext().AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_badge.gif", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*")),
+			slackCtx,
 		},
 	}
 }
