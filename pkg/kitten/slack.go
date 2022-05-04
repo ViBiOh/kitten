@@ -175,8 +175,8 @@ func (a App) getSlackUnsplashResponse(image unsplash.Image, caption, user string
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			a.getMemeContent(image.ID, caption),
 			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))).AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image by <%s|%s>", image.AuthorURL, image.Author))),
+			a.getMemeContent(image.ID, caption),
 		},
 	}
 }
@@ -192,8 +192,8 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, caption, user string) slack.
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			a.getGifContent(image.ID, caption),
 			slackCtx,
+			a.getGifContent(image.ID, caption),
 		},
 	}
 }
@@ -203,8 +203,8 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			a.getMemeContent(id, caption),
 			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))).AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))),
+			a.getMemeContent(id, caption),
 		},
 	}
 }
