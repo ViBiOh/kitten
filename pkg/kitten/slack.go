@@ -107,12 +107,12 @@ func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string,
 
 	elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s:0", kind, id, caption), "primary"))
 
-	var accessory *slack.Accessory
+	var accessory slack.Image
 	switch kind {
 	case gifKind:
-		accessory = a.getGifContent(id, caption)
+		accessory = a.getGifContent(id, search, caption)
 	default:
-		accessory = a.getMemeContent(id, caption)
+		accessory = a.getMemeContent(id, search, caption)
 	}
 
 	return slack.Response{
@@ -149,14 +149,14 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 				return slack.NewError(err)
 			}
 
-			return a.getSlackUnsplashResponse(image, caption, payload.User.ID)
+			return a.getSlackUnsplashResponse(image, action.BlockID, caption, payload.User.ID)
 		case gifKind:
 			image, err := a.giphyApp.Get(ctx, id)
 			if err != nil {
 				return slack.NewError(err)
 			}
 
-			return a.getSlackGiphyResponse(image, caption, payload.User.ID)
+			return a.getSlackGiphyResponse(image, action.BlockID, caption, payload.User.ID)
 		default:
 			return slack.NewEphemeralMessage("Sorry, we don't that kind of meme.")
 		}
@@ -170,30 +170,30 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getSlackUnsplashResponse(image unsplash.Image, caption, user string) slack.Response {
+func (a App) getSlackUnsplashResponse(image unsplash.Image, search, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))).AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image by <%s|%s>", image.AuthorURL, image.Author))),
-			a.getMemeContent(image.ID, caption),
+			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image by <%s|%s>", image.AuthorURL, image.Author))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))),
+			a.getMemeContent(image.ID, search, caption),
 		},
 	}
 }
 
-func (a App) getSlackGiphyResponse(image giphy.Gif, caption, user string) slack.Response {
-	slackCtx := slack.NewContext().AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_logo.png", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*")).AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
-
+func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string) slack.Response {
+	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
 	if len(image.User.ProfileURL) > 0 {
 		slackCtx = slackCtx.AddElement(slack.NewText(fmt.Sprintf("GIF by <%s|%s>", image.User.ProfileURL, image.User.Username)))
 	}
+	slackCtx = slackCtx.AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_logo.png", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*"))
 
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			slackCtx,
-			a.getGifContent(image.ID, caption),
+			a.getGifContent(image.ID, search, caption),
 		},
 	}
 }
@@ -203,18 +203,18 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))).AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))),
-			a.getMemeContent(id, caption),
+			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))),
+			a.getMemeContent(id, "", caption),
 		},
 	}
 }
 
-func (a App) getMemeContent(id, caption string) *slack.Accessory {
-	return slack.NewAccessory(fmt.Sprintf("%s/api?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption))
+func (a App) getMemeContent(id, search, caption string) slack.Image {
+	return slack.NewImage(fmt.Sprintf("%s/api?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
-func (a App) getGifContent(id, caption string) *slack.Accessory {
-	return slack.NewAccessory(fmt.Sprintf("%s/gif?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("gif with caption `%s` on it", caption))
+func (a App) getGifContent(id, search, caption string) slack.Image {
+	return slack.NewImage(fmt.Sprintf("%s/gif?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
 }
 
 func parseValue(value string) (memeKind, string, string, uint64) {

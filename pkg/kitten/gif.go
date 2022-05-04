@@ -141,12 +141,11 @@ func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 	textImageBounds := textImage.Bounds()
 
 	for _, frame := range source.Image {
-		func(frame *image.Paletted) {
-			wg.Go(func() error {
-				draw.DrawMask(frame, textImageBounds, textImage, textImageBounds.Min, textImage, textImageBounds.Min, draw.Over)
-				return err
-			})
-		}(frame)
+		maskedFrame := frame
+		wg.Go(func() error {
+			draw.DrawMask(maskedFrame, textImageBounds, textImage, textImageBounds.Min, textImage, textImageBounds.Min, draw.Over)
+			return err
+		})
 	}
 
 	if err := wg.Wait(); err != nil {
