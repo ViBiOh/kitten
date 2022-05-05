@@ -181,7 +181,7 @@ func (a App) getSlackUnsplashResponse(image unsplash.Image, search, caption, use
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image by <%s|%s>", image.AuthorURL, image.Author))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))),
+			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image By <%s|%s>", image.AuthorURL, image.Author))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))),
 			a.getMemeContent(image.ID, search, caption),
 		},
 	}
