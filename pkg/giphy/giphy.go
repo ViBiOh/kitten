@@ -109,6 +109,10 @@ func New(config Config, redisApp redis.App) App {
 func (a App) Search(ctx context.Context, query string, offset uint64) (Gif, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/gifs/search?api_key=%s&q=%s&limit=1&offset=%d", a.apiKey, url.QueryEscape(query), offset)).Send(ctx, nil)
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return Gif{}, ErrNotFound
+		}
+
 		return Gif{}, fmt.Errorf("unable to search gif: %s", err)
 	}
 

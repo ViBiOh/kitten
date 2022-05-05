@@ -82,10 +82,16 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 		switch kind {
 		case gifKind:
 			image, err := a.giphyApp.Search(ctx, search, offset)
-			if err != nil {
+
+			switch err {
+			case nil:
+				id = image.ID
+			case giphy.ErrNotFound:
+				return slack.NewEphemeralMessage("No gif found")
+			default:
 				return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 			}
-			id = image.ID
+
 		default:
 			image, err := a.unsplashApp.Search(ctx, search)
 			if err != nil {
