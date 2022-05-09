@@ -190,7 +190,7 @@ func (a App) getSlackUnsplashResponse(image unsplash.Image, search, caption, use
 func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string) slack.Response {
 	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
 	if len(image.User.ProfileURL) > 0 {
-		slackCtx = slackCtx.AddElement(slack.NewText(fmt.Sprintf("GIF by <%s|%s>", image.User.ProfileURL, image.User.Username)))
+		slackCtx = slackCtx.AddElement(slack.NewText(fmt.Sprintf("GIF By <%s|%s>", image.User.ProfileURL, image.User.Username)))
 	}
 	slackCtx = slackCtx.AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_logo.png", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*"))
 
