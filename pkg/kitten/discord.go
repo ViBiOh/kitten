@@ -157,7 +157,7 @@ func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, 
 			Components: []discord.Component{
 				discord.NewButton(discord.PrimaryButton, "Send", strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)),
 				discord.NewButton(discord.SecondaryButton, "Another?", strings.Join([]string{"another", string(kind), search, caption, strconv.FormatUint(offset+1, 10)}, contentSeparator)),
-				discord.NewButton(discord.DangerButton, "Cancel", fmt.Sprintf("cancel")),
+				discord.NewButton(discord.DangerButton, "Cancel", "cancel"),
 			},
 		},
 	}
