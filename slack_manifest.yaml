@@ -1,7 +1,3 @@
----
-_metadata:
-  major_version: 1
-  minor_version: 1
 display_information:
   name: Kitten
   description: Get a cute (or not) meme
@@ -14,22 +10,32 @@ features:
     - command: /kitten
       url: https://kitten.vibioh.fr/slack/kitten
       description: Get a kitten meme
-      usage_hint: "caption text"
+      usage_hint: caption text
       should_escape: false
     - command: /puppy
       url: https://kitten.vibioh.fr/slack/puppy
       description: Get a puppy meme
-      usage_hint: "caption text"
+      usage_hint: caption text
       should_escape: false
     - command: /trout
       url: https://kitten.vibioh.fr/slack/trout
       description: Get a trout meme
-      usage_hint: "caption text"
+      usage_hint: caption text
       should_escape: false
     - command: /squirrel
       url: https://kitten.vibioh.fr/slack/squirrel
       description: Get a squirrel meme
-      usage_hint: "caption text"
+      usage_hint: caption text
+      should_escape: false
+    - command: /seal
+      url: https://kitten.vibioh.fr/slack/seal
+      description: Get a seal meme
+      usage_hint: caption text
+      should_escape: false
+    - command: /otter
+      url: https://kitten.vibioh.fr/slack/otter
+      description: Get a seal meme
+      usage_hint: caption text
       should_escape: false
     - command: /meme
       url: https://kitten.vibioh.fr/slack/custom
