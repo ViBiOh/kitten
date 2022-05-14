@@ -8,7 +8,7 @@ require (
 	github.com/ViBiOh/httputils/v4 v4.41.4
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	go.opentelemetry.io/otel/trace v1.7.0
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8
 )
