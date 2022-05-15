@@ -103,7 +103,7 @@ func (a App) handleSend(ctx context.Context, kind memeKind, id, caption, userID 
 			return discord.NewError(true, err), nil
 		}
 
-		go a.giphyApp.SendAnalytics(ctx, image)
+		go a.giphyApp.SendAnalytics(context.Background(), image)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordGiphyResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
@@ -114,7 +114,7 @@ func (a App) handleSend(ctx context.Context, kind memeKind, id, caption, userID 
 			return discord.NewError(true, err), nil
 		}
 
-		go a.unsplashApp.SendDownload(ctx, image)
+		go a.unsplashApp.SendDownload(context.Background(), image)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
