@@ -16,8 +16,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/fogleman/gg"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/image/font"
 )
 
@@ -126,11 +126,8 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 }
 
 func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "captionGif")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
+	defer end()
 
 	wg := concurrent.NewFailFast(8)
 
@@ -156,10 +153,8 @@ func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 }
 
 func (a App) captionAlpha(ctx context.Context, width, height int, text string) (image.Image, error) {
-	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "captionImage")
-		defer span.End()
-	}
+	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
+	defer end()
 
 	imageCtx := gg.NewContext(width, height)
 

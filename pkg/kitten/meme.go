@@ -9,8 +9,8 @@ import (
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/fogleman/gg"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/image/font"
 )
 
@@ -46,11 +46,8 @@ var (
 
 // GetFromUnsplash generates a meme from the given id with caption text
 func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "GetFromUnsplash")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromUnsplash")
+	defer end()
 
 	unsplashImage, err := a.unsplashApp.Get(ctx, id)
 	if err != nil {
@@ -64,11 +61,8 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 
 // GetFromGiphy generates a meme from the given id with caption text
 func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, error) {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "GetFromGiphy")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromGiphy")
+	defer end()
 
 	giphyImage, err := a.giphyApp.Get(ctx, id)
 	if err != nil {
@@ -82,19 +76,15 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 
 // GetFromURL a meme caption to the given image name from unsplash
 func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Image, error) {
-	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "GetFromURL")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromURL")
+	defer end()
 
 	return a.generateImage(ctx, imageURL, caption)
 }
 
 func (a App) captionImage(ctx context.Context, source image.Image, text string) (image.Image, error) {
-	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "captionImage")
-		defer span.End()
-	}
+	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
+	defer end()
 
 	imageCtx := gg.NewContextForImage(source)
 
