@@ -2,6 +2,7 @@ package kitten
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -216,7 +217,8 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 }
 
 func (a App) getMemeContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
+	path := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(caption))))
+	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, path), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
 func (a App) getGifContent(id, search, caption string) slack.Image {

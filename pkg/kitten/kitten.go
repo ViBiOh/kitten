@@ -2,6 +2,7 @@ package kitten
 
 import (
 	"bytes"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"image"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
@@ -81,9 +81,14 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		id, caption, err := parseRequest(r.URL.Query())
+		query, err := getQuery(r)
 		if err != nil {
-			logger.Warn("URL was `%s`", r.URL.String())
+			httperror.BadRequest(w, err)
+			return
+		}
+
+		id, caption, err := parseRequest(query)
+		if err != nil {
 			httperror.BadRequest(w, err)
 			return
 		}
@@ -117,6 +122,25 @@ func (a App) Handler() http.Handler {
 
 		go a.storeInCache(id, caption, image)
 	})
+}
+
+func getQuery(r *http.Request) (url.Values, error) {
+	urlPath := strings.TrimPrefix(r.URL.Path, "/")
+	if len(urlPath) == 0 {
+		return r.URL.Query(), nil
+	}
+
+	content, err := base64.URLEncoding.DecodeString(urlPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode content: %s", err)
+	}
+
+	query, err := url.ParseQuery(string(content))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse content: %s", err)
+	}
+
+	return query, nil
 }
 
 func parseRequest(query url.Values) (string, string, error) {
