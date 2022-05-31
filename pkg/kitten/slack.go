@@ -43,7 +43,7 @@ const (
 )
 
 var (
-	customSearch = regexp.MustCompile("#([0-9a-zA-Z_ ]+)$")
+	customSearch = regexp.MustCompile("|([0-9a-zA-Z_ ]+)$")
 	cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 )
 
@@ -68,7 +68,7 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 	if search == customImageCommand || search == customGifSearch {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
-			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value #searched_query`")
+			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value |searched_query`")
 		}
 
 		search = matches[1]

@@ -45,12 +45,12 @@ features:
     - command: /meme
       url: https://kitten.vibioh.fr/slack/custom
       description: Get a custom meme from an image query
-      usage_hint: "caption text #imageQuery"
+      usage_hint: "caption text |imageQuery"
       should_escape: false
     - command: /memegif
       url: https://kitten.vibioh.fr/slack/memegif
       description: Get a custom meme from a gif query
-      usage_hint: "caption text #gifQuery"
+      usage_hint: "caption text |gifQuery"
       should_escape: false
 oauth_config:
   redirect_urls:
