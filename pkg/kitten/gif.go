@@ -29,7 +29,13 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		id, caption, err := parseRequest(r.URL.Query())
+		query, err := getQuery(r)
+		if err != nil {
+			httperror.BadRequest(w, err)
+			return
+		}
+
+		id, caption, err := parseRequest(query)
 		if err != nil {
 			httperror.BadRequest(w, err)
 			return

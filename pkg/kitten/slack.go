@@ -211,18 +211,21 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))),
-			a.getMemeContent(id, "", caption),
+			a.getMemeContent(id, "local image", caption),
 		},
 	}
 }
 
 func (a App) getMemeContent(id, search, caption string) slack.Image {
-	path := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(caption))))
-	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, path), fmt.Sprintf("image with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, getContent(id, caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
 func (a App) getGifContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/gif/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/gif/%s", a.website, getContent(id, caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
+}
+
+func getContent(id, caption string) string {
+	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(caption))))
 }
 
 func parseValue(value string) (memeKind, string, string, uint64) {
