@@ -14,6 +14,7 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
@@ -82,6 +83,7 @@ func (a App) Handler() http.Handler {
 
 		id, caption, err := parseRequest(r.URL.Query())
 		if err != nil {
+			logger.Warn("URL was `%s`", r.URL.String())
 			httperror.BadRequest(w, err)
 			return
 		}

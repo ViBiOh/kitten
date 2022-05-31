@@ -216,11 +216,11 @@ func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
 }
 
 func (a App) getMemeContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/api?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/api/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
 func (a App) getGifContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/gif?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/gif/?id=%s&caption=%s", a.website, url.QueryEscape(id), url.QueryEscape(caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
 }
 
 func parseValue(value string) (memeKind, string, string, uint64) {
