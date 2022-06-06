@@ -43,7 +43,7 @@ const (
 )
 
 var (
-	customSearch = regexp.MustCompile(`\|([0-9a-zA-Z_ ]+)$`)
+	customSearch = regexp.MustCompile(`\|([0-9a-zA-Z_ -]+)$`)
 	cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 )
 
