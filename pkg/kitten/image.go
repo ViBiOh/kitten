@@ -16,7 +16,7 @@ func (a App) generateImage(ctx context.Context, from, caption string) (image.Ima
 		return nil, fmt.Errorf("unable to get image: %s", err)
 	}
 
-	image, err = a.captionImage(ctx, image, caption)
+	image, err = a.CaptionImage(ctx, image, caption)
 	if err != nil {
 		return nil, fmt.Errorf("unable to caption image: %s", err)
 	}

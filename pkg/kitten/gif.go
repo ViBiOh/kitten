@@ -91,7 +91,7 @@ func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, e
 		return nil, fmt.Errorf("unable to get gif: %s", err)
 	}
 
-	image, err = a.captionGif(ctx, image, caption)
+	image, err = a.CaptionGif(ctx, image, caption)
 	if err != nil {
 		return nil, fmt.Errorf("unable to caption gif: %s", err)
 	}
@@ -138,7 +138,8 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	return output, nil
 }
 
-func (a App) captionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
+// CaptionGif add caption on a gif
+func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
 	defer end()
 

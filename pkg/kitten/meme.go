@@ -2,6 +2,7 @@ package kitten
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"image"
 	"image/gif"
@@ -11,8 +12,12 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 )
+
+//go:embed fonts
+var content embed.FS
 
 const (
 	fontSize    float64 = 64
@@ -23,7 +28,7 @@ const (
 var (
 	fontFacePool = sync.Pool{
 		New: func() any {
-			impactFace, err := gg.LoadFontFace("impact.ttf", fontSize)
+			impactFace, err := loadFsFont("fonts/impact.ttf", fontSize)
 			if err != nil {
 				logger.Error("unable to load font face: %s", err)
 			}
@@ -34,7 +39,7 @@ var (
 
 	gifFontFacePool = sync.Pool{
 		New: func() any {
-			impactFace, err := gg.LoadFontFace("impact.ttf", gifFontSize)
+			impactFace, err := loadFsFont("fonts/impact.ttf", gifFontSize)
 			if err != nil {
 				logger.Error("unable to load font face: %s", err)
 			}
@@ -43,6 +48,22 @@ var (
 		},
 	}
 )
+
+func loadFsFont(fontName string, points float64) (font.Face, error) {
+	fontBytes, err := content.ReadFile(fontName)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := truetype.Parse(fontBytes)
+	if err != nil {
+		return nil, err
+	}
+	face := truetype.NewFace(f, &truetype.Options{
+		Size: points,
+	})
+	return face, nil
+}
 
 // GetFromUnsplash generates a meme from the given id with caption text
 func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
@@ -90,7 +111,8 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Im
 	return a.generateImage(ctx, imageURL, caption)
 }
 
-func (a App) captionImage(ctx context.Context, source image.Image, text string) (image.Image, error) {
+// CaptionImage add caption on an image
+func (a App) CaptionImage(ctx context.Context, source image.Image, text string) (image.Image, error) {
 	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
 	defer end()
 
