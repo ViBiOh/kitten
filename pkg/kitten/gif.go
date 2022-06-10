@@ -18,7 +18,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/fogleman/gg"
-	"golang.org/x/image/font"
 )
 
 // GifHandler for gif request. Should be use with net/http
@@ -172,19 +171,20 @@ func (a App) captionAlpha(ctx context.Context, width, height int, text string) (
 
 	imageCtx := gg.NewContext(width, height)
 
-	fontFace := gifFontFacePool.Get().(font.Face)
-	defer gifFontFacePool.Put(fontFace)
+	fontSize := float64(width) * fontSizeCoeff
+	fontFace, resolve := getFontFace(fontSize)
+	defer resolve()
 
 	imageCtx.SetFontFace(fontFace)
 
 	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
 	xAnchor := float64(imageCtx.Width() / 2)
-	yAnchor := gifFontSize / 2
+	yAnchor := fontSize / 2
 
 	n := float64(2)
 
 	for _, lineString := range lines {
-		yAnchor += gifFontSize
+		yAnchor += fontSize
 
 		imageCtx.SetRGBA(0, 0, 0, 1)
 		for dy := -n; dy <= n; dy++ {

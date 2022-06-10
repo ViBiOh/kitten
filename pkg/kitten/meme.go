@@ -20,34 +20,11 @@ import (
 var content embed.FS
 
 const (
-	fontSize    float64 = 64
-	gifFontSize float64 = 32
-	maxBodySize int64   = 2 << 20
+	fontSizeCoeff float64 = 0.07
+	maxBodySize   int64   = 2 << 20
 )
 
-var (
-	fontFacePool = sync.Pool{
-		New: func() any {
-			impactFace, err := loadFsFont("fonts/impact.ttf", fontSize)
-			if err != nil {
-				logger.Error("unable to load font face: %s", err)
-			}
-
-			return impactFace
-		},
-	}
-
-	gifFontFacePool = sync.Pool{
-		New: func() any {
-			impactFace, err := loadFsFont("fonts/impact.ttf", gifFontSize)
-			if err != nil {
-				logger.Error("unable to load font face: %s", err)
-			}
-
-			return impactFace
-		},
-	}
-)
+var fontFacesSizes = map[float64]*sync.Pool{}
 
 func loadFsFont(fontName string, points float64) (font.Face, error) {
 	fontBytes, err := content.ReadFile(fontName)
@@ -63,6 +40,27 @@ func loadFsFont(fontName string, points float64) (font.Face, error) {
 		Size: points,
 	})
 	return face, nil
+}
+
+func getFontFace(size float64) (font.Face, func()) {
+	pool, ok := fontFacesSizes[size]
+	if !ok {
+		pool = &sync.Pool{
+			New: func() any {
+				impactFace, err := loadFsFont("fonts/impact.ttf", size)
+				if err != nil {
+					logger.Error("unable to load font face: %s", err)
+				}
+
+				return impactFace
+			},
+		}
+
+		fontFacesSizes[size] = pool
+	}
+
+	fontFace := pool.Get().(font.Face)
+	return fontFace, func() { pool.Put(fontFace) }
 }
 
 // GetFromUnsplash generates a meme from the given id with caption text
@@ -118,8 +116,9 @@ func (a App) CaptionImage(ctx context.Context, source image.Image, text string) 
 
 	imageCtx := gg.NewContextForImage(source)
 
-	fontFace := fontFacePool.Get().(font.Face)
-	defer fontFacePool.Put(fontFace)
+	fontSize := float64(source.Bounds().Dx()) * fontSizeCoeff
+	fontFace, resolve := getFontFace(fontSize)
+	defer resolve()
 
 	imageCtx.SetFontFace(fontFace)
 
