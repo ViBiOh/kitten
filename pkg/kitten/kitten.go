@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"image"
 	"image/jpeg"
 	"net/http"
 	"net/url"
@@ -38,7 +37,6 @@ type App struct {
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
-	idsOverrides map[string]string
 	giphyApp     giphy.App
 	tmpFolder    string
 	website      string
@@ -69,7 +67,6 @@ func New(config Config, unsplashApp unsplash.App, giphyApp giphy.App, prometheus
 		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),
 		servedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "served"),
 		tmpFolder:    strings.TrimSpace(*config.tmpFolder),
-		idsOverrides: parseIdsOverrides(strings.TrimSpace(*config.idsOverrides)),
 	}
 }
 
@@ -97,14 +94,7 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		var image image.Image
-
-		if override := a.getOverride(id); len(override) != 0 {
-			image, err = a.GetFromURL(r.Context(), override, caption)
-		} else {
-			image, err = a.GetFromUnsplash(r.Context(), id, caption)
-		}
-
+		image, err := a.GetFromUnsplash(r.Context(), id, caption)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return

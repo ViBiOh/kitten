@@ -25,12 +25,6 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 		return discord.NewError(replace, err), nil
 	}
 
-	if a.isOverride(search) {
-		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
-			return a.getDiscordOverrideResponse(ctx, webhook.Member.User.ID, search, caption)
-		}
-	}
-
 	if len(id) != 0 {
 		return a.handleSend(ctx, kind, id, caption, webhook.Member.User.ID)
 	}
@@ -201,17 +195,4 @@ func (a App) getDiscordGiphyResponse(ctx context.Context, content string, epheme
 		Image:  discord.NewImage("attachment://meme.gif"),
 		Author: discord.NewAuthor(image.User.Username, image.User.ProfileURL),
 	})
-}
-
-func (a App) getDiscordOverrideResponse(ctx context.Context, user, id, caption string) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreImage(ctx, id, a.getOverride(id), caption)
-	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
-	}
-
-	return discord.NewResponse(discord.ChannelMessageWithSource, fmt.Sprintf("<@!%s> shares a meme", user)).
-		AddEmbed(discord.Embed{
-			Title: id,
-			Image: discord.NewImage("attachment://image.jpeg"),
-		}).AddAttachment("image.jpeg", imagePath, size)
 }

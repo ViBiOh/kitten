@@ -77,43 +77,31 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 
 	var id string
 
-	if a.isOverride(search) {
-		id = search
-	} else {
-		switch kind {
-		case gifKind:
-			image, err := a.giphyApp.Search(ctx, search, offset)
+	switch kind {
+	case gifKind:
+		image, err := a.giphyApp.Search(ctx, search, offset)
 
-			switch err {
-			case nil:
-				id = image.ID
-			case giphy.ErrNotFound:
-				return slack.NewEphemeralMessage("No gif found")
-			default:
-				return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
-			}
-
-		default:
-			image, err := a.unsplashApp.Search(ctx, search)
-			if err != nil {
-				return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
-			}
+		switch err {
+		case nil:
 			id = image.ID
+		case giphy.ErrNotFound:
+			return slack.NewEphemeralMessage("No gif found")
+		default:
+			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 		}
+
+	default:
+		image, err := a.unsplashApp.Search(ctx, search)
+		if err != nil {
+			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
+		}
+		id = image.ID
 	}
 
 	return a.getSlackInteractResponse(kind, id, search, caption, offset)
 }
 
 func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string, offset uint64) slack.Response {
-	elements := []slack.Element{cancelButton}
-
-	if !a.isOverride(search) {
-		elements = append(elements, slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s:%s:%d", kind, caption, offset+1), ""))
-	}
-
-	elements = append(elements, slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s:0", kind, id, caption), "primary"))
-
 	var accessory slack.Image
 	switch kind {
 	case gifKind:
@@ -127,7 +115,11 @@ func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string,
 		ReplaceOriginal: true,
 		Blocks: []slack.Block{
 			accessory,
-			slack.NewActions(search, elements...),
+			slack.NewActions(search,
+				cancelButton,
+				slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s:%s:%d", kind, caption, offset+1), ""),
+				slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s:0", kind, id, caption), "primary"),
+			),
 		},
 	}
 }
@@ -145,9 +137,6 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 
 	if action.ActionID == sendValue {
 		kind, id, caption, _ := parseValue(action.Value)
-		if a.isOverride(id) {
-			return a.getSlackOverrideResponse(kind, id, caption, payload.User.ID)
-		}
 
 		switch kind {
 		case imageKind:
@@ -201,25 +190,6 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string
 		Blocks: []slack.Block{
 			slackCtx,
 			a.getGifContent(image.ID, search, caption),
-		},
-	}
-}
-
-func (a App) getSlackOverrideResponse(kind memeKind, id, caption, user string) slack.Response {
-	var content slack.Image
-	switch kind {
-	case gifKind:
-		content = a.getGifContent(id, "local gif", caption)
-	default:
-		content = a.getMemeContent(id, "local image", caption)
-	}
-
-	return slack.Response{
-		ResponseType:   "in_channel",
-		DeleteOriginal: true,
-		Blocks: []slack.Block{
-			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))),
-			content,
 		},
 	}
 }

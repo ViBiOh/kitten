@@ -66,8 +66,6 @@ Usage of kitten:
         [owasp] Indicate Strict Transport Security {KITTEN_HSTS} (default true)
   -idleTimeout string
         [server] Idle Timeout {KITTEN_IDLE_TIMEOUT} (default "2m")
-  -idsOverrides string
-        [kitten] Ids overrides in the form key1|http1~key2|http2 {KITTEN_IDS_OVERRIDES}
   -key string
         [server] Key file {KITTEN_KEY}
   -loggerJson
