@@ -146,7 +146,7 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 	if action.ActionID == sendValue {
 		kind, id, caption, _ := parseValue(action.Value)
 		if a.isOverride(id) {
-			return a.getSlackOverrideResponse(id, caption, payload.User.ID)
+			return a.getSlackOverrideResponse(kind, id, caption, payload.User.ID)
 		}
 
 		switch kind {
@@ -205,13 +205,21 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string
 	}
 }
 
-func (a App) getSlackOverrideResponse(id, caption, user string) slack.Response {
+func (a App) getSlackOverrideResponse(kind memeKind, id, caption, user string) slack.Response {
+	var content slack.Image
+	switch kind {
+	case gifKind:
+		content = a.getGifContent(id, "local gif", caption)
+	default:
+		content = a.getMemeContent(id, "local image", caption)
+	}
+
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Kitten>", a.website))),
-			a.getMemeContent(id, "local image", caption),
+			content,
 		},
 	}
 }
