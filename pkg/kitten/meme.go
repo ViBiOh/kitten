@@ -74,7 +74,15 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 	return a.generateGif(ctx, giphyImage.Images["downsized"].URL, caption)
 }
 
-// GetFromURL a meme caption to the given image name from unsplash
+// GetGifFromURL generates a meme gif from the given id with caption text
+func (a App) GetGifFromURL(ctx context.Context, imageURL, caption string) (*gif.GIF, error) {
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetGifFromURL")
+	defer end()
+
+	return a.generateGif(ctx, imageURL, caption)
+}
+
+// GetFromURL a meme caption to the given image name from url
 func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (image.Image, error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromURL")
 	defer end()

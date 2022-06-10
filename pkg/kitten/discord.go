@@ -140,8 +140,6 @@ func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, 
 		case nil:
 			response = a.getDiscordUnsplashResponse(ctx, "", true, image, caption)
 			id = image.ID
-		case giphy.ErrNotFound:
-			return discord.NewEphemeral(replace, "No gif found")
 		default:
 			return discord.NewError(replace, err)
 		}

@@ -45,7 +45,14 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		image, err := a.GetFromGiphy(r.Context(), id, caption)
+		var image *gif.GIF
+
+		if override := a.getOverride(id); len(override) != 0 {
+			image, err = a.GetGifFromURL(r.Context(), override, caption)
+		} else {
+			image, err = a.GetFromGiphy(r.Context(), id, caption)
+		}
+
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
