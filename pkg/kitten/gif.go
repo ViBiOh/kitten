@@ -3,13 +3,11 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"image"
 	"image/draw"
 	"image/gif"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/concurrent"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
@@ -132,12 +130,12 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 
 // CaptionGif add caption on a gif
 func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
+	_, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
 	defer end()
 
 	wg := concurrent.NewFailFast(8)
 
-	textImage, err := a.captionAlpha(ctx, source.Config.Width, source.Config.Height, text)
+	textImage, err := a.caption(gg.NewContext(source.Config.Width, source.Config.Height), text)
 	if err != nil {
 		return source, fmt.Errorf("unable to generate text layer: %s", err)
 	}
@@ -156,39 +154,4 @@ func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 	}
 
 	return source, nil
-}
-
-func (a App) captionAlpha(ctx context.Context, width, height int, text string) (image.Image, error) {
-	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
-	defer end()
-
-	imageCtx := gg.NewContext(width, height)
-
-	fontSize := float64(width) * fontSizeCoeff
-	fontFace, resolve := getFontFace(fontSize)
-	defer resolve()
-
-	imageCtx.SetFontFace(fontFace)
-
-	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
-	xAnchor := float64(imageCtx.Width() / 2)
-	yAnchor := fontSize / 2
-
-	n := float64(2)
-
-	for _, lineString := range lines {
-		yAnchor += fontSize
-
-		imageCtx.SetRGBA(0, 0, 0, 1)
-		for dy := -n; dy <= n; dy++ {
-			for dx := -n; dx <= n; dx++ {
-				imageCtx.DrawStringAnchored(lineString, xAnchor+dx, yAnchor+dy, 0.5, 0.5)
-			}
-		}
-
-		imageCtx.SetRGBA(1, 1, 1, 1)
-		imageCtx.DrawStringAnchored(lineString, xAnchor, yAnchor, 0.5, 0.5)
-	}
-
-	return imageCtx.Image(), nil
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"image"
 	"image/jpeg"
 	"net/http"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
+	"github.com/fogleman/gg"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -145,4 +147,34 @@ func parseRequest(query url.Values) (string, string, error) {
 	}
 
 	return id, caption, nil
+}
+
+func (a App) caption(imageCtx *gg.Context, text string) (image.Image, error) {
+	fontSize := float64(imageCtx.Width()) * fontSizeCoeff
+	fontFace, resolve := getFontFace(fontSize)
+	defer resolve()
+
+	imageCtx.SetFontFace(fontFace)
+
+	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*widthPadding)
+	xAnchor := float64(imageCtx.Width() / 2)
+	yAnchor := fontSize / 2
+
+	n := float64(2)
+
+	for _, lineString := range lines {
+		yAnchor += fontSize
+
+		imageCtx.SetRGBA(0, 0, 0, 1)
+		for dy := -n; dy <= n; dy++ {
+			for dx := -n; dx <= n; dx++ {
+				imageCtx.DrawStringAnchored(lineString, xAnchor+dx, yAnchor+dy, 0.5, 0.5)
+			}
+		}
+
+		imageCtx.SetRGBA(1, 1, 1, 1)
+		imageCtx.DrawStringAnchored(lineString, xAnchor, yAnchor, 0.5, 0.5)
+	}
+
+	return imageCtx.Image(), nil
 }

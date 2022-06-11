@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"image/gif"
-	"strings"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -21,6 +20,7 @@ var content embed.FS
 
 const (
 	fontSizeCoeff float64 = 0.07
+	widthPadding  float64 = 0.8
 	maxBodySize   int64   = 2 << 20
 )
 
@@ -114,34 +114,5 @@ func (a App) CaptionImage(ctx context.Context, source image.Image, text string) 
 	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
 	defer end()
 
-	imageCtx := gg.NewContextForImage(source)
-
-	fontSize := float64(source.Bounds().Dx()) * fontSizeCoeff
-	fontFace, resolve := getFontFace(fontSize)
-	defer resolve()
-
-	imageCtx.SetFontFace(fontFace)
-
-	imageCtx.SetRGB(1, 1, 1)
-	lines := imageCtx.WordWrap(strings.ToUpper(text), float64(imageCtx.Width())*0.75)
-	xAnchor := float64(imageCtx.Width() / 2)
-	yAnchor := fontSize / 2
-
-	n := float64(2)
-
-	for _, lineString := range lines {
-		yAnchor += fontSize
-
-		imageCtx.SetRGB(0, 0, 0)
-		for dy := -n; dy <= n; dy++ {
-			for dx := -n; dx <= n; dx++ {
-				imageCtx.DrawStringAnchored(lineString, xAnchor+dx, yAnchor+dy, 0.5, 0.5)
-			}
-		}
-
-		imageCtx.SetRGB(1, 1, 1)
-		imageCtx.DrawStringAnchored(lineString, xAnchor, yAnchor, 0.5, 0.5)
-	}
-
-	return imageCtx.Image(), nil
+	return a.caption(gg.NewContextForImage(source), text)
 }
