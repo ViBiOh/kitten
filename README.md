@@ -60,12 +60,14 @@ Usage of kitten:
         [owasp] X-Frame-Options {KITTEN_FRAME_OPTIONS} (default "deny")
   -giphyApiKey string
         [giphy] API Key {KITTEN_GIPHY_API_KEY}
-  -graceDuration string
-        [http] Grace duration when SIGTERM received {KITTEN_GRACE_DURATION} (default "30s")
+  -graceDuration duration
+        [http] Grace duration when SIGTERM received {KITTEN_GRACE_DURATION} (default 30s)
   -hsts
         [owasp] Indicate Strict Transport Security {KITTEN_HSTS} (default true)
-  -idleTimeout string
-        [server] Idle Timeout {KITTEN_IDLE_TIMEOUT} (default "2m")
+  -idleTimeout duration
+        [server] Idle Timeout {KITTEN_IDLE_TIMEOUT} (default 2m0s)
+  -idsOverrides string
+        [kitten] Ids overrides in the form key1|http1~key2|http2 {KITTEN_IDS_OVERRIDES}
   -key string
         [server] Key file {KITTEN_KEY}
   -loggerJson
@@ -92,24 +94,24 @@ Usage of kitten:
         [prometheus] Certificate file {KITTEN_PROMETHEUS_CERT}
   -prometheusGzip
         [prometheus] Enable gzip compression of metrics output {KITTEN_PROMETHEUS_GZIP}
-  -prometheusIdleTimeout string
-        [prometheus] Idle Timeout {KITTEN_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
+  -prometheusIdleTimeout duration
+        [prometheus] Idle Timeout {KITTEN_PROMETHEUS_IDLE_TIMEOUT} (default 10s)
   -prometheusIgnore string
         [prometheus] Ignored path prefixes for metrics, comma separated {KITTEN_PROMETHEUS_IGNORE}
   -prometheusKey string
         [prometheus] Key file {KITTEN_PROMETHEUS_KEY}
   -prometheusPort uint
         [prometheus] Listen port (0 to disable) {KITTEN_PROMETHEUS_PORT} (default 9090)
-  -prometheusReadTimeout string
-        [prometheus] Read Timeout {KITTEN_PROMETHEUS_READ_TIMEOUT} (default "5s")
-  -prometheusShutdownTimeout string
-        [prometheus] Shutdown Timeout {KITTEN_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
-  -prometheusWriteTimeout string
-        [prometheus] Write Timeout {KITTEN_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
+  -prometheusReadTimeout duration
+        [prometheus] Read Timeout {KITTEN_PROMETHEUS_READ_TIMEOUT} (default 5s)
+  -prometheusShutdownTimeout duration
+        [prometheus] Shutdown Timeout {KITTEN_PROMETHEUS_SHUTDOWN_TIMEOUT} (default 5s)
+  -prometheusWriteTimeout duration
+        [prometheus] Write Timeout {KITTEN_PROMETHEUS_WRITE_TIMEOUT} (default 10s)
   -publicURL string
         Public URL {KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
-  -readTimeout string
-        [server] Read Timeout {KITTEN_READ_TIMEOUT} (default "5s")
+  -readTimeout duration
+        [server] Read Timeout {KITTEN_READ_TIMEOUT} (default 5s)
   -redisAddress string
         [redis] Redis Address (blank to disable) {KITTEN_REDIS_ADDRESS} (default "localhost:6379")
   -redisAlias string
@@ -120,8 +122,8 @@ Usage of kitten:
         [redis] Redis Password, if any {KITTEN_REDIS_PASSWORD}
   -redisUsername string
         [redis] Redis Username, if any {KITTEN_REDIS_USERNAME}
-  -shutdownTimeout string
-        [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default "10s")
+  -shutdownTimeout duration
+        [server] Shutdown Timeout {KITTEN_SHUTDOWN_TIMEOUT} (default 10s)
   -slackClientID string
         [slack] ClientID {KITTEN_SLACK_CLIENT_ID}
   -slackClientSecret string
@@ -144,6 +146,6 @@ Usage of kitten:
         [alcotest] URL to check {KITTEN_URL}
   -userAgent string
         [alcotest] User-Agent for check {KITTEN_USER_AGENT} (default "Alcotest")
-  -writeTimeout string
-        [server] Write Timeout {KITTEN_WRITE_TIMEOUT} (default "10s")
+  -writeTimeout duration
+        [server] Write Timeout {KITTEN_WRITE_TIMEOUT} (default 10s)
 ```
