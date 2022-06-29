@@ -42,6 +42,11 @@ features:
       description: Get a Monet meme
       usage_hint: caption text
       should_escape: false
+    - command: /croissant
+      url: https://kitten.vibioh.fr/slack/croissant
+      description: Get a croissant meme
+      usage_hint: caption text
+      should_escape: false
     - command: /meme
       url: https://kitten.vibioh.fr/slack/custom
       description: Get a custom meme from an image query
