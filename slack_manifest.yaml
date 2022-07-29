@@ -47,6 +47,11 @@ features:
       description: Get a croissant meme
       usage_hint: caption text
       should_escape: false
+    - command: /apero
+      url: https://kitten.vibioh.fr/slack/apero
+      description: Get a apero meme
+      usage_hint: caption text
+      should_escape: false
     - command: /meme
       url: https://kitten.vibioh.fr/slack/custom
       description: Get a custom meme from an image query
