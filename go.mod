@@ -3,14 +3,14 @@ module github.com/ViBiOh/kitten
 go 1.18
 
 require (
-	github.com/ViBiOh/ChatPotte v0.0.29
+	github.com/ViBiOh/ChatPotte v0.0.30
 	github.com/ViBiOh/flags v1.1.0
-	github.com/ViBiOh/httputils/v4 v4.45.0
+	github.com/ViBiOh/httputils/v4 v4.45.1
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/prometheus/client_golang v1.12.2
-	go.opentelemetry.io/otel/trace v1.8.0
+	go.opentelemetry.io/otel/trace v1.9.0
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 )
 
@@ -32,11 +32,11 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/tdewolff/minify/v2 v2.12.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.33.0 // indirect
-	go.opentelemetry.io/otel v1.8.0 // indirect
-	go.opentelemetry.io/otel/exporters/jaeger v1.8.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.34.0 // indirect
+	go.opentelemetry.io/otel v1.9.0 // indirect
+	go.opentelemetry.io/otel/exporters/jaeger v1.9.0 // indirect
 	go.opentelemetry.io/otel/metric v0.31.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.8.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.9.0 // indirect
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
