@@ -10,7 +10,7 @@ require (
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/prometheus/client_golang v1.12.2
-	go.opentelemetry.io/otel/trace v1.8.0
+	go.opentelemetry.io/otel/trace v1.9.0
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 )
 
@@ -33,7 +33,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.12.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.33.0 // indirect
-	go.opentelemetry.io/otel v1.8.0 // indirect
+	go.opentelemetry.io/otel v1.9.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.8.0 // indirect
 	go.opentelemetry.io/otel/metric v0.31.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.8.0 // indirect
