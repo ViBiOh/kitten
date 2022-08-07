@@ -85,12 +85,12 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 			return ResponseObject{}, ErrNotFound
 		}
 
-		return ResponseObject{}, fmt.Errorf("unable to search gif: %s", err)
+		return ResponseObject{}, fmt.Errorf("search gif: %s", err)
 	}
 
 	var search response
 	if err := httpjson.Read(resp, &search); err != nil {
-		return ResponseObject{}, fmt.Errorf("unable to parse gif response: %s", err)
+		return ResponseObject{}, fmt.Errorf("parse gif response: %s", err)
 	}
 
 	if len(search.Results) == 0 || len(search.Next) == 0 {
@@ -103,11 +103,11 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 		go func() {
 			payload, err := json.Marshal(gif)
 			if err != nil {
-				logger.Error("unable to marshal gif for cache: %s", err)
+				logger.Error("marshal gif for cache: %s", err)
 			}
 
 			if err = a.redisApp.Store(context.Background(), cacheID(gif.ID), payload, cacheDuration); err != nil {
-				logger.Error("unable to save gif in cache: %s", err)
+				logger.Error("save gif in cache: %s", err)
 			}
 		}()
 	}
@@ -120,12 +120,12 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
-			return ResponseObject{}, fmt.Errorf("unable to get gif `%s`: %s", id, err)
+			return ResponseObject{}, fmt.Errorf("get gif `%s`: %s", id, err)
 		}
 
 		var result response
 		if err := httpjson.Read(resp, &result); err != nil {
-			return ResponseObject{}, fmt.Errorf("unable to parse gif response: %s", err)
+			return ResponseObject{}, fmt.Errorf("parse gif response: %s", err)
 		}
 
 		if len(result.Results) == 0 || len(result.Next) == 0 {
@@ -140,12 +140,12 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
 	resp, err := request.Get(fmt.Sprintf("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), query)).Send(ctx, nil)
 	if err != nil {
-		logger.Error("unable to send sahre events to tenor: %s", err)
+		logger.Error("send sahre events to tenor: %s", err)
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("unable to discard analytics body from giphy: %s", err)
+		logger.Error("discard analytics body from giphy: %s", err)
 	}
 }
 

@@ -90,9 +90,9 @@ func New(config Config, redisApp redis.App) App {
 // SendDownload event
 func (a App) SendDownload(ctx context.Context, content Image) {
 	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
-		logger.Error("unable to send download request to unsplash: %s", err)
+		logger.Error("send download request to unsplash: %s", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("unable to discard download body: %s", err)
+		logger.Error("discard download body: %s", err)
 	}
 }
 
@@ -105,7 +105,7 @@ func (a App) Get(ctx context.Context, id string) (Image, error) {
 				return Image{}, ErrRateLimitExceeded
 			}
 
-			return Image{}, fmt.Errorf("unable to get image `%s`: %s", id, err)
+			return Image{}, fmt.Errorf("get image `%s`: %s", id, err)
 		}
 
 		return a.getImageFromResponse(ctx, resp)
@@ -120,7 +120,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 			return Image{}, ErrRateLimitExceeded
 		}
 
-		return Image{}, fmt.Errorf("unable to get random image for `%s`: %s", query, err)
+		return Image{}, fmt.Errorf("get random image for `%s`: %s", query, err)
 	}
 
 	image, err := a.getImageFromResponse(ctx, resp)
@@ -128,11 +128,11 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 		go func() {
 			payload, err := json.Marshal(image)
 			if err != nil {
-				logger.Error("unable to marshal image for cache: %s", err)
+				logger.Error("marshal image for cache: %s", err)
 			}
 
 			if err = a.redisApp.Store(context.Background(), cacheID(image.ID), payload, cacheDuration); err != nil {
-				logger.Error("unable to save image in cache: %s", err)
+				logger.Error("save image in cache: %s", err)
 			}
 		}()
 	}
@@ -143,7 +143,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
-		err = fmt.Errorf("unable to parse random response: %s", err)
+		err = fmt.Errorf("parse random response: %s", err)
 		return
 	}
 

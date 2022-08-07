@@ -124,12 +124,12 @@ func getQuery(r *http.Request) (url.Values, error) {
 
 	content, err := base64.URLEncoding.DecodeString(urlPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode content: %s", err)
+		return nil, fmt.Errorf("decode content: %s", err)
 	}
 
 	query, err := url.ParseQuery(string(content))
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse content: %s", err)
+		return nil, fmt.Errorf("parse content: %s", err)
 	}
 
 	return query, nil

@@ -69,21 +69,21 @@ func (a App) getGifCacheFilename(id, caption string) string {
 
 func (a App) storeGifInCache(id, caption string, image *gif.GIF) {
 	if file, err := os.OpenFile(a.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		logger.Error("unable to open gif to local cache: %s", err)
+		logger.Error("open gif to local cache: %s", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
-		logger.Error("unable to write gif to local cache: %s", err)
+		logger.Error("write gif to local cache: %s", err)
 	}
 }
 
 func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
 	image, err := getGif(ctx, from)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get gif: %s", err)
+		return nil, fmt.Errorf("get gif: %s", err)
 	}
 
 	image, err = a.CaptionGif(ctx, image, caption)
 	if err != nil {
-		return nil, fmt.Errorf("unable to caption gif: %s", err)
+		return nil, fmt.Errorf("caption gif: %s", err)
 	}
 
 	return image, nil
@@ -100,14 +100,14 @@ func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) 
 	if info == nil {
 		image, err := a.generateGif(ctx, from, caption)
 		if err != nil {
-			return "", 0, fmt.Errorf("unable to generate image: %s", err)
+			return "", 0, fmt.Errorf("generate image: %s", err)
 		}
 
 		a.storeGifInCache(id, caption, image)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {
-			return "", 0, fmt.Errorf("unable to get image info: %s", err)
+			return "", 0, fmt.Errorf("get image info: %s", err)
 		}
 	}
 
@@ -117,12 +117,12 @@ func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) 
 func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	resp, err := request.Get(imageURL).Send(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch URL `%s`: %s", imageURL, err)
+		return nil, fmt.Errorf("fetch URL `%s`: %s", imageURL, err)
 	}
 
 	output, err := gif.DecodeAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode gif: %s", err)
+		return nil, fmt.Errorf("decode gif: %s", err)
 	}
 
 	return output, nil
@@ -137,7 +137,7 @@ func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 
 	textImage, err := a.caption(gg.NewContext(source.Config.Width, source.Config.Height), text)
 	if err != nil {
-		return source, fmt.Errorf("unable to generate text layer: %s", err)
+		return source, fmt.Errorf("generate text layer: %s", err)
 	}
 	textImageBounds := textImage.Bounds()
 

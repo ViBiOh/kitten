@@ -160,7 +160,7 @@ func (a App) handleSearch(ctx context.Context, kind memeKind, interactionToken, 
 func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
 	imagePath, size, err := a.generateAndStoreImage(ctx, image.ID, image.Raw, caption)
 	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to generate image: %s", err))
+		return discord.NewError(false, fmt.Errorf("generate image: %s", err))
 	}
 
 	resp := discord.NewResponse(discord.ChannelMessageWithSource, content)
@@ -180,7 +180,7 @@ func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, eph
 func (a App) getDiscordGiphyResponse(ctx context.Context, content string, ephemeral bool, image giphy.Gif, caption string) discord.InteractionResponse {
 	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images["downsized"].URL, caption)
 	if err != nil {
-		return discord.NewError(false, fmt.Errorf("unable to generate gif: %s", err))
+		return discord.NewError(false, fmt.Errorf("generate gif: %s", err))
 	}
 
 	resp := discord.NewResponse(discord.ChannelMessageWithSource, content)

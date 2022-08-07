@@ -52,7 +52,7 @@ func main() {
 	logger.Fatal(err)
 	defer func() {
 		if closeErr := inputFile.Close(); closeErr != nil {
-			logger.Warn("unable to close input file: %s", err)
+			logger.Warn("close input file: %s", err)
 		}
 	}()
 
@@ -60,7 +60,7 @@ func main() {
 	logger.Fatal(err)
 	defer func() {
 		if closeErr := outputFile.Close(); closeErr != nil {
-			logger.Warn("unable to close output file: %s", err)
+			logger.Warn("close output file: %s", err)
 		}
 	}()
 
@@ -74,12 +74,12 @@ func main() {
 func generateGif(kittenApp kitten.App, input, output *os.File, caption string) error {
 	inputContent, err := gif.DecodeAll(input)
 	if err != nil {
-		return fmt.Errorf("unable to decode gif: %s", err)
+		return fmt.Errorf("decode gif: %s", err)
 	}
 
 	outputContent, err := kittenApp.CaptionGif(context.Background(), inputContent, caption)
 	if err != nil {
-		return fmt.Errorf("unable to caption gif: %s", err)
+		return fmt.Errorf("caption gif: %s", err)
 	}
 
 	return gif.EncodeAll(output, outputContent)
@@ -88,12 +88,12 @@ func generateGif(kittenApp kitten.App, input, output *os.File, caption string) e
 func generateImage(kittenApp kitten.App, input, output *os.File, caption string) error {
 	inputContent, _, err := image.Decode(input)
 	if err != nil {
-		return fmt.Errorf("unable to decode image: %s", err)
+		return fmt.Errorf("decode image: %s", err)
 	}
 
 	outputContent, err := kittenApp.CaptionImage(context.Background(), inputContent, caption)
 	if err != nil {
-		return fmt.Errorf("unable to caption image: %s", err)
+		return fmt.Errorf("caption image: %s", err)
 	}
 
 	return jpeg.Encode(output, outputContent, &jpeg.Options{Quality: 80})

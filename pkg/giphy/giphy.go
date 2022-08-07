@@ -113,12 +113,12 @@ func (a App) Search(ctx context.Context, query string, offset uint64) (Gif, erro
 			return Gif{}, ErrNotFound
 		}
 
-		return Gif{}, fmt.Errorf("unable to search gif: %s", err)
+		return Gif{}, fmt.Errorf("search gif: %s", err)
 	}
 
 	var search searchResponse
 	if err := httpjson.Read(resp, &search); err != nil {
-		return Gif{}, fmt.Errorf("unable to parse gif response: %s", err)
+		return Gif{}, fmt.Errorf("parse gif response: %s", err)
 	}
 
 	if len(search.Data) == 0 {
@@ -131,11 +131,11 @@ func (a App) Search(ctx context.Context, query string, offset uint64) (Gif, erro
 		go func() {
 			payload, err := json.Marshal(gif)
 			if err != nil {
-				logger.Error("unable to marshal gif for cache: %s", err)
+				logger.Error("marshal gif for cache: %s", err)
 			}
 
 			if err = a.redisApp.Store(context.Background(), cacheID(gif.ID), payload, cacheDuration); err != nil {
-				logger.Error("unable to save gif in cache: %s", err)
+				logger.Error("save gif in cache: %s", err)
 			}
 		}()
 	}
@@ -148,12 +148,12 @@ func (a App) Get(ctx context.Context, id string) (Gif, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Gif, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/gifs/%s?api_key=%s", url.PathEscape(id), a.apiKey)).Send(ctx, nil)
 		if err != nil {
-			return Gif{}, fmt.Errorf("unable to get gif `%s`: %s", id, err)
+			return Gif{}, fmt.Errorf("get gif `%s`: %s", id, err)
 		}
 
 		var random getResponse
 		if err := httpjson.Read(resp, &random); err != nil {
-			return Gif{}, fmt.Errorf("unable to parse gif response: %s", err)
+			return Gif{}, fmt.Errorf("parse gif response: %s", err)
 		}
 
 		if random.Data.IsZero() {
@@ -174,24 +174,24 @@ func (a App) SendAnalytics(ctx context.Context, content Gif) {
 
 	resp, err := a.req.Method(http.MethodGet).Path(fmt.Sprintf("/randomid?api_key=%s", a.apiKey)).Send(ctx, nil)
 	if err != nil {
-		logger.Error("unable to get random id from giphy: %s", err)
+		logger.Error("get random id from giphy: %s", err)
 		return
 	}
 
 	var randomID randomIDResponse
 	if err = httpjson.Read(resp, &randomID); err != nil {
-		logger.Error("unable to parse random id from giphy: %s", err)
+		logger.Error("parse random id from giphy: %s", err)
 		return
 	}
 
 	resp, err = request.Get(fmt.Sprintf("%s&api_key=%s&random_id=%s&ts=%d", analytic.URL, a.apiKey, url.QueryEscape(randomID.ID), time.Now().Unix())).Send(ctx, nil)
 	if err != nil {
-		logger.Error("unable to send analytics to giphy: %s", err)
+		logger.Error("send analytics to giphy: %s", err)
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("unable to discard analytics body from giphy: %s", err)
+		logger.Error("discard analytics body from giphy: %s", err)
 	}
 }
 

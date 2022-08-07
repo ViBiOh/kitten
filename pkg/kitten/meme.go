@@ -49,7 +49,7 @@ func getFontFace(size float64) (font.Face, func()) {
 			New: func() any {
 				impactFace, err := loadFsFont("fonts/impact.ttf", size)
 				if err != nil {
-					logger.Error("unable to load font face: %s", err)
+					logger.Error("load font face: %s", err)
 				}
 
 				return impactFace
@@ -70,7 +70,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 
 	unsplashImage, err := a.unsplashApp.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get image from unsplash: %s", err)
+		return nil, fmt.Errorf("get image from unsplash: %s", err)
 	}
 
 	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
@@ -85,7 +85,7 @@ func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, er
 
 	giphyImage, err := a.giphyApp.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get image from giphy: %s", err)
+		return nil, fmt.Errorf("get image from giphy: %s", err)
 	}
 
 	go a.giphyApp.SendAnalytics(context.Background(), giphyImage)
