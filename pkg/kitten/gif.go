@@ -32,7 +32,7 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		id, caption, err := parseRequest(query)
+		id, search, caption, err := parseRequest(query)
 		if err != nil {
 			httperror.BadRequest(w, err)
 			return
@@ -42,7 +42,7 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		image, err := a.GetFromGiphy(r.Context(), id, caption)
+		image, err := a.GetGif(r.Context(), id, caption, search)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return

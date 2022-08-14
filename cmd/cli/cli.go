@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/kitten/pkg/giphy"
 	"github.com/ViBiOh/kitten/pkg/kitten"
+	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -34,7 +34,7 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
-	kittenApp := kitten.New(kittenConfig, unsplash.App{}, giphy.App{}, nil, nil, "")
+	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, nil, "")
 
 	if len(*input) == 0 {
 		logger.Fatal(errors.New("input filename is required"))

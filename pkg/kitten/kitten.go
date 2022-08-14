@@ -16,7 +16,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
-	"github.com/ViBiOh/kitten/pkg/giphy"
+	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
 	"github.com/prometheus/client_golang/prometheus"
@@ -39,7 +39,7 @@ type App struct {
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
-	giphyApp     giphy.App
+	tenorApp     tenor.App
 	tmpFolder    string
 	website      string
 	unsplashApp  unsplash.App
@@ -60,10 +60,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, giphyApp giphy.App, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer, website string) App {
+func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer, website string) App {
 	return App{
 		unsplashApp:  unsplashApp,
-		giphyApp:     giphyApp,
+		tenorApp:     tenorApp,
 		tracer:       tracer,
 		website:      website,
 		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),
@@ -86,7 +86,7 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		id, caption, err := parseRequest(query)
+		id, _, caption, err := parseRequest(query)
 		if err != nil {
 			httperror.BadRequest(w, err)
 			return
@@ -135,18 +135,20 @@ func getQuery(r *http.Request) (url.Values, error) {
 	return query, nil
 }
 
-func parseRequest(query url.Values) (string, string, error) {
+func parseRequest(query url.Values) (string, string, string, error) {
 	id := strings.TrimSpace(query.Get("id"))
 	if len(id) == 0 {
-		return "", "", fmt.Errorf("id param is required")
+		return "", "", "", fmt.Errorf("id param is required")
 	}
+
+	search := strings.TrimSpace(query.Get("search"))
 
 	caption := strings.TrimSpace(query.Get("caption"))
 	if len(caption) == 0 {
-		return "", "", fmt.Errorf("caption param is required")
+		return "", "", "", fmt.Errorf("caption param is required")
 	}
 
-	return id, caption, nil
+	return id, search, caption, nil
 }
 
 func (a App) caption(imageCtx *gg.Context, text string) (image.Image, error) {

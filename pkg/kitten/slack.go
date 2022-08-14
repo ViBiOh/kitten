@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/ViBiOh/ChatPotte/slack"
-	"github.com/ViBiOh/kitten/pkg/giphy"
+	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -61,10 +60,10 @@ func (a App) SlackCommand(ctx context.Context, payload slack.SlashPayload) slack
 		kind = imageKind
 	}
 
-	return a.getKittenBlock(ctx, kind, payload.Command, payload.Text, 0)
+	return a.getKittenBlock(ctx, kind, payload.Command, payload.Text, "")
 }
 
-func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption string, offset uint64) slack.Response {
+func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption string, next string) slack.Response {
 	if search == customImageCommand || search == customGifSearch {
 		matches := customSearch.FindStringSubmatch(caption)
 		if len(matches) == 0 {
@@ -79,12 +78,13 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 
 	switch kind {
 	case gifKind:
-		image, err := a.giphyApp.Search(ctx, search, offset)
+		image, nextValue, err := a.tenorApp.Search(ctx, search, next)
 
 		switch err {
 		case nil:
 			id = image.ID
-		case giphy.ErrNotFound:
+			next = nextValue
+		case tenor.ErrNotFound:
 			return slack.NewEphemeralMessage("No gif found")
 		default:
 			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
@@ -98,10 +98,10 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 		id = image.ID
 	}
 
-	return a.getSlackInteractResponse(kind, id, search, caption, offset)
+	return a.getSlackInteractResponse(kind, id, search, caption, next)
 }
 
-func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string, offset uint64) slack.Response {
+func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string, next string) slack.Response {
 	var accessory slack.Image
 	switch kind {
 	case gifKind:
@@ -117,8 +117,8 @@ func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string,
 			accessory,
 			slack.NewActions(search,
 				cancelButton,
-				slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s:%s:%d", kind, caption, offset+1), ""),
-				slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s:0", kind, id, caption), "primary"),
+				slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s:%s:%s", kind, caption, next), ""),
+				slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s: ", kind, id, caption), "primary"),
 			),
 		},
 	}
@@ -145,28 +145,28 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 				return slack.NewError(err)
 			}
 
-			return a.getSlackUnsplashResponse(image, action.BlockID, caption, payload.User.ID)
+			return a.getSlackImageResponse(image, action.BlockID, caption, payload.User.ID)
 		case gifKind:
-			image, err := a.giphyApp.Get(ctx, id)
+			image, err := a.tenorApp.Get(ctx, id)
 			if err != nil {
 				return slack.NewError(err)
 			}
 
-			return a.getSlackGiphyResponse(image, action.BlockID, caption, payload.User.ID)
+			return a.getSlackGifReponse(image, action.BlockID, caption, payload.User.ID)
 		default:
 			return slack.NewEphemeralMessage("Sorry, we don't that kind of meme.")
 		}
 	}
 
 	if action.ActionID == nextValue {
-		kind, _, caption, offset := parseValue(action.Value)
-		return a.getKittenBlock(ctx, kind, action.BlockID, caption, offset)
+		kind, _, caption, next := parseValue(action.Value)
+		return a.getKittenBlock(ctx, kind, action.BlockID, caption, next)
 	}
 
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a App) getSlackUnsplashResponse(image unsplash.Image, search, caption, user string) slack.Response {
+func (a App) getSlackImageResponse(image unsplash.Image, search, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
@@ -177,12 +177,9 @@ func (a App) getSlackUnsplashResponse(image unsplash.Image, search, caption, use
 	}
 }
 
-func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string) slack.Response {
+func (a App) getSlackGifReponse(image tenor.ResponseObject, search, caption, user string) slack.Response {
 	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
-	if len(image.User.ProfileURL) > 0 {
-		slackCtx = slackCtx.AddElement(slack.NewText(fmt.Sprintf("GIF By <%s|%s>", image.User.ProfileURL, image.User.Username)))
-	}
-	slackCtx = slackCtx.AddElement(slack.NewAccessory(fmt.Sprintf("%s/images/giphy_logo.png", a.website), "powered by giphy")).AddElement(slack.NewText("Powered By *GIPHY*"))
+	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *tenor*"))
 
 	return slack.Response{
 		ResponseType:   "in_channel",
@@ -195,26 +192,25 @@ func (a App) getSlackGiphyResponse(image giphy.Gif, search, caption, user string
 }
 
 func (a App) getMemeContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, getContent(id, caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, getContent(id, search, caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
 func (a App) getGifContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/gif/%s", a.website, getContent(id, caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
+	return slack.NewImage(fmt.Sprintf("%s/gif/%s", a.website, getContent(id, search, caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
 }
 
-func getContent(id, caption string) string {
-	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(caption))))
+func getContent(id, search, caption string) string {
+	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&search=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(search), url.QueryEscape(caption))))
 }
 
-func parseValue(value string) (memeKind, string, string, uint64) {
+func parseValue(value string) (memeKind, string, string, string) {
 	parts := strings.SplitN(value, ":", 4)
 	if len(parts) == 4 {
-		return parseKind(parts[0]), parts[1], parts[2], 0
+		return parseKind(parts[0]), parts[1], parts[2], ""
 	}
 	if len(parts) == 3 {
-		offset, _ := strconv.ParseUint(parts[2], 10, 64)
-		return parseKind(parts[0]), "", parts[1], offset
+		return parseKind(parts[0]), "", parts[1], parts[2]
 	}
 
-	return "", "", "", 0
+	return "", "", "", ""
 }

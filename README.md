@@ -58,8 +58,6 @@ Usage of kitten:
         [discord] Public Key {KITTEN_DISCORD_PUBLIC_KEY}
   -frameOptions string
         [owasp] X-Frame-Options {KITTEN_FRAME_OPTIONS} (default "deny")
-  -giphyApiKey string
-        [giphy] API Key {KITTEN_GIPHY_API_KEY}
   -graceDuration duration
         [http] Grace duration when SIGTERM received {KITTEN_GRACE_DURATION} (default 30s)
   -hsts
@@ -130,6 +128,10 @@ Usage of kitten:
         [slack] ClientSecret {KITTEN_SLACK_CLIENT_SECRET}
   -slackSigningSecret string
         [slack] Signing secret {KITTEN_SLACK_SIGNING_SECRET}
+  -tenorApiKey string
+        [tenor] API Key {KITTEN_TENOR_API_KEY}
+  -tenorClientKey string
+        [tenor] Client Key {KITTEN_TENOR_CLIENT_KEY}
   -title string
         Application title {KITTEN_TITLE} (default "KittenBot")
   -tmpFolder string

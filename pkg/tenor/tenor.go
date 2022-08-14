@@ -33,7 +33,7 @@ type image struct {
 	URL        string  `json:"url"`
 }
 
-// ResponseObject described from giphy API
+// ResponseObject described from tenor API
 type ResponseObject struct {
 	Images map[string]image `json:"media_formats"`
 	URL    string           `json:"url"`
@@ -78,23 +78,23 @@ func New(config Config, redisApp redis.App) App {
 }
 
 // Search from a gif from Giphy
-func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, error) {
+func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
-			return ResponseObject{}, ErrNotFound
+			return ResponseObject{}, "", ErrNotFound
 		}
 
-		return ResponseObject{}, fmt.Errorf("search gif: %s", err)
+		return ResponseObject{}, "", fmt.Errorf("search gif: %s", err)
 	}
 
 	var search response
 	if err := httpjson.Read(resp, &search); err != nil {
-		return ResponseObject{}, fmt.Errorf("parse gif response: %s", err)
+		return ResponseObject{}, "", fmt.Errorf("parse gif response: %s", err)
 	}
 
 	if len(search.Results) == 0 || len(search.Next) == 0 {
-		return ResponseObject{}, ErrNotFound
+		return ResponseObject{}, "", ErrNotFound
 	}
 
 	gif := search.Results[0]
@@ -112,7 +112,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 		}()
 	}
 
-	return gif, nil
+	return gif, search.Next, nil
 }
 
 // Get gif by id
@@ -140,12 +140,12 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
 	resp, err := request.Get(fmt.Sprintf("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), query)).Send(ctx, nil)
 	if err != nil {
-		logger.Error("send sahre events to tenor: %s", err)
+		logger.Error("send share events to tenor: %s", err)
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("discard analytics body from giphy: %s", err)
+		logger.Error("discard analytics from tenor: %s", err)
 	}
 }
 

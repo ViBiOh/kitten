@@ -78,19 +78,19 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 	return a.generateImage(ctx, unsplashImage.Raw, caption)
 }
 
-// GetFromGiphy generates a meme from the given id with caption text
-func (a App) GetFromGiphy(ctx context.Context, id, caption string) (*gif.GIF, error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromGiphy")
+// GetGif generates a meme from the given id with caption text
+func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetGif")
 	defer end()
 
-	giphyImage, err := a.giphyApp.Get(ctx, id)
+	gifContent, err := a.tenorApp.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("get image from giphy: %s", err)
+		return nil, fmt.Errorf("get gif: %s", err)
 	}
 
-	go a.giphyApp.SendAnalytics(context.Background(), giphyImage)
+	go a.tenorApp.SendAnalytics(context.Background(), gifContent, search)
 
-	return a.generateGif(ctx, giphyImage.Images["downsized"].URL, caption)
+	return a.generateGif(ctx, gifContent.Images["mediumgif"].URL, caption)
 }
 
 // GetGifFromURL generates a meme gif from the given id with caption text
