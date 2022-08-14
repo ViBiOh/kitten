@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ViBiOh/ChatPotte/discord"
+	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
@@ -19,7 +21,7 @@ const (
 
 // DiscordHandler handle discord request
 func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
-	replace, kind, id, search, caption, next, err := a.parseQuery(webhook)
+	replace, kind, id, search, caption, next, err := a.parseQuery(ctx, webhook)
 	if err != nil {
 		return discord.NewError(replace, err), nil
 	}
@@ -37,7 +39,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	return discord.NewEphemeral(replace, "Ok, not now."), nil
 }
 
-func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
+func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
 		switch webhook.Data.Name {
 		case "memegif":
@@ -64,7 +66,14 @@ func (a App) parseQuery(webhook discord.InteractionRequest) (replace bool, kind 
 	if webhook.Type == discord.MessageComponentInteraction {
 		replace = true
 
-		parts := strings.SplitN(webhook.Data.CustomID, contentSeparator, 5)
+		var content string
+
+		content, err = a.redisApp.Load(ctx, redisKey(webhook.Data.CustomID))
+		if err != nil {
+			return
+		}
+
+		parts := strings.SplitN(content, contentSeparator, 5)
 
 		switch parts[0] {
 		case "send":
@@ -144,12 +153,24 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 		response.Type = discord.UpdateMessageCallback
 	}
 
+	sendContent := strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)
+	sendSha := sha.New(sendContent)
+	if err := a.redisApp.Store(ctx, redisKey(sendSha), sendContent, time.Hour); err != nil {
+		return discord.NewError(replace, err)
+	}
+
+	nextContent := strings.Join([]string{"another", string(kind), search, caption, next}, contentSeparator)
+	nextSha := sha.New(nextContent)
+	if err := a.redisApp.Store(ctx, redisKey(nextSha), nextContent, time.Hour); err != nil {
+		return discord.NewError(replace, err)
+	}
+
 	response.Data.Components = []discord.Component{
 		{
 			Type: discord.ActionRowType,
 			Components: []discord.Component{
-				discord.NewButton(discord.PrimaryButton, "Send", strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)),
-				discord.NewButton(discord.SecondaryButton, "Another?", strings.Join([]string{"another", string(kind), search, caption, next}, contentSeparator)),
+				discord.NewButton(discord.PrimaryButton, "Send", sendSha),
+				discord.NewButton(discord.SecondaryButton, "Another?", nextSha),
 				discord.NewButton(discord.DangerButton, "Cancel", "cancel"),
 			},
 		},

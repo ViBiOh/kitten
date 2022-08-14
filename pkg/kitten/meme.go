@@ -85,7 +85,7 @@ func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, 
 
 	gifContent, err := a.tenorApp.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("get gif: %s", err)
+		return nil, fmt.Errorf("get from tenor: %s", err)
 	}
 
 	go a.tenorApp.SendAnalytics(context.Background(), gifContent, search)

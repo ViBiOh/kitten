@@ -16,6 +16,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
+	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
@@ -43,6 +44,7 @@ type App struct {
 	tmpFolder    string
 	website      string
 	unsplashApp  unsplash.App
+	redisApp     redis.App
 }
 
 // Config of package
@@ -60,10 +62,11 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, tracer trace.Tracer, website string) App {
+func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, redisApp redis.App, tracer trace.Tracer, website string) App {
 	return App{
 		unsplashApp:  unsplashApp,
 		tenorApp:     tenorApp,
+		redisApp:     redisApp,
 		tracer:       tracer,
 		website:      website,
 		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),
