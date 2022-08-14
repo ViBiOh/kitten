@@ -118,8 +118,6 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 // Get gif by id
 func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
-	fmt.Println(id, url.QueryEscape(id))
-
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
