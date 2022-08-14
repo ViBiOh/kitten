@@ -11,17 +11,17 @@ import (
 )
 
 func (a App) generateImage(ctx context.Context, from, caption string) (image.Image, error) {
-	image, err := getImage(ctx, from)
+	imageOutput, err := getImage(ctx, from)
 	if err != nil {
-		return nil, fmt.Errorf("get image: %s", err)
+		return nil, fmt.Errorf("get imageOutput: %s", err)
 	}
 
-	image, err = a.CaptionImage(ctx, image, caption)
+	imageOutput, err = a.CaptionImage(ctx, imageOutput, caption)
 	if err != nil {
-		return nil, fmt.Errorf("caption image: %s", err)
+		return nil, fmt.Errorf("caption imageOutput: %s", err)
 	}
 
-	return image, nil
+	return imageOutput, nil
 }
 
 func getImage(ctx context.Context, imageURL string) (image.Image, error) {

@@ -96,23 +96,23 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		image, err := a.GetFromUnsplash(r.Context(), id, caption)
+		imageOutput, err := a.GetFromUnsplash(r.Context(), id, caption)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
 
 		w.Header().Add("Cache-Control", cacheControlDuration)
-		w.Header().Set("Content-Type", "image/jpeg")
+		w.Header().Set("Content-Type", "imageOutput/jpeg")
 		w.WriteHeader(http.StatusOK)
-		if err = jpeg.Encode(w, image, &jpeg.Options{Quality: 80}); err != nil {
+		if err = jpeg.Encode(w, imageOutput, &jpeg.Options{Quality: 80}); err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
 
 		a.increaseServed()
 
-		go a.storeInCache(id, caption, image)
+		go a.storeInCache(id, caption, imageOutput)
 	})
 }
 

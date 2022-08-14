@@ -77,7 +77,7 @@ func New(config Config, redisApp redis.App) App {
 	}
 }
 
-// Search search from a gif from Giphy
+// Search from a gif from Giphy
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
 	if err != nil {
