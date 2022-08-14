@@ -213,7 +213,7 @@ func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemera
 	}
 
 	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
-		Title: "Powered By Tenor",
+		Title: "Powered By tenor",
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})
