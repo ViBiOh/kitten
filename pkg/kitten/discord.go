@@ -10,6 +10,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
+	"github.com/ViBiOh/kitten/pkg/version"
 )
 
 const (
@@ -68,7 +69,7 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 
 		var content string
 
-		content, err = a.redisApp.Load(ctx, redisKey(webhook.Data.CustomID))
+		content, err = a.redisApp.Load(ctx, version.Redis(webhook.Data.CustomID))
 		if err != nil {
 			return
 		}
@@ -155,13 +156,13 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 
 	sendContent := strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)
 	sendSha := sha.New(sendContent)
-	if err := a.redisApp.Store(ctx, redisKey(sendSha), sendContent, time.Hour); err != nil {
+	if err := a.redisApp.Store(ctx, version.Redis(sendSha), sendContent, time.Hour); err != nil {
 		return discord.NewError(replace, err)
 	}
 
 	nextContent := strings.Join([]string{"another", string(kind), search, caption, next}, contentSeparator)
 	nextSha := sha.New(nextContent)
-	if err := a.redisApp.Store(ctx, redisKey(nextSha), nextContent, time.Hour); err != nil {
+	if err := a.redisApp.Store(ctx, version.Redis(nextSha), nextContent, time.Hour); err != nil {
 		return discord.NewError(replace, err)
 	}
 
@@ -200,7 +201,7 @@ func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, eph
 }
 
 func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image tenor.ResponseObject, caption string) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images["downsized"].URL, caption)
+	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images["mediumgif"].URL, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("generate gif: %s", err))
 	}

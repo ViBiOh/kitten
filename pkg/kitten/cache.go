@@ -15,12 +15,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-var cacheVersion = sha.New("vibioh/kitten/1")[:8]
-
-func redisKey(content string) string {
-	return fmt.Sprintf("kitten:%s:%s", cacheVersion, content)
-}
-
 func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bool {
 	var filename string
 	if gif {

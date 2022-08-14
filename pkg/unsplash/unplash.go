@@ -17,6 +17,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/kitten/pkg/version"
 )
 
 // Image describe an image use by app
@@ -158,5 +159,5 @@ func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (out
 }
 
 func cacheID(id string) string {
-	return "kitten:unsplash:" + id
+	return version.Redis("unsplash:" + id)
 }

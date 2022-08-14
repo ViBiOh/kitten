@@ -17,6 +17,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/kitten/pkg/version"
 )
 
 const root = "https://tenor.googleapis.com/v2/"
@@ -117,6 +118,8 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 // Get gif by id
 func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
+	fmt.Println(id, url.QueryEscape(id))
+
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
@@ -128,7 +131,7 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 			return ResponseObject{}, fmt.Errorf("parse gif response: %s", err)
 		}
 
-		if len(result.Results) == 0 || len(result.Next) == 0 {
+		if len(result.Results) == 0 {
 			return ResponseObject{}, ErrNotFound
 		}
 
@@ -150,5 +153,5 @@ func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query st
 }
 
 func cacheID(id string) string {
-	return "kitten:tenor:" + id
+	return version.Redis("tenor:" + id)
 }
