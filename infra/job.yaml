@@ -72,7 +72,7 @@ spec:
           },
           "memegif": {
             "name": "memegif",
-            "description": "Generate a gif with caption from Giphy",
+            "description": "Generate a gif with caption from Tenor",
             "options": [
               {
                 "name": "search",

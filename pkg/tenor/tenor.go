@@ -78,7 +78,7 @@ func New(config Config, redisApp redis.App) App {
 	}
 }
 
-// Search from a gif from Giphy
+// Search from a gif from Tenor
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
 	if err != nil {
@@ -141,7 +141,7 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 
 // SendAnalytics send anonymous analytics event
 func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
-	resp, err := request.Get(fmt.Sprintf("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), query)).Send(ctx, nil)
+	resp, err := a.req.Path(fmt.Sprintf("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), query)).Send(ctx, nil)
 	if err != nil {
 		logger.Error("send share events to tenor: %s", err)
 		return
