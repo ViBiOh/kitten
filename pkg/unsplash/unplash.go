@@ -106,7 +106,7 @@ func (a App) Get(ctx context.Context, id string) (Image, error) {
 				return Image{}, ErrRateLimitExceeded
 			}
 
-			return Image{}, fmt.Errorf("get image `%s`: %s", id, err)
+			return Image{}, fmt.Errorf("get image `%s`: %w", id, err)
 		}
 
 		return a.getImageFromResponse(ctx, resp)
@@ -121,7 +121,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 			return Image{}, ErrRateLimitExceeded
 		}
 
-		return Image{}, fmt.Errorf("get random image for `%s`: %s", query, err)
+		return Image{}, fmt.Errorf("get random image for `%s`: %w", query, err)
 	}
 
 	image, err := a.getImageFromResponse(ctx, resp)
@@ -144,7 +144,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
-		err = fmt.Errorf("parse random response: %s", err)
+		err = fmt.Errorf("parse random response: %w", err)
 		return
 	}
 

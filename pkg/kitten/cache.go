@@ -76,14 +76,14 @@ func (a App) generateAndStoreImage(ctx context.Context, id, from, caption string
 	if info == nil {
 		imageOutput, err := a.generateImage(ctx, from, caption)
 		if err != nil {
-			return "", 0, fmt.Errorf("generate imageOutput: %s", err)
+			return "", 0, fmt.Errorf("generate imageOutput: %w", err)
 		}
 
 		a.storeInCache(id, caption, imageOutput)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {
-			return "", 0, fmt.Errorf("get imageOutput info: %s", err)
+			return "", 0, fmt.Errorf("get imageOutput info: %w", err)
 		}
 	}
 

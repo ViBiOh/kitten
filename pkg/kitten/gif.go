@@ -2,6 +2,7 @@ package kitten
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image/draw"
 	"image/gif"
@@ -15,6 +16,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/fogleman/gg"
 )
 
@@ -44,7 +46,12 @@ func (a App) GifHandler() http.Handler {
 
 		image, err := a.GetGif(r.Context(), id, caption, search)
 		if err != nil {
-			httperror.InternalServerError(w, err)
+			if errors.Is(err, tenor.ErrNotFound) {
+				httperror.NotFound(w)
+			} else {
+				httperror.InternalServerError(w, err)
+			}
+
 			return
 		}
 
@@ -78,12 +85,12 @@ func (a App) storeGifInCache(id, caption string, image *gif.GIF) {
 func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
 	image, err := getGif(ctx, from)
 	if err != nil {
-		return nil, fmt.Errorf("get gif: %s", err)
+		return nil, fmt.Errorf("get gif: %w", err)
 	}
 
 	image, err = a.CaptionGif(ctx, image, caption)
 	if err != nil {
-		return nil, fmt.Errorf("caption gif: %s", err)
+		return nil, fmt.Errorf("caption gif: %w", err)
 	}
 
 	return image, nil
@@ -100,14 +107,14 @@ func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) 
 	if info == nil {
 		image, err := a.generateGif(ctx, from, caption)
 		if err != nil {
-			return "", 0, fmt.Errorf("generate image: %s", err)
+			return "", 0, fmt.Errorf("generate image: %w", err)
 		}
 
 		a.storeGifInCache(id, caption, image)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {
-			return "", 0, fmt.Errorf("get image info: %s", err)
+			return "", 0, fmt.Errorf("get image info: %w", err)
 		}
 	}
 
@@ -117,12 +124,12 @@ func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) 
 func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	resp, err := request.Get(imageURL).Send(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("fetch URL `%s`: %s", imageURL, err)
+		return nil, fmt.Errorf("fetch URL `%s`: %w", imageURL, err)
 	}
 
 	output, err := gif.DecodeAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("decode gif: %s", err)
+		return nil, fmt.Errorf("decode gif: %w", err)
 	}
 
 	return output, nil
@@ -137,7 +144,7 @@ func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 
 	textImage, err := a.caption(gg.NewContext(source.Config.Width, source.Config.Height), text)
 	if err != nil {
-		return source, fmt.Errorf("generate text layer: %s", err)
+		return source, fmt.Errorf("generate text layer: %w", err)
 	}
 	textImageBounds := textImage.Bounds()
 
