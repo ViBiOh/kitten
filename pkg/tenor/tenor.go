@@ -121,6 +121,10 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
+			if resp != nil && resp.StatusCode == http.StatusNotFound {
+				return ResponseObject{}, ErrNotFound
+			}
+
 			return ResponseObject{}, fmt.Errorf("get gif `%s`: %w", id, err)
 		}
 
