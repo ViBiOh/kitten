@@ -44,7 +44,7 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		image, err := a.GetGif(r.Context(), id, caption, search)
+		image, err := a.GetGif(r.Context(), id, search, caption)
 		if err != nil {
 			if errors.Is(err, tenor.ErrNotFound) {
 				httperror.NotFound(w)

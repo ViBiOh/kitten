@@ -101,7 +101,7 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 	return a.getSlackInteractResponse(kind, id, search, caption, next)
 }
 
-func (a App) getSlackInteractResponse(kind memeKind, id, search, caption string, next string) slack.Response {
+func (a App) getSlackInteractResponse(kind memeKind, id, search, caption, next string) slack.Response {
 	var accessory slack.Image
 	switch kind {
 	case gifKind:
