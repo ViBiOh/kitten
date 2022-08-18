@@ -82,7 +82,7 @@ func New(config Config, redisApp redis.App) App {
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
 	if err != nil {
-		if resp != nil && resp.StatusCode == http.StatusNotFound {
+		if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
 			return ResponseObject{}, "", ErrNotFound
 		}
 
