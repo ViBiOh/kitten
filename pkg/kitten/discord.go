@@ -67,6 +67,10 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 	if webhook.Type == discord.MessageComponentInteraction {
 		replace = true
 
+		if webhook.Data.CustomID == cancelValue {
+			return
+		}
+
 		var content string
 
 		content, err = a.redisApp.Load(ctx, version.Redis(webhook.Data.CustomID))
@@ -77,22 +81,21 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 		parts := strings.SplitN(content, contentSeparator, 5)
 
 		switch parts[0] {
-		case "send":
+		case sendValue:
 			if len(parts) != 4 {
-				err = fmt.Errorf("invalid format for sending image: `%s`", webhook.Data.CustomID)
+				err = fmt.Errorf("invalid format for send image: `%s`", webhook.Data.CustomID)
 			}
 			kind = parseKind(parts[1])
 			id = parts[2]
 			caption = parts[3]
-		case "another":
+		case nextValue:
 			if len(parts) != 5 {
-				err = fmt.Errorf("invalid format for another image: `%s`", webhook.Data.CustomID)
+				err = fmt.Errorf("invalid format for next image: `%s`", webhook.Data.CustomID)
 			}
 			kind = parseKind(parts[1])
 			search = parts[2]
 			caption = parts[3]
 			next = parts[4]
-		case "cancel":
 		}
 	}
 
@@ -154,15 +157,13 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 		response.Type = discord.UpdateMessageCallback
 	}
 
-	sendContent := strings.Join([]string{"send", string(kind), id, caption}, contentSeparator)
-	sendSha := sha.New(sendContent)
-	if err := a.redisApp.Store(ctx, version.Redis(sendSha), sendContent, time.Hour); err != nil {
+	sendKey, err := a.getCustomID(ctx, sendValue, string(kind), id, caption)
+	if err != nil {
 		return discord.NewError(replace, err)
 	}
 
-	nextContent := strings.Join([]string{"another", string(kind), search, caption, next}, contentSeparator)
-	nextSha := sha.New(nextContent)
-	if err := a.redisApp.Store(ctx, version.Redis(nextSha), nextContent, time.Hour); err != nil {
+	nextKey, err := a.getCustomID(ctx, nextValue, string(kind), search, caption, next)
+	if err != nil {
 		return discord.NewError(replace, err)
 	}
 
@@ -170,8 +171,8 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 		{
 			Type: discord.ActionRowType,
 			Components: []discord.Component{
-				discord.NewButton(discord.PrimaryButton, "Send", sendSha),
-				discord.NewButton(discord.SecondaryButton, "Another?", nextSha),
+				discord.NewButton(discord.PrimaryButton, "Send", sendKey),
+				discord.NewButton(discord.SecondaryButton, "Another?", nextKey),
 				discord.NewButton(discord.DangerButton, "Cancel", "cancel"),
 			},
 		},
@@ -217,4 +218,10 @@ func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemera
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})
+}
+
+func (a App) getCustomID(ctx context.Context, values ...string) (string, error) {
+	content := strings.Join(values, contentSeparator)
+	key := sha.New(content)
+	return key, a.redisApp.Store(ctx, version.Redis(key), content, time.Hour)
 }
