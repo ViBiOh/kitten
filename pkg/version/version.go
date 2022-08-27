@@ -6,8 +6,11 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-var cacheVersion = sha.New("vibioh/kitten/1")[:8]
+var (
+	CacheVersion = sha.New("vibioh/kitten/1")[:8]
+	CachePrefix  = "kitten:" + CacheVersion
+)
 
 func Redis(content string) string {
-	return fmt.Sprintf("kitten:%s:%s", cacheVersion, content)
+	return fmt.Sprintf("%s:%s", CachePrefix, content)
 }
