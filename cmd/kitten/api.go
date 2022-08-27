@@ -95,12 +95,12 @@ func main() {
 
 	redisApp := redis.New(redisConfig, prometheusApp.Registerer(), tracerApp.GetTracer("redis"))
 	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp), tenor.New(tenorConfig, redisApp), prometheusApp.Registerer(), redisApp, tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
-	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler)
+	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler, tracerApp.GetTracer("discord"))
 	logger.Fatal(err)
 
 	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
 	gifHandler := http.StripPrefix(gifPrefix, kittenApp.GifHandler())
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract).Handler())
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract, tracerApp.GetTracer("slack")).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

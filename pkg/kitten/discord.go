@@ -3,21 +3,23 @@ package kitten
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
+	"net/url"
 
 	"github.com/ViBiOh/ChatPotte/discord"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/ViBiOh/kitten/pkg/version"
 )
 
 const (
-	captionParam     = "caption"
-	searchParam      = "search"
-	idParam          = "id"
-	contentSeparator = ":"
+	captionParam = "caption"
+	searchParam  = "search"
+	idParam      = "id"
+)
+
+var (
+	cachePrefix  = version.Redis("discord")
+	cancelAction = fmt.Sprintf("action=%s", url.QueryEscape(cancelValue))
 )
 
 // DiscordHandler handle discord request
@@ -67,35 +69,24 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 	if webhook.Type == discord.MessageComponentInteraction {
 		replace = true
 
-		if webhook.Data.CustomID == cancelValue {
-			return
-		}
-
-		var content string
-
-		content, err = a.redisApp.Load(ctx, version.Redis(webhook.Data.CustomID))
+		var values url.Values
+		values, err = discord.RestoreCustomID(ctx, a.redisApp, cachePrefix, webhook.Data.CustomID, []string{cancelAction})
 		if err != nil {
 			return
 		}
 
-		parts := strings.SplitN(content, contentSeparator, 5)
-
-		switch parts[0] {
+		switch values.Get("action") {
 		case sendValue:
-			if len(parts) != 4 {
-				err = fmt.Errorf("invalid format for send image: `%s`", webhook.Data.CustomID)
-			}
-			kind = parseKind(parts[1])
-			id = parts[2]
-			caption = parts[3]
+			kind = parseKind(values.Get("kind"))
+			id = values.Get(idParam)
+			caption = values.Get(captionParam)
 		case nextValue:
-			if len(parts) != 5 {
-				err = fmt.Errorf("invalid format for next image: `%s`", webhook.Data.CustomID)
-			}
-			kind = parseKind(parts[1])
-			search = parts[2]
-			caption = parts[3]
-			next = parts[4]
+			kind = parseKind(values.Get("kind"))
+			search = values.Get(searchParam)
+			caption = values.Get(captionParam)
+			next = values.Get("next")
+		case cancelValue:
+			return
 		}
 	}
 
@@ -157,12 +148,25 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 		response.Type = discord.UpdateMessageCallback
 	}
 
-	sendKey, err := a.getCustomID(ctx, sendValue, string(kind), id, caption)
+	sendValues := url.Values{}
+	sendValues.Add("action", sendValue)
+	sendValues.Add("kind", string(kind))
+	sendValues.Add(idParam, id)
+	sendValues.Add(captionParam, caption)
+
+	sendKey, err := discord.SaveCustomID(ctx, a.redisApp, cachePrefix, sendValues)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
 
-	nextKey, err := a.getCustomID(ctx, nextValue, string(kind), search, caption, next)
+	nextValues := url.Values{}
+	nextValues.Add("action", nextValue)
+	nextValues.Add("kind", string(kind))
+	nextValues.Add(searchParam, search)
+	nextValues.Add(captionParam, caption)
+	nextValues.Add("next", next)
+
+	nextKey, err := discord.SaveCustomID(ctx, a.redisApp, cachePrefix, nextValues)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
@@ -173,7 +177,7 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 			Components: []discord.Component{
 				discord.NewButton(discord.PrimaryButton, "Send", sendKey),
 				discord.NewButton(discord.SecondaryButton, "Another?", nextKey),
-				discord.NewButton(discord.DangerButton, "Cancel", "cancel"),
+				discord.NewButton(discord.DangerButton, "Cancel", cancelAction),
 			},
 		},
 	}
@@ -218,10 +222,4 @@ func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemera
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})
-}
-
-func (a App) getCustomID(ctx context.Context, values ...string) (string, error) {
-	content := strings.Join(values, contentSeparator)
-	key := sha.New(content)
-	return key, a.redisApp.Store(ctx, version.Redis(key), content, time.Hour)
 }
