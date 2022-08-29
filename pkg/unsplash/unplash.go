@@ -13,6 +13,7 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/cache"
+	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
@@ -106,7 +107,7 @@ func (a App) Get(ctx context.Context, id string) (Image, error) {
 				return Image{}, ErrRateLimitExceeded
 			}
 
-			return Image{}, fmt.Errorf("get image `%s`: %w", id, err)
+			return Image{}, httperror.FromResponse(resp, fmt.Errorf("get image `%s`: %w", id, err))
 		}
 
 		return a.getImageFromResponse(ctx, resp)
@@ -121,7 +122,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 			return Image{}, ErrRateLimitExceeded
 		}
 
-		return Image{}, fmt.Errorf("get random image for `%s`: %w", query, err)
+		return Image{}, httperror.FromResponse(resp, fmt.Errorf("get random image for `%s`: %w", query, err))
 	}
 
 	image, err := a.getImageFromResponse(ctx, resp)

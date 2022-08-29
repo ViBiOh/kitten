@@ -6,13 +6,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/cache"
+	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
@@ -82,11 +82,7 @@ func New(config Config, redisApp redis.App) App {
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
 	if err != nil {
-		if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusBadRequest) {
-			return ResponseObject{}, "", ErrNotFound
-		}
-
-		return ResponseObject{}, "", fmt.Errorf("search gif: %w", err)
+		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
 
 	var search response
@@ -121,11 +117,7 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
-			if resp != nil && resp.StatusCode == http.StatusNotFound {
-				return ResponseObject{}, ErrNotFound
-			}
-
-			return ResponseObject{}, fmt.Errorf("get gif `%s`: %w", id, err)
+			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
 		}
 
 		var result response
