@@ -2,7 +2,6 @@ package unsplash
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -18,6 +17,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/version"
 )
 
@@ -59,7 +59,7 @@ var (
 
 // App of package
 type App struct {
-	redisApp    redis.App
+	cacheApp    cache.App[string, Image]
 	appName     string
 	req         request.Request
 	downloadReq request.Request
@@ -80,13 +80,27 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.App) App {
-	return App{
+func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
+	app := App{
 		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
-		redisApp:    redisApp,
 		appName:     strings.TrimSpace(*config.appName),
 	}
+
+	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (Image, error) {
+		resp, err := app.req.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
+		if err != nil {
+			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
+				return Image{}, ErrRateLimitExceeded
+			}
+
+			return Image{}, httperror.FromResponse(resp, fmt.Errorf("get image `%s`: %w", id, err))
+		}
+
+		return app.getImageFromResponse(ctx, resp)
+	}, cacheDuration, 6, tracerApp.GetTracer("unsplash_cache"))
+
+	return app
 }
 
 // SendDownload event
@@ -100,18 +114,7 @@ func (a App) SendDownload(ctx context.Context, content Image) {
 
 // Get from unsplash for given id
 func (a App) Get(ctx context.Context, id string) (Image, error) {
-	return cache.Retrieve(ctx, a.redisApp, func(ctx context.Context) (Image, error) {
-		resp, err := a.req.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
-		if err != nil {
-			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
-				return Image{}, ErrRateLimitExceeded
-			}
-
-			return Image{}, httperror.FromResponse(resp, fmt.Errorf("get image `%s`: %w", id, err))
-		}
-
-		return a.getImageFromResponse(ctx, resp)
-	}, cacheDuration, cacheID(id))
+	return a.cacheApp.Get(ctx, id)
 }
 
 // Search from unsplash for given keyword
@@ -128,12 +131,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 	image, err := a.getImageFromResponse(ctx, resp)
 	if err != nil {
 		go func() {
-			payload, err := json.Marshal(image)
-			if err != nil {
-				logger.Error("marshal image for cache: %s", err)
-			}
-
-			if err = a.redisApp.Store(context.Background(), cacheID(image.ID), payload, cacheDuration); err != nil {
+			if err = a.cacheApp.Store(context.Background(), image.ID, image); err != nil {
 				logger.Error("save image in cache: %s", err)
 			}
 		}()

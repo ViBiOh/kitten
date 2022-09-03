@@ -2,7 +2,6 @@ package tenor
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -17,6 +16,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/version"
 )
 
@@ -48,7 +48,7 @@ type response struct {
 
 // App of package
 type App struct {
-	redisApp  redis.App
+	cacheApp  cache.App[string, ResponseObject]
 	apiKey    string
 	clientKey string
 	req       request.Request
@@ -69,13 +69,32 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.App) App {
-	return App{
+func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
+	app := App{
 		req:       request.New().URL(root),
 		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
 		clientKey: url.QueryEscape(strings.TrimSpace(*config.clientKey)),
-		redisApp:  redisApp,
 	}
+
+	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (ResponseObject, error) {
+		resp, err := app.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", app.apiKey, app.clientKey, url.QueryEscape(id))).Send(ctx, nil)
+		if err != nil {
+			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
+		}
+
+		var result response
+		if err := httpjson.Read(resp, &result); err != nil {
+			return ResponseObject{}, fmt.Errorf("parse gif response: %w", err)
+		}
+
+		if len(result.Results) == 0 {
+			return ResponseObject{}, ErrNotFound
+		}
+
+		return result.Results[0], nil
+	}, cacheDuration, 6, tracerApp.GetTracer("tenor_cache"))
+
+	return app
 }
 
 // Search from a gif from Tenor
@@ -98,12 +117,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 	if err != nil {
 		go func() {
-			payload, err := json.Marshal(gif)
-			if err != nil {
-				logger.Error("marshal gif for cache: %s", err)
-			}
-
-			if err = a.redisApp.Store(context.Background(), cacheID(gif.ID), payload, cacheDuration); err != nil {
+			if err = a.cacheApp.Store(context.Background(), gif.ID, gif); err != nil {
 				logger.Error("save gif in cache: %s", err)
 			}
 		}()
@@ -114,23 +128,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 // Get gif by id
 func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
-	return cache.Retrieve(ctx, a.redisApp, func(ctx context.Context) (ResponseObject, error) {
-		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
-		if err != nil {
-			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
-		}
-
-		var result response
-		if err := httpjson.Read(resp, &result); err != nil {
-			return ResponseObject{}, fmt.Errorf("parse gif response: %w", err)
-		}
-
-		if len(result.Results) == 0 {
-			return ResponseObject{}, ErrNotFound
-		}
-
-		return result.Results[0], nil
-	}, cacheDuration, cacheID(id))
+	return a.cacheApp.Get(ctx, id)
 }
 
 // SendAnalytics send anonymous analytics event
