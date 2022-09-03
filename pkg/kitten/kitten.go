@@ -37,14 +37,14 @@ var (
 
 // App of package
 type App struct {
+	redisApp     redis.App
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
-	tenorApp     tenor.App
 	tmpFolder    string
 	website      string
 	unsplashApp  unsplash.App
-	redisApp     redis.App
+	tenorApp     tenor.App
 }
 
 // Config of package

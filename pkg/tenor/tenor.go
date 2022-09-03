@@ -30,8 +30,8 @@ var (
 )
 
 type image struct {
-	Dimensions []int64 `json:"dims"`
 	URL        string  `json:"url"`
+	Dimensions []int64 `json:"dims"`
 }
 
 // ResponseObject described from tenor API
@@ -42,8 +42,8 @@ type ResponseObject struct {
 }
 
 type response struct {
-	Results []ResponseObject `json:"results"`
 	Next    string           `json:"next"`
+	Results []ResponseObject `json:"results"`
 }
 
 // App of package
