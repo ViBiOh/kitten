@@ -100,7 +100,7 @@ func (a App) SendDownload(ctx context.Context, content Image) {
 
 // Get from unsplash for given id
 func (a App) Get(ctx context.Context, id string) (Image, error) {
-	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (Image, error) {
+	return cache.Retrieve(ctx, a.redisApp, func(ctx context.Context) (Image, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
@@ -111,7 +111,7 @@ func (a App) Get(ctx context.Context, id string) (Image, error) {
 		}
 
 		return a.getImageFromResponse(ctx, resp)
-	}, cacheDuration)
+	}, cacheDuration, cacheID(id))
 }
 
 // Search from unsplash for given keyword

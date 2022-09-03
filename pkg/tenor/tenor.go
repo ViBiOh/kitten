@@ -114,7 +114,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 // Get gif by id
 func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
-	return cache.Retrieve(ctx, a.redisApp, cacheID(id), func(ctx context.Context) (ResponseObject, error) {
+	return cache.Retrieve(ctx, a.redisApp, func(ctx context.Context) (ResponseObject, error) {
 		resp, err := a.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", a.apiKey, a.clientKey, url.QueryEscape(id))).Send(ctx, nil)
 		if err != nil {
 			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
@@ -130,7 +130,7 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 		}
 
 		return result.Results[0], nil
-	}, cacheDuration)
+	}, cacheDuration, cacheID(id))
 }
 
 // SendAnalytics send anonymous analytics event
