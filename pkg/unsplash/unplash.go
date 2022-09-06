@@ -82,13 +82,13 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 // New creates new App from Config
 func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
 	app := App{
-		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
+		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
 		appName:     strings.TrimSpace(*config.appName),
 	}
 
 	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (Image, error) {
-		resp, err := app.req.Path(fmt.Sprintf("/photos/%s", url.PathEscape(id))).Send(ctx, nil)
+		resp, err := app.req.Path("/photos/%s", url.PathEscape(id)).Send(ctx, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 				return Image{}, ErrRateLimitExceeded
@@ -119,7 +119,7 @@ func (a App) Get(ctx context.Context, id string) (Image, error) {
 
 // Search from unsplash for given keyword
 func (a App) Search(ctx context.Context, query string) (Image, error) {
-	resp, err := a.req.Path(fmt.Sprintf("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query))).Send(ctx, nil)
+	resp, err := a.req.Path("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 			return Image{}, ErrRateLimitExceeded

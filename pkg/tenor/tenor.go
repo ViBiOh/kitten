@@ -71,13 +71,13 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 // New creates new App from Config
 func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
 	app := App{
-		req:       request.New().URL(root),
+		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
 		clientKey: url.QueryEscape(strings.TrimSpace(*config.clientKey)),
 	}
 
 	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (ResponseObject, error) {
-		resp, err := app.req.Path(fmt.Sprintf("/posts?key=%s&client_key=%s&ids=%s", app.apiKey, app.clientKey, url.QueryEscape(id))).Send(ctx, nil)
+		resp, err := app.req.Path("/posts?key=%s&client_key=%s&ids=%s", app.apiKey, app.clientKey, url.QueryEscape(id)).Send(ctx, nil)
 		if err != nil {
 			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
 		}
@@ -99,7 +99,7 @@ func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
 
 // Search from a gif from Tenor
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
-	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), pos)).Send(ctx, nil)
+	resp, err := a.req.Path("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos)).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
@@ -133,7 +133,7 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 
 // SendAnalytics send anonymous analytics event
 func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
-	resp, err := a.req.Path(fmt.Sprintf("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), query)).Send(ctx, nil)
+	resp, err := a.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		logger.Error("send share events to tenor: %s", err)
 		return
