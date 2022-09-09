@@ -20,18 +20,19 @@ import (
 	"github.com/ViBiOh/kitten/pkg/version"
 )
 
-const root = "https://tenor.googleapis.com/v2/"
+const (
+	root        = "https://tenor.googleapis.com/v2/"
+	maxFileSize = 4 << 20
+)
 
 var (
-	ErrNotFound     = errors.New("no gif found")
-	ImageFormatUsed = "tinygif"
-
+	ErrNotFound   = errors.New("no gif found")
 	cacheDuration = time.Hour * 24 * 7
 )
 
 type image struct {
-	URL        string  `json:"url"`
-	Dimensions []int64 `json:"dims"`
+	URL  string `json:"url"`
+	Size uint64 `json:"size"`
 }
 
 // ResponseObject described from tenor API
@@ -39,6 +40,14 @@ type ResponseObject struct {
 	Images map[string]image `json:"media_formats"`
 	URL    string           `json:"url"`
 	ID     string           `json:"id"`
+}
+
+func (ro ResponseObject) GetImageURL() string {
+	if medium, ok := ro.Images["mediumgif"]; ok && medium.Size < maxFileSize {
+		return medium.URL
+	}
+
+	return ro.Images["tinygif"].URL
 }
 
 type response struct {
@@ -99,7 +108,7 @@ func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
 
 // Search from a gif from Tenor
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
-	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=%s", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos), ImageFormatUsed)).Send(ctx, nil)
+	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
