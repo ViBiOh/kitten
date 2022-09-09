@@ -10,6 +10,7 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
@@ -90,7 +91,7 @@ func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, 
 
 	go a.tenorApp.SendAnalytics(context.Background(), gifContent, search)
 
-	return a.generateGif(ctx, gifContent.Images["mediumgif"].URL, caption)
+	return a.generateGif(ctx, gifContent.Images[tenor.ImageFormatUsed].URL, caption)
 }
 
 // GetGifFromURL generates a meme gif from the given id with caption text

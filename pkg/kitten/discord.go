@@ -206,7 +206,7 @@ func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, eph
 }
 
 func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image tenor.ResponseObject, caption string) discord.InteractionResponse {
-	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images["mediumgif"].URL, caption)
+	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.Images[tenor.ImageFormatUsed].URL, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("generate gif: %w", err))
 	}

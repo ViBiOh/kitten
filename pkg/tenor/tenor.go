@@ -23,8 +23,8 @@ import (
 const root = "https://tenor.googleapis.com/v2/"
 
 var (
-	// ErrNotFound occurs when no git is found
-	ErrNotFound = errors.New("no gif found")
+	ErrNotFound     = errors.New("no gif found")
+	ImageFormatUsed = "tinygif"
 
 	cacheDuration = time.Hour * 24 * 7
 )
@@ -99,7 +99,7 @@ func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
 
 // Search from a gif from Tenor
 func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
-	resp, err := a.req.Path("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos)).Send(ctx, nil)
+	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=%s", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos), ImageFormatUsed)).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
