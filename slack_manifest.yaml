@@ -1,6 +1,6 @@
 display_information:
   name: Kitten
-  description: Get a cute (or not) meme
+  description: Generate a cute (or not) meme
   background_color: "#004492"
 features:
   bot_user:
