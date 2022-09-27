@@ -42,7 +42,7 @@ const (
 )
 
 var (
-	customSearch = regexp.MustCompile(`\|([0-9a-zA-Z -]+)$`)
+	customSearch = regexp.MustCompile(`\|.+$`)
 	cancelButton = slack.NewButtonElement("Cancel", cancelValue, "", "danger")
 )
 
@@ -70,7 +70,12 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value |searched_query`")
 		}
 
-		search = matches[1]
+		var err error
+		search, err = sanitizeValue(matches[1])
+		if err != nil {
+			return slack.NewError(fmt.Errorf("Unable to sanitize value `%s`", matches[1]))
+		}
+
 		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 	}
 
