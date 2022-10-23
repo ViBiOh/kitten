@@ -3,7 +3,7 @@ module github.com/ViBiOh/kitten
 go 1.19
 
 require (
-	github.com/ViBiOh/ChatPotte v0.2.21
+	github.com/ViBiOh/ChatPotte v0.2.22
 	github.com/ViBiOh/flags v1.2.0
 	github.com/ViBiOh/httputils/v4 v4.49.5
 	github.com/fogleman/gg v1.3.0
@@ -11,7 +11,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/prometheus/client_golang v1.13.0
 	go.opentelemetry.io/otel/trace v1.11.1
-	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
+	golang.org/x/image v0.1.0
 	golang.org/x/text v0.4.0
 )
 
