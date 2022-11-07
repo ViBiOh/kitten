@@ -49,15 +49,13 @@ type App struct {
 
 // Config of package
 type Config struct {
-	idsOverrides *string
-	tmpFolder    *string
+	tmpFolder *string
 }
 
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder:    flags.String(fs, prefix, "kitten", "TmpFolder", "Temp folder for storing cache image", "/tmp", overrides),
-		idsOverrides: flags.String(fs, prefix, "kitten", "IdsOverrides", "Ids overrides in the form key1|http1~key2|http2", "", overrides),
+		tmpFolder: flags.String(fs, prefix, "kitten", "TmpFolder", "Temp folder for storing cache image", "/tmp", overrides),
 	}
 }
 

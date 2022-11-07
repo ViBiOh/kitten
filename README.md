@@ -64,8 +64,6 @@ Usage of kitten:
         [owasp] Indicate Strict Transport Security {KITTEN_HSTS} (default true)
   -idleTimeout duration
         [server] Idle Timeout {KITTEN_IDLE_TIMEOUT} (default 2m0s)
-  -idsOverrides string
-        [kitten] Ids overrides in the form key1|http1~key2|http2 {KITTEN_IDS_OVERRIDES}
   -key string
         [server] Key file {KITTEN_KEY}
   -loggerJson
@@ -111,7 +109,7 @@ Usage of kitten:
   -readTimeout duration
         [server] Read Timeout {KITTEN_READ_TIMEOUT} (default 5s)
   -redisAddress string
-        [redis] Redis Address (blank to disable) {KITTEN_REDIS_ADDRESS} (default "localhost:6379")
+        [redis] Redis Address fqdn:port (blank to disable) {KITTEN_REDIS_ADDRESS} (default "localhost:6379")
   -redisAlias string
         [redis] Connection alias, for metric {KITTEN_REDIS_ALIAS}
   -redisDatabase int
