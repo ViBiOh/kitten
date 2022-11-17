@@ -19,6 +19,8 @@ const (
 	unkownKind memeKind = "unknown"
 	imageKind  memeKind = "image"
 	gifKind    memeKind = "gif"
+
+	yoloMagicWord = "yolo"
 )
 
 func parseKind(value string) memeKind {
@@ -60,23 +62,27 @@ func (a App) SlackCommand(ctx context.Context, payload slack.SlashPayload) slack
 		kind = imageKind
 	}
 
-	return a.getKittenBlock(ctx, kind, payload.Command, payload.Text, "")
+	return a.getKittenBlock(ctx, kind, payload.UserID, payload.Command, payload.Text, "")
 }
 
-func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption string, next string) slack.Response {
-	if search == customImageCommand || search == customGifSearch {
-		matches := customSearch.FindStringSubmatch(caption)
-		if len(matches) == 0 {
-			return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value |searched_query`")
-		}
+func (a App) getKittenBlock(ctx context.Context, kind memeKind, user, search, caption string, next string) slack.Response {
+	var yolo bool
 
+	matches := customSearch.FindStringSubmatch(caption)
+	if len(matches) != 0 {
 		var err error
 		search, err = sanitizeValue(matches[1])
 		if err != nil {
-			return slack.NewError(fmt.Errorf("Unable to sanitize value `%s`", matches[1]))
+			return slack.NewError(fmt.Errorf("sanitize value `%s`: %w", matches[1], err))
 		}
 
-		caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
+		if search == yoloMagicWord {
+			yolo = true
+		} else if search == customImageCommand || search == customGifSearch {
+			caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
+		}
+	} else if search == customImageCommand || search == customGifSearch {
+		return slack.NewEphemeralMessage("You must provide a query for image in the form `my caption value |searched_query`")
 	}
 
 	var id string
@@ -103,16 +109,26 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, search, caption 
 		id = image.ID
 	}
 
-	return a.getSlackInteractResponse(kind, id, search, caption, next)
+	return a.getSlackInteractResponse(kind, user, id, search, caption, next, yolo)
 }
 
-func (a App) getSlackInteractResponse(kind memeKind, id, search, caption, next string) slack.Response {
+func (a App) getSlackInteractResponse(kind memeKind, user, id, search, caption, next string, yolo bool) slack.Response {
 	var accessory slack.Image
 	switch kind {
 	case gifKind:
 		accessory = a.getGifContent(id, search, caption)
 	default:
 		accessory = a.getMemeContent(id, search, caption)
+	}
+
+	if yolo {
+		return slack.Response{
+			ResponseType: "in_channel",
+			Blocks: []slack.Block{
+				getSlackHeadline(user),
+				accessory,
+			},
+		}
 	}
 
 	return slack.Response{
@@ -165,7 +181,7 @@ func (a App) SlackInteract(ctx context.Context, payload slack.InteractivePayload
 
 	if action.ActionID == nextValue {
 		kind, _, caption, next := parseValue(action.Value)
-		return a.getKittenBlock(ctx, kind, action.BlockID, caption, next)
+		return a.getKittenBlock(ctx, kind, payload.User.ID, action.BlockID, caption, next)
 	}
 
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
@@ -183,17 +199,21 @@ func (a App) getSlackImageResponse(image unsplash.Image, search, caption, user s
 }
 
 func (a App) getSlackGifReponse(image tenor.ResponseObject, search, caption, user string) slack.Response {
-	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
-	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *tenor*"))
-
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
-			slackCtx,
+			getSlackHeadline(user),
 			a.getGifContent(image.ID, search, caption),
 		},
 	}
+}
+
+func getSlackHeadline(user string) slack.Context {
+	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
+	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *tenor*"))
+
+	return slackCtx
 }
 
 func (a App) getMemeContent(id, search, caption string) slack.Image {
