@@ -123,7 +123,9 @@ func (a App) getSlackInteractResponse(kind memeKind, user, id, search, caption, 
 
 	if yolo {
 		return slack.Response{
-			ResponseType: "in_channel",
+			ResponseType:    "in_channel",
+			ReplaceOriginal: true,
+			DeleteOriginal:  true,
 			Blocks: []slack.Block{
 				getSlackHeadline(user),
 				accessory,
