@@ -78,7 +78,9 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, user, search, ca
 
 		if search == yoloMagicWord {
 			yolo = true
-		} else if search == customImageCommand || search == customGifSearch {
+		}
+
+		if yolo || search == customImageCommand || search == customGifSearch {
 			caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 		}
 	} else if search == customImageCommand || search == customGifSearch {
@@ -123,9 +125,7 @@ func (a App) getSlackInteractResponse(kind memeKind, user, id, search, caption, 
 
 	if yolo {
 		return slack.Response{
-			ResponseType:    "in_channel",
-			ReplaceOriginal: true,
-			DeleteOriginal:  true,
+			ResponseType: "in_channel",
 			Blocks: []slack.Block{
 				getSlackHeadline(user),
 				accessory,
