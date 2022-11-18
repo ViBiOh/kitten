@@ -79,6 +79,7 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, user, search, ca
 		}
 
 		if search == yoloMagicWord {
+			search = initialSearch
 			yolo = true
 		}
 
