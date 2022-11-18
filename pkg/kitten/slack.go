@@ -70,6 +70,8 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, user, search, ca
 
 	matches := customSearch.FindStringSubmatch(caption)
 	if len(matches) != 0 {
+		initialSearch := search
+
 		var err error
 		search, err = sanitizeValue(matches[1])
 		if err != nil {
@@ -80,7 +82,7 @@ func (a App) getKittenBlock(ctx context.Context, kind memeKind, user, search, ca
 			yolo = true
 		}
 
-		if yolo || search == customImageCommand || search == customGifSearch {
+		if yolo || initialSearch == customImageCommand || initialSearch == customGifSearch {
 			caption = strings.TrimSpace(strings.TrimSuffix(caption, matches[0]))
 		}
 	} else if search == customImageCommand || search == customGifSearch {
