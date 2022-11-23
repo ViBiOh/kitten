@@ -52,6 +52,11 @@ features:
       description: Get a apero meme
       usage_hint: caption text
       should_escape: false
+    - command: /rooster
+      url: https://kitten.vibioh.fr/slack/rooster
+      description: Get a rooster meme
+      usage_hint: caption text
+      should_escape: false
     - command: /meme
       url: https://kitten.vibioh.fr/slack/custom
       description: Get a custom meme from an image query
