@@ -125,11 +125,11 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 	gif := search.Results[0]
 
 	if err != nil {
-		go func() {
-			if err = a.cacheApp.Store(context.Background(), gif.ID, gif); err != nil {
+		go func(ctx context.Context) {
+			if err = a.cacheApp.Store(ctx, gif.ID, gif); err != nil {
 				logger.Error("save gif in cache: %s", err)
 			}
-		}()
+		}(tracer.CopyToBackground(ctx))
 	}
 
 	return gif, search.Next, nil

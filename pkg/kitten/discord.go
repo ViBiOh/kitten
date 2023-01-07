@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/ViBiOh/ChatPotte/discord"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/ViBiOh/kitten/pkg/version"
@@ -101,7 +102,7 @@ func (a App) handleDiscordSend(ctx context.Context, kind memeKind, id, search, c
 			return discord.NewError(true, err), nil
 		}
 
-		go a.tenorApp.SendAnalytics(context.Background(), image, search)
+		go a.tenorApp.SendAnalytics(tracer.CopyToBackground(ctx), image, search)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordGifResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
@@ -112,7 +113,7 @@ func (a App) handleDiscordSend(ctx context.Context, kind memeKind, id, search, c
 			return discord.NewError(true, err), nil
 		}
 
-		go a.unsplashApp.SendDownload(context.Background(), image)
+		go a.unsplashApp.SendDownload(tracer.CopyToBackground(ctx), image)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)

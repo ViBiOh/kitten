@@ -73,7 +73,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 		return nil, fmt.Errorf("get image from unsplash: %w", err)
 	}
 
-	go a.unsplashApp.SendDownload(context.Background(), unsplashImage)
+	go a.unsplashApp.SendDownload(tracer.CopyToBackground(ctx), unsplashImage)
 
 	return a.generateImage(ctx, unsplashImage.Raw, caption)
 }
@@ -88,7 +88,7 @@ func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, 
 		return nil, fmt.Errorf("get from tenor: %w", err)
 	}
 
-	go a.tenorApp.SendAnalytics(context.Background(), gifContent, search)
+	go a.tenorApp.SendAnalytics(tracer.CopyToBackground(ctx), gifContent, search)
 
 	return a.generateGif(ctx, gifContent.GetImageURL(), caption)
 }

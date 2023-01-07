@@ -130,11 +130,11 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 
 	image, err := a.getImageFromResponse(ctx, resp)
 	if err != nil {
-		go func() {
-			if err = a.cacheApp.Store(context.Background(), image.ID, image); err != nil {
+		go func(ctx context.Context) {
+			if err = a.cacheApp.Store(ctx, image.ID, image); err != nil {
 				logger.Error("save image in cache: %s", err)
 			}
-		}()
+		}(tracer.CopyToBackground(ctx))
 	}
 
 	return image, err

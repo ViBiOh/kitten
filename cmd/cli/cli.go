@@ -35,6 +35,8 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
+	ctx := context.Background()
+
 	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, redis.App{}, nil, "")
 
 	if len(*input) == 0 {
@@ -66,19 +68,19 @@ func main() {
 	}()
 
 	if filepath.Ext(*input) == ".gif" {
-		logger.Fatal(generateGif(kittenApp, inputFile, outputFile, *caption))
+		logger.Fatal(generateGif(ctx, kittenApp, inputFile, outputFile, *caption))
 	} else {
-		logger.Fatal(generateImage(kittenApp, inputFile, outputFile, *caption))
+		logger.Fatal(generateImage(ctx, kittenApp, inputFile, outputFile, *caption))
 	}
 }
 
-func generateGif(kittenApp kitten.App, input, output *os.File, caption string) error {
+func generateGif(ctx context.Context, kittenApp kitten.App, input, output *os.File, caption string) error {
 	inputContent, err := gif.DecodeAll(input)
 	if err != nil {
 		return fmt.Errorf("decode gif: %w", err)
 	}
 
-	outputContent, err := kittenApp.CaptionGif(context.Background(), inputContent, caption)
+	outputContent, err := kittenApp.CaptionGif(ctx, inputContent, caption)
 	if err != nil {
 		return fmt.Errorf("caption gif: %w", err)
 	}
@@ -86,13 +88,13 @@ func generateGif(kittenApp kitten.App, input, output *os.File, caption string) e
 	return gif.EncodeAll(output, outputContent)
 }
 
-func generateImage(kittenApp kitten.App, input, output *os.File, caption string) error {
+func generateImage(ctx context.Context, kittenApp kitten.App, input, output *os.File, caption string) error {
 	inputContent, _, err := image.Decode(input)
 	if err != nil {
 		return fmt.Errorf("decode image: %w", err)
 	}
 
-	outputContent, err := kittenApp.CaptionImage(context.Background(), inputContent, caption)
+	outputContent, err := kittenApp.CaptionImage(ctx, inputContent, caption)
 	if err != nil {
 		return fmt.Errorf("caption image: %w", err)
 	}
