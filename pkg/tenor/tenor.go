@@ -78,7 +78,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.App, tracerApp tracer.App) App {
+func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
 	app := App{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
