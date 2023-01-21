@@ -37,7 +37,7 @@ var (
 
 // App of package
 type App struct {
-	redisApp     redis.App
+	redisApp     redis.Client
 	tracer       trace.Tracer
 	cachedMetric prometheus.Counter
 	servedMetric prometheus.Counter
@@ -60,7 +60,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, redisApp redis.App, tracer trace.Tracer, website string) App {
+func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, redisApp redis.Client, tracer trace.Tracer, website string) App {
 	return App{
 		unsplashApp:  unsplashApp,
 		tenorApp:     tenorApp,
