@@ -11,6 +11,7 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/cache"
+	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -129,7 +130,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 			if err = a.cacheApp.Store(ctx, gif.ID, gif); err != nil {
 				logger.Error("save gif in cache: %s", err)
 			}
-		}(tracer.CopyToBackground(ctx))
+		}(cntxt.WithoutDeadline(ctx))
 	}
 
 	return gif, search.Next, nil

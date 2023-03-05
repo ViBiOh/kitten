@@ -135,9 +135,9 @@ Usage of kitten:
   -tmpFolder string
         [kitten] Temp folder for storing cache image {KITTEN_TMP_FOLDER} (default "/tmp")
   -tracerRate string
-        [tracer] Jaeger sample rate, 'always', 'never' or a float value {KITTEN_TRACER_RATE} (default "always")
+        [tracer] OpenTracing sample rate, 'always', 'never' or a float value {KITTEN_TRACER_RATE} (default "always")
   -tracerURL string
-        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {KITTEN_TRACER_URL}
+        [tracer] OpenTracing gRPC endpoint (e.g. otel-exporter:4317) {KITTEN_TRACER_URL}
   -unsplashAccessKey string
         [unsplash] Unsplash Access Key {KITTEN_UNSPLASH_ACCESS_KEY}
   -unsplashName string

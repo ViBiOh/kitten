@@ -137,8 +137,10 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 
 // CaptionGif add caption on a gif
 func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
+	var err error
+
 	_, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
-	defer end()
+	defer end(&err)
 
 	wg := concurrent.NewFailFast(8)
 
@@ -156,7 +158,7 @@ func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif
 		})
 	}
 
-	if err := wg.Wait(); err != nil {
+	if err = wg.Wait(); err != nil {
 		return source, err
 	}
 
