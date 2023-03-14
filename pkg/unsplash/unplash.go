@@ -126,6 +126,11 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 			return Image{}, ErrRateLimitExceeded
 		}
 
+		var httpError request.RequestError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return Image{}, httperror.FromResponse(resp, fmt.Errorf("nothing was found for the query `%s`", query))
+		}
+
 		return Image{}, httperror.FromResponse(resp, fmt.Errorf("get random image for `%s`: %w", query, err))
 	}
 
