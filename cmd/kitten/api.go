@@ -96,7 +96,10 @@ func main() {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	redisApp := redis.New(redisConfig, tracerApp.GetTracer("redis"))
+	redisApp, err := redis.New(redisConfig, tracerApp.GetProvider())
+	logger.Fatal(err)
+	defer redisApp.Close()
+
 	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp, tracerApp), tenor.New(tenorConfig, redisApp, tracerApp), prometheusApp.Registerer(), redisApp, tracerApp.GetTracer("meme"), rendererApp.PublicURL(""))
 	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler, tracerApp.GetTracer("discord"))
 	logger.Fatal(err)
