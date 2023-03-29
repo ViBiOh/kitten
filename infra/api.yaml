@@ -27,6 +27,7 @@ spec:
       name: vibioh/kitten
       tag: "202303191309" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     config:
+      GOMAXPROCS: "1"
       KITTEN_DISCORD_APPLICATION_ID: "959191057835393044"
       KITTEN_DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
       KITTEN_LOGGER_JSON: "true"
