@@ -12,7 +12,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	golang.org/x/image v0.6.0
-	golang.org/x/text v0.8.0
+	golang.org/x/text v0.9.0
 )
 
 require (
