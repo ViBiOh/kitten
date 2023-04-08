@@ -11,8 +11,8 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/prometheus/client_golang v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
-	golang.org/x/image v0.6.0
-	golang.org/x/text v0.8.0
+	golang.org/x/image v0.7.0
+	golang.org/x/text v0.9.0
 )
 
 require (
