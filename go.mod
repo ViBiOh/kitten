@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ViBiOh/ChatPotte v0.2.29
-	github.com/ViBiOh/flags v1.2.0
+	github.com/ViBiOh/flags v1.3.0
 	github.com/ViBiOh/httputils/v4 v4.55.2
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
