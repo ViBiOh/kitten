@@ -75,8 +75,8 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		appName:   flags.String(fs, prefix, "unsplash", "Name", "Unsplash App name", "SayIt", overrides),
-		accessKey: flags.String(fs, prefix, "unsplash", "AccessKey", "Unsplash Access Key", "", overrides),
+		appName:   flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").String(fs, "SayIt", overrides),
+		accessKey: flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").String(fs, "", overrides),
 	}
 }
 

@@ -73,8 +73,8 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		apiKey:    flags.String(fs, prefix, "tenor", "ApiKey", "API Key", "", overrides),
-		clientKey: flags.String(fs, prefix, "tenor", "ClientKey", "Client Key", "", overrides),
+		apiKey:    flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("tenor").String(fs, "", overrides),
+		clientKey: flags.New("ClientKey", "Client Key").Prefix(prefix).DocPrefix("tenor").String(fs, "", overrides),
 	}
 }
 
