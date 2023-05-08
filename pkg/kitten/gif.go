@@ -20,7 +20,6 @@ import (
 	"github.com/fogleman/gg"
 )
 
-// GifHandler for gif request. Should be use with net/http
 func (a App) GifHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -135,7 +134,6 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	return output, nil
 }
 
-// CaptionGif add caption on a gif
 func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
 	var err error
 
