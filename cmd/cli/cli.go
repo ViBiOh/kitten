@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/kitten/pkg/kitten"
@@ -22,6 +23,7 @@ const mode = 0o600
 
 func main() {
 	fs := flag.NewFlagSet("kitten-cli", flag.ExitOnError)
+	fs.Usage = flags.Usage(fs)
 
 	loggerConfig := logger.Flags(fs, "logger")
 	kittenConfig := kitten.Flags(fs, "")
