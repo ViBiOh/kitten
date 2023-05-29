@@ -13,7 +13,6 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/kitten/pkg/kitten"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
@@ -39,7 +38,7 @@ func main() {
 
 	ctx := context.Background()
 
-	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, redis.App{}, nil, "")
+	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, nil, nil, "")
 
 	if len(*input) == 0 {
 		logger.Fatal(errors.New("input filename is required"))

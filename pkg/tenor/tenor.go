@@ -58,7 +58,7 @@ type response struct {
 
 // App of package
 type App struct {
-	cacheApp  cache.App[string, ResponseObject]
+	cacheApp  *cache.App[string, ResponseObject]
 	apiKey    string
 	clientKey string
 	req       request.Request

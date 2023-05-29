@@ -60,7 +60,7 @@ var (
 
 // App of package
 type App struct {
-	cacheApp    cache.App[string, Image]
+	cacheApp    *cache.App[string, Image]
 	appName     string
 	req         request.Request
 	downloadReq request.Request
