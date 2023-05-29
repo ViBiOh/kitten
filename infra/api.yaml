@@ -25,7 +25,7 @@ spec:
     nameOverride: kitten
     image:
       name: vibioh/kitten
-      tag: "202305282047" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202305291744" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     config:
       GOMAXPROCS: "1"
       KITTEN_DISCORD_APPLICATION_ID: "959191057835393044"
