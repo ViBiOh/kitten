@@ -1,94 +1,106 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+---
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: kitten-discord
   namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/version: latest
+    k8s-cleaner: "true"
+
 spec:
-  interval: 120m
-  chart:
+  backoffLimit: 3
+  template:
     spec:
-      chart: job
-      version: "0.0.18"
-      sourceRef:
-        kind: HelmRepository
-        name: vibioh
-      interval: 120m
-  install:
-    skipCRDs: true
-  maxHistory: 3
-  upgrade:
-    remediation:
-      retries: 3
-  rollback:
-    cleanupOnFail: true
-  values:
-    nameOverride: kitten-discord
-    extraLabels:
-      k8s-cleaner: "true"
-    image:
-      name: vibioh/discord_configure
-      tag: "latest"
-    config:
-      DISCORD_APPLICATION_ID: "959191057835393044"
-      DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
-      DISCORD_LOGGER_JSON: "true"
-      DISCORD_COMMANDS: |
-        {
-          "meme": {
-            "name": "meme",
-            "description": "Generate a meme with caption from Unsplash",
-            "options": [
-              {
-                "name": "search",
-                "description": "Searched image",
-                "type": 3,
-                "required": true
-              },
-              {
-                "name": "caption",
-                "description": "Caption to add",
-                "type": 3,
-                "required": true
-              }
-            ]
-          },
-          "memedi": {
-            "name": "memedi",
-            "description": "Generate a meme with caption from Unsplash Image ID",
-            "options": [
-              {
-                "name": "id",
-                "description": "Image ID",
-                "type": 3,
-                "required": true
-              },
-              {
-                "name": "caption",
-                "description": "Caption to add",
-                "type": 3,
-                "required": true
-              }
-            ]
-          },
-          "memegif": {
-            "name": "memegif",
-            "description": "Generate a gif with caption from Tenor",
-            "options": [
-              {
-                "name": "search",
-                "description": "Searched image",
-                "type": 3,
-                "required": true
-              },
-              {
-                "name": "caption",
-                "description": "Caption to add",
-                "type": 3,
-                "required": true
-              }
-            ]
-          }
-        }
-    secrets:
-      DISCORD_CLIENT_ID: AgCpI2bac2zLduvacd7mY2OQ2q03hi8SEH92hHVbM9fP5AadaCmaLxjQmKcDoh7DIX8a9B533Hl7Clb06xwxQCFwm81zuAb3jZ9QJAvUeGjSDz8TbEVKoNupxXvezoyfPmR/iSIZFPqzOexB5RVQgWwA9rsSyXnTAUsUZ5EvL8BNUIdRuwGnUisqNXeTr6E7GRfW43vR/TeTbrZHAq+0NiM9pIWuJjsEk+af/7Ks7zVSUuetvmQKDbtlO654xKwR7Kbwv6J+u+OnPKog2lYUtzWXzx6iNMWAjbb0v+XotzYmt4+CiFcn7CBZGbeVHxgrqKSrnvz5JPczxhJUrlcMSViBOH0cLUayzWCuNB05KXMdnQ2vI/EcM8cMLJKPSn63PCRFiqsSfQRN1uVKVBG7jVqPsqLYj6/NK0AhyiZ13mGB2pFvINGeCP2b7Pluc9uIuWpM8mK61D8zDPHLnSM9zDTVO8shz+XEbW25ly9tTYhMYSCWmFXuMiIn60NhN9KFeomSzzAMK9h3nJT44WkY/MppKIcVRyxmcGR71pF4j0S+PLqg5kmKRvbhXYHl75u405y5N5rUM8Z+f47OCcQpZ08DqAT7hxwnFJyHdagEaSPl/liewCPxlI87I57+xt0LU5PhDmIqdwRy2BrY/MnRCJhc+XrK8Ohoy3Jq2wFR87JE4LXodJjSvdDEDG/MvpG9ejKstKmMarZABLjOz7iuGyRf20E=
-      DISCORD_CLIENT_SECRET: AgA/4uOcwWQ4395BCd6lGIQaHwqlX0HSayxR705NrE54T4oe2ElWYKBxVZeIg1SKTi/YeTgnRY8TUx3MaEsQddfljaKuK/EKdjUt668XNdYWbPiwXhcZGKfSTfrDYpKi9BDjB2xcC3QH6SZLjCdpromhCeNlPffb5rO4Wg3+AY0KDavAnv+kU/zkeQ59z4Sh+ixnlokvwZPWrYiVWKopQMIauMJELLcm20Ke7x/ywdEAEUej3lJ9NgJIx1YzfwkdJ6Su8Sejk2F+YL1Y9FuXBIiGLZlK8FAiKhe+sqctmQW89UJra5r2pxO/5jA43uSo8HFTo6jOneLnEJ9Dph3Byj8Iy21d4qkf69G8Om/W4GrGYlcILlyQmABGRp6zHthJkFgiZpJK2UbZ1USgG2SJZUYelD1BRmWSss2bMbnNYaGhz6J3PGPE4jFtfYqPymKxG/w3po6VMpxtQvx58WRfNTDHX+eKuN9rXmgf3EIXzcGlPFdvm5X4c4YBMcgT+c88XTxVCZ+Rbil3ia6a5/pw/Z3JFNg8uEulXRlnWDbWNSYvVMSHtALlfIwqsrZ/ES6gTbUCaNU/uH/qMqlIF/ix8YY3abMJn9iKI4ok6v9yGfZW6kmNfX/JQlf0hPBjk//AfPkDIWaDupfbrXYUCsU/J2oWJb+C4ge71WmMe+Q3ba/2c6nOS5Jr1WUqnm3KhdITWgoTmyPF/N0MJ7DOKO9OH9V0kk7WF9/E/hNuAi9Z/02+HA==
+      automountServiceAccountToken: false
+
+      imagePullSecrets:
+        - name: dockerhub
+
+      restartPolicy: OnFailure
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: discord
+
+          image: vibioh/discord_configure
+          imagePullPolicy: Always
+
+          env:
+            - name: DISCORD_APPLICATION_ID
+              value: "959191057835393044"
+            - name: DISCORD_PUBLIC_KEY
+              value: "2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47"
+            - name: DISCORD_LOGGER_JSON
+              value: "true"
+            - name: DISCORD_COMMANDS
+              value: |
+                {
+                  "meme": {
+                    "name": "meme",
+                    "description": "Generate a meme with caption from Unsplash",
+                    "options": [
+                      {
+                        "name": "search",
+                        "description": "Searched image",
+                        "type": 3,
+                        "required": true
+                      },
+                      {
+                        "name": "caption",
+                        "description": "Caption to add",
+                        "type": 3,
+                        "required": true
+                      }
+                    ]
+                  },
+                  "memedi": {
+                    "name": "memedi",
+                    "description": "Generate a meme with caption from Unsplash Image ID",
+                    "options": [
+                      {
+                        "name": "id",
+                        "description": "Image ID",
+                        "type": 3,
+                        "required": true
+                      },
+                      {
+                        "name": "caption",
+                        "description": "Caption to add",
+                        "type": 3,
+                        "required": true
+                      }
+                    ]
+                  },
+                  "memegif": {
+                    "name": "memegif",
+                    "description": "Generate a gif with caption from Tenor",
+                    "options": [
+                      {
+                        "name": "search",
+                        "description": "Searched image",
+                        "type": 3,
+                        "required": true
+                      },
+                      {
+                        "name": "caption",
+                        "description": "Caption to add",
+                        "type": 3,
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+            - name: DISCORD_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: kitten
+                  key: KITTEN_DISCORD_CLIENT_ID
+            - name: DISCORD_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kitten
+                  key: KITTEN_DISCORD_CLIENT_SECRET
