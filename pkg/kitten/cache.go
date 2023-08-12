@@ -11,8 +11,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ViBiOh/httputils/v4/pkg/hash"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
 func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bool {
@@ -62,7 +62,7 @@ func (a App) storeInCache(id, caption string, image image.Image) {
 }
 
 func (a App) getCacheFilename(id, caption string) string {
-	return filepath.Join(a.tmpFolder, sha.New(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
+	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
 }
 
 func (a App) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
