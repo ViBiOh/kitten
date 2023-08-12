@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/httputils/v4/pkg/concurrent"
+	"github.com/ViBiOh/httputils/v4/pkg/hash"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/fogleman/gg"
@@ -70,7 +70,7 @@ func (a App) GifHandler() http.Handler {
 }
 
 func (a App) getGifCacheFilename(id, caption string) string {
-	return filepath.Join(a.tmpFolder, sha.New(fmt.Sprintf("%s:%s", id, caption))+".gif")
+	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".gif")
 }
 
 func (a App) storeGifInCache(id, caption string, image *gif.GIF) {

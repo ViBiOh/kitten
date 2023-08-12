@@ -3,11 +3,11 @@ package version
 import (
 	"fmt"
 
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
+	"github.com/ViBiOh/httputils/v4/pkg/hash"
 )
 
 var (
-	CacheVersion = sha.New("vibioh/kitten/1")[:8]
+	CacheVersion = hash.String("vibioh/kitten/1")[:8]
 	CachePrefix  = "kitten:" + CacheVersion
 )
 
