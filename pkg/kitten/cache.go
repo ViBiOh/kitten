@@ -7,15 +7,15 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
-func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bool {
+func (a App) serveCached(ctx context.Context, w http.ResponseWriter, id, caption string, gif bool) bool {
 	var filename string
 	if gif {
 		filename = a.getGifCacheFilename(id, caption)
@@ -26,7 +26,7 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bo
 	file, err := os.OpenFile(filename, os.O_RDONLY, 0o600)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			logger.Error("open file from local cache: %s", err)
+			slog.Error("open file from local cache", "err", err)
 		}
 
 		return false
@@ -44,20 +44,20 @@ func (a App) serveCached(w http.ResponseWriter, id, caption string, gif bool) bo
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
-		logger.Error("write file from local cache: %s", err)
+		slog.Error("write file from local cache", "err", err)
 		return false
 	}
 
-	a.increaseCached()
+	a.increaseCached(ctx)
 
 	return true
 }
 
 func (a App) storeInCache(id, caption string, image image.Image) {
 	if file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		logger.Error("open image to local cache: %s", err)
+		slog.Error("open image to local cache", "err", err)
 	} else if err := jpeg.Encode(file, image, &jpeg.Options{Quality: 80}); err != nil {
-		logger.Error("write image to local cache: %s", err)
+		slog.Error("write image to local cache", "err", err)
 	}
 }
 

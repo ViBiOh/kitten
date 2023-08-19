@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,12 +16,11 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -39,8 +39,8 @@ var (
 type App struct {
 	redisApp     redis.Client
 	tracer       trace.Tracer
-	cachedMetric prometheus.Counter
-	servedMetric prometheus.Counter
+	cachedMetric metric.Int64Counter
+	servedMetric metric.Int64Counter
 	tmpFolder    string
 	website      string
 	unsplashApp  unsplash.App
@@ -60,15 +60,32 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, prometheusRegisterer prometheus.Registerer, redisApp redis.Client, tracer trace.Tracer, website string) App {
+func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, redisApp redis.Client, meterProvider metric.MeterProvider, tracer trace.Tracer, website string) App {
+	var cachedCounter, servedCounter metric.Int64Counter
+	if meterProvider != nil {
+		var err error
+
+		meter := meterProvider.Meter("github.com/ViBiOh/kitten/pkg/kitten")
+
+		cachedCounter, err = meter.Int64Counter("kitten_image_cached")
+		if err != nil {
+			slog.Error("create cached counter", "err", err)
+		}
+
+		servedCounter, err = meter.Int64Counter("kitten_image_served")
+		if err != nil {
+			slog.Error("create cached counter", "err", err)
+		}
+	}
+
 	return App{
 		unsplashApp:  unsplashApp,
 		tenorApp:     tenorApp,
 		redisApp:     redisApp,
 		tracer:       tracer,
 		website:      website,
-		cachedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "cached"),
-		servedMetric: prom.Counter(prometheusRegisterer, "kitten", "image", "served"),
+		cachedMetric: cachedCounter,
+		servedMetric: servedCounter,
 		tmpFolder:    strings.TrimSpace(*config.tmpFolder),
 	}
 }
@@ -93,7 +110,7 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		if a.serveCached(w, id, caption, false) {
+		if a.serveCached(r.Context(), w, id, caption, false) {
 			return
 		}
 
@@ -111,7 +128,7 @@ func (a App) Handler() http.Handler {
 			return
 		}
 
-		a.increaseServed()
+		a.increaseServed(r.Context())
 
 		go a.storeInCache(id, caption, imageOutput)
 	})

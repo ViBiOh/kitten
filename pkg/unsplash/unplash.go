@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,11 +16,10 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/version"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Image describe an image use by app
@@ -81,7 +81,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
+func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
 	app := App{
 		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
@@ -99,7 +99,7 @@ func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
 		}
 
 		return app.getImageFromResponse(ctx, resp)
-	}, cacheDuration, 6, tracerApp.GetTracer("unsplash_cache"))
+	}, tracer).WithTTL(cacheDuration)
 
 	return app
 }
@@ -107,9 +107,9 @@ func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
 // SendDownload event
 func (a App) SendDownload(ctx context.Context, content Image) {
 	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
-		logger.Error("send download request to unsplash: %s", err)
+		slog.Error("send download request to unsplash", "err", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("discard download body: %s", err)
+		slog.Error("discard download body", "err", err)
 	}
 }
 
@@ -138,7 +138,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 	if err != nil {
 		go func(ctx context.Context) {
 			if err = a.cacheApp.Store(ctx, image.ID, image); err != nil {
-				logger.Error("save image in cache: %s", err)
+				slog.Error("save image in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}

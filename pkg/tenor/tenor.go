@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strings"
 	"time"
@@ -14,11 +15,10 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/kitten/pkg/version"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -79,7 +79,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
+func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
 	app := App{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
@@ -102,7 +102,7 @@ func New(config Config, redisApp redis.Client, tracerApp tracer.App) App {
 		}
 
 		return result.Results[0], nil
-	}, cacheDuration, 6, tracerApp.GetTracer("tenor_cache"))
+	}, tracer).WithTTL(cacheDuration)
 
 	return app
 }
@@ -128,7 +128,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 	if err != nil {
 		go func(ctx context.Context) {
 			if err = a.cacheApp.Store(ctx, gif.ID, gif); err != nil {
-				logger.Error("save gif in cache: %s", err)
+				slog.Error("save gif in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}
@@ -145,12 +145,12 @@ func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
 func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
 	resp, err := a.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
-		logger.Error("send share events to tenor: %s", err)
+		slog.Error("send share events to tenor", "err", err)
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		logger.Error("discard analytics from tenor: %s", err)
+		slog.Error("discard analytics from tenor", "err", err)
 	}
 }
 
