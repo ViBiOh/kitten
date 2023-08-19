@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image/draw"
 	"image/gif"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,9 +14,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/concurrent"
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/kitten/pkg/tenor"
 	"github.com/fogleman/gg"
 )
@@ -39,7 +39,7 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		if a.serveCached(w, id, caption, true) {
+		if a.serveCached(r.Context(), w, id, caption, true) {
 			return
 		}
 
@@ -63,7 +63,7 @@ func (a App) GifHandler() http.Handler {
 			return
 		}
 
-		a.increaseServed()
+		a.increaseServed(r.Context())
 
 		go a.storeGifInCache(id, caption, image)
 	})
@@ -75,9 +75,9 @@ func (a App) getGifCacheFilename(id, caption string) string {
 
 func (a App) storeGifInCache(id, caption string, image *gif.GIF) {
 	if file, err := os.OpenFile(a.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		logger.Error("open gif to local cache: %s", err)
+		slog.Error("open gif to local cache", "err", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
-		logger.Error("write gif to local cache: %s", err)
+		slog.Error("write gif to local cache", "err", err)
 	}
 }
 
@@ -137,7 +137,7 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
 	var err error
 
-	_, end := tracer.StartSpan(ctx, a.tracer, "captionGif")
+	_, end := telemetry.StartSpan(ctx, a.tracer, "captionGif")
 	defer end(&err)
 
 	wg := concurrent.NewFailFast(8)

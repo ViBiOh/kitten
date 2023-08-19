@@ -1,19 +1,23 @@
 package kitten
 
-import "github.com/ViBiOh/httputils/v4/pkg/model"
+import (
+	"context"
 
-func (a App) increaseServed() {
+	"github.com/ViBiOh/httputils/v4/pkg/model"
+)
+
+func (a App) increaseServed(ctx context.Context) {
 	if model.IsNil(a.servedMetric) {
 		return
 	}
 
-	a.servedMetric.Inc()
+	a.servedMetric.Add(ctx, 1)
 }
 
-func (a App) increaseCached() {
+func (a App) increaseCached(ctx context.Context) {
 	if model.IsNil(a.cachedMetric) {
 		return
 	}
 
-	a.cachedMetric.Inc()
+	a.cachedMetric.Add(ctx, 1)
 }

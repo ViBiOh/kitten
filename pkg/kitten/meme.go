@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"image"
 	"image/gif"
+	"log/slog"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
@@ -50,7 +50,7 @@ func getFontFace(size float64) (font.Face, func()) {
 			New: func() any {
 				impactFace, err := loadFsFont("fonts/impact.ttf", size)
 				if err != nil {
-					logger.Error("load font face: %s", err)
+					slog.Error("load font face", "err", err)
 				}
 
 				return impactFace
@@ -68,7 +68,7 @@ func getFontFace(size float64) (font.Face, func()) {
 func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
 	var err error
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromUnsplash")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromUnsplash")
 	defer end(&err)
 
 	unsplashImage, err := a.unsplashApp.Get(ctx, id)
@@ -85,7 +85,7 @@ func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Ima
 func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
 	var err error
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetGif")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGif")
 	defer end(&err)
 
 	gifContent, err := a.tenorApp.Get(ctx, id)
@@ -100,7 +100,7 @@ func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, 
 
 // GetGifFromURL generates a meme gif from the given id with caption text
 func (a App) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *gif.GIF, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetGifFromURL")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGifFromURL")
 	defer end(&err)
 
 	return a.generateGif(ctx, imageURL, caption)
@@ -108,7 +108,7 @@ func (a App) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *
 
 // GetFromURL a meme caption to the given image name from url
 func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (img image.Image, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "GetFromURL")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromURL")
 	defer end(&err)
 
 	return a.generateImage(ctx, imageURL, caption)
@@ -116,7 +116,7 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (img imag
 
 // CaptionImage add caption on an image
 func (a App) CaptionImage(ctx context.Context, source image.Image, text string) (img image.Image, err error) {
-	_, end := tracer.StartSpan(ctx, a.tracer, "captionImage")
+	_, end := telemetry.StartSpan(ctx, a.tracer, "captionImage")
 	defer end(&err)
 
 	return a.caption(gg.NewContextForImage(source), text)

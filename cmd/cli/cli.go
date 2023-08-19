@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -36,45 +36,60 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger.Global(logger.New(loggerConfig))
-	defer logger.Close()
+	logger.Init(loggerConfig)
 
 	ctx := context.Background()
 
 	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, nil, nil, "")
 
 	if len(*input) == 0 {
-		logger.Fatal(errors.New("input filename is required"))
+		slog.Error("input filename is required")
+		os.Exit(1)
 	}
 
 	if len(*output) == 0 {
-		logger.Fatal(errors.New("output filename is required"))
+		slog.Error("output filename is required")
+		os.Exit(1)
 	}
 
 	if len(*caption) == 0 {
-		logger.Fatal(errors.New("caption is required"))
+		slog.Error("caption is required")
+		os.Exit(1)
 	}
 
 	inputFile, err := os.OpenFile(*input, os.O_RDONLY, mode)
-	logger.Fatal(err)
+	if err != nil {
+		slog.Error("open input", "err", err)
+		os.Exit(1)
+	}
+
 	defer func() {
 		if closeErr := inputFile.Close(); closeErr != nil {
-			logger.Warn("close input file: %s", err)
+			slog.Warn("close input file", "err", err)
 		}
 	}()
 
 	outputFile, err := os.OpenFile(*output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
-	logger.Fatal(err)
+	if err != nil {
+		slog.Error("create output", "err", err)
+		os.Exit(1)
+	}
+
 	defer func() {
 		if closeErr := outputFile.Close(); closeErr != nil {
-			logger.Warn("close output file: %s", err)
+			slog.Warn("close output file", "err", err)
 		}
 	}()
 
 	if filepath.Ext(*input) == ".gif" {
-		logger.Fatal(generateGif(ctx, kittenApp, inputFile, outputFile, *caption))
+		err = generateGif(ctx, kittenApp, inputFile, outputFile, *caption)
 	} else {
-		logger.Fatal(generateImage(ctx, kittenApp, inputFile, outputFile, *caption))
+		err = generateImage(ctx, kittenApp, inputFile, outputFile, *caption)
+	}
+
+	if err != nil {
+		slog.Error("generate", "err", err)
+		os.Exit(1)
 	}
 }
 
