@@ -83,7 +83,7 @@ func main() {
 	}
 
 	defer telemetryApp.Close(ctx)
-	request.AddOpenTelemetryToDefaultClient(telemetryApp.GetMeterProvider(), telemetryApp.GetTraceProvider())
+	request.AddOpenTelemetryToDefaultClient(telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
@@ -92,7 +92,7 @@ func main() {
 	appServer := server.New(appServerConfig)
 	healthApp := health.New(healthConfig)
 
-	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryApp.GetMeter("renderer"), telemetryApp.GetTracer("renderer"))
+	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 	if err != nil {
 		slog.Error("create renderer", "err", err)
 		os.Exit(1)
@@ -102,7 +102,7 @@ func main() {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	redisApp, err := redis.New(redisConfig, telemetryApp.GetMeterProvider(), telemetryApp.GetTraceProvider())
+	redisApp, err := redis.New(redisConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 	if err != nil {
 		slog.Error("create redis", "err", err)
 		os.Exit(1)
@@ -110,9 +110,9 @@ func main() {
 
 	defer redisApp.Close()
 
-	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp, telemetryApp.GetTracer("unsplash")), tenor.New(tenorConfig, redisApp, telemetryApp.GetTracer("tenor")), redisApp, telemetryApp.GetMeterProvider(), telemetryApp.GetTracer("meme"), rendererApp.PublicURL(""))
+	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp, telemetryApp.TracerProvider()), tenor.New(tenorConfig, redisApp, telemetryApp.TracerProvider()), redisApp, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), rendererApp.PublicURL(""))
 
-	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler, telemetryApp.GetTracer("discord"))
+	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler, telemetryApp.TracerProvider())
 	if err != nil {
 		slog.Error("create discord", "err", err)
 		os.Exit(1)
@@ -120,7 +120,7 @@ func main() {
 
 	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
 	gifHandler := http.StripPrefix(gifPrefix, kittenApp.GifHandler())
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract, telemetryApp.GetTracer("slack")).Handler())
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract, telemetryApp.TracerProvider()).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

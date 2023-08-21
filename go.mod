@@ -3,9 +3,9 @@ module github.com/ViBiOh/kitten
 go 1.21
 
 require (
-	github.com/ViBiOh/ChatPotte v0.3.0
+	github.com/ViBiOh/ChatPotte v0.3.1
 	github.com/ViBiOh/flags v1.3.1
-	github.com/ViBiOh/httputils/v4 v4.63.1
+	github.com/ViBiOh/httputils/v4 v4.63.4
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0

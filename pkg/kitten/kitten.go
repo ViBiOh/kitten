@@ -60,34 +60,36 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, redisApp redis.Client, meterProvider metric.MeterProvider, tracer trace.Tracer, website string) App {
-	var cachedCounter, servedCounter metric.Int64Counter
-	if meterProvider != nil {
-		var err error
+func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, redisApp redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) App {
+	app := App{
+		unsplashApp: unsplashApp,
+		tenorApp:    tenorApp,
+		redisApp:    redisApp,
+		website:     website,
+		tmpFolder:   strings.TrimSpace(*config.tmpFolder),
+	}
 
+	if meterProvider != nil {
 		meter := meterProvider.Meter("github.com/ViBiOh/kitten/pkg/kitten")
 
-		cachedCounter, err = meter.Int64Counter("kitten_image_cached")
+		var err error
+
+		app.cachedMetric, err = meter.Int64Counter("kitten.image_cached")
 		if err != nil {
 			slog.Error("create cached counter", "err", err)
 		}
 
-		servedCounter, err = meter.Int64Counter("kitten_image_served")
+		app.servedMetric, err = meter.Int64Counter("kitten.image_served")
 		if err != nil {
-			slog.Error("create cached counter", "err", err)
+			slog.Error("create served counter", "err", err)
 		}
 	}
 
-	return App{
-		unsplashApp:  unsplashApp,
-		tenorApp:     tenorApp,
-		redisApp:     redisApp,
-		tracer:       tracer,
-		website:      website,
-		cachedMetric: cachedCounter,
-		servedMetric: servedCounter,
-		tmpFolder:    strings.TrimSpace(*config.tmpFolder),
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("kitten")
 	}
+
+	return app
 }
 
 // Handler for image request. Should be use with net/http

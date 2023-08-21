@@ -79,7 +79,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
+func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvider) App {
 	app := App{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
@@ -102,7 +102,7 @@ func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
 		}
 
 		return result.Results[0], nil
-	}, tracer).WithTTL(cacheDuration)
+	}, tracerProvider).WithTTL(cacheDuration)
 
 	return app
 }

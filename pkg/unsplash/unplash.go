@@ -81,7 +81,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
+func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvider) App {
 	app := App{
 		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
@@ -99,7 +99,7 @@ func New(config Config, redisApp redis.Client, tracer trace.Tracer) App {
 		}
 
 		return app.getImageFromResponse(ctx, resp)
-	}, tracer).WithTTL(cacheDuration)
+	}, tracerProvider).WithTTL(cacheDuration)
 
 	return app
 }
