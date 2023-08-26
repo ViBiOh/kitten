@@ -10,7 +10,7 @@ import (
 	"github.com/go-oss/image/imageutil"
 )
 
-func (a App) generateImage(ctx context.Context, from, caption string) (image.Image, error) {
+func (a Service) generateImage(ctx context.Context, from, caption string) (image.Image, error) {
 	imageOutput, err := getImage(ctx, from)
 	if err != nil {
 		return nil, fmt.Errorf("get imageOutput: %w", err)

@@ -65,41 +65,41 @@ func getFontFace(size float64) (font.Face, func()) {
 }
 
 // GetFromUnsplash generates a meme from the given id with caption text
-func (a App) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
+func (a Service) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
 	var err error
 
 	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromUnsplash")
 	defer end(&err)
 
-	unsplashImage, err := a.unsplashApp.Get(ctx, id)
+	unsplashImage, err := a.unsplashService.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get image from unsplash: %w", err)
 	}
 
-	go a.unsplashApp.SendDownload(cntxt.WithoutDeadline(ctx), unsplashImage)
+	go a.unsplashService.SendDownload(cntxt.WithoutDeadline(ctx), unsplashImage)
 
 	return a.generateImage(ctx, unsplashImage.Raw, caption)
 }
 
 // GetGif generates a meme from the given id with caption text
-func (a App) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
+func (a Service) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
 	var err error
 
 	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGif")
 	defer end(&err)
 
-	gifContent, err := a.tenorApp.Get(ctx, id)
+	gifContent, err := a.tenorService.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get from tenor: %w", err)
 	}
 
-	go a.tenorApp.SendAnalytics(cntxt.WithoutDeadline(ctx), gifContent, search)
+	go a.tenorService.SendAnalytics(cntxt.WithoutDeadline(ctx), gifContent, search)
 
 	return a.generateGif(ctx, gifContent.GetImageURL(), caption)
 }
 
 // GetGifFromURL generates a meme gif from the given id with caption text
-func (a App) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *gif.GIF, err error) {
+func (a Service) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *gif.GIF, err error) {
 	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGifFromURL")
 	defer end(&err)
 
@@ -107,7 +107,7 @@ func (a App) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *
 }
 
 // GetFromURL a meme caption to the given image name from url
-func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (img image.Image, err error) {
+func (a Service) GetFromURL(ctx context.Context, imageURL, caption string) (img image.Image, err error) {
 	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromURL")
 	defer end(&err)
 
@@ -115,7 +115,7 @@ func (a App) GetFromURL(ctx context.Context, imageURL, caption string) (img imag
 }
 
 // CaptionImage add caption on an image
-func (a App) CaptionImage(ctx context.Context, source image.Image, text string) (img image.Image, err error) {
+func (a Service) CaptionImage(ctx context.Context, source image.Image, text string) (img image.Image, err error) {
 	_, end := telemetry.StartSpan(ctx, a.tracer, "captionImage")
 	defer end(&err)
 

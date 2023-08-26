@@ -24,7 +24,7 @@ var (
 )
 
 // DiscordHandler handle discord request
-func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
+func (a Service) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
 	replace, kind, id, search, caption, next, err := a.parseQuery(ctx, webhook)
 	if err != nil {
 		return discord.NewError(replace, err), nil
@@ -43,7 +43,7 @@ func (a App) DiscordHandler(ctx context.Context, webhook discord.InteractionRequ
 	return discord.NewEphemeral(replace, "Ok, not now."), nil
 }
 
-func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
+func (a Service) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
 		switch webhook.Data.Name {
 		case "memegif":
@@ -71,7 +71,7 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 		replace = true
 
 		var values url.Values
-		values, err = discord.RestoreCustomID(ctx, a.redisApp, cachePrefix, webhook.Data.CustomID, []string{cancelAction})
+		values, err = discord.RestoreCustomID(ctx, a.redisClient, cachePrefix, webhook.Data.CustomID, []string{cancelAction})
 		if err != nil {
 			return
 		}
@@ -94,26 +94,26 @@ func (a App) parseQuery(ctx context.Context, webhook discord.InteractionRequest)
 	return
 }
 
-func (a App) handleDiscordSend(ctx context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
+func (a Service) handleDiscordSend(ctx context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
 	switch kind {
 	case gifKind:
-		image, err := a.tenorApp.Get(ctx, id)
+		image, err := a.tenorService.Get(ctx, id)
 		if err != nil {
 			return discord.NewError(true, err), nil
 		}
 
-		go a.tenorApp.SendAnalytics(cntxt.WithoutDeadline(ctx), image, search)
+		go a.tenorService.SendAnalytics(cntxt.WithoutDeadline(ctx), image, search)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordGifResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
 	default:
-		image, err := a.unsplashApp.Get(ctx, id)
+		image, err := a.unsplashService.Get(ctx, id)
 		if err != nil {
 			return discord.NewError(true, err), nil
 		}
 
-		go a.unsplashApp.SendDownload(cntxt.WithoutDeadline(ctx), image)
+		go a.unsplashService.SendDownload(cntxt.WithoutDeadline(ctx), image)
 
 		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
 			return a.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
@@ -121,13 +121,13 @@ func (a App) handleDiscordSend(ctx context.Context, kind memeKind, id, search, c
 	}
 }
 
-func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interactionToken, search, caption string, replace bool, next string) discord.InteractionResponse {
+func (a Service) handleDiscordSearch(ctx context.Context, kind memeKind, interactionToken, search, caption string, replace bool, next string) discord.InteractionResponse {
 	var response discord.InteractionResponse
 	var id string
 
 	switch kind {
 	case gifKind:
-		image, nextValue, err := a.tenorApp.Search(ctx, search, next)
+		image, nextValue, err := a.tenorService.Search(ctx, search, next)
 		if err != nil {
 			return discord.NewError(replace, err)
 		}
@@ -135,7 +135,7 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 		id = image.ID
 		next = nextValue
 	default:
-		image, err := a.unsplashApp.Search(ctx, search)
+		image, err := a.unsplashService.Search(ctx, search)
 		switch err {
 		case nil:
 			response = a.getDiscordUnsplashResponse(ctx, "", true, image, caption)
@@ -155,7 +155,7 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 	sendValues.Add(idParam, id)
 	sendValues.Add(captionParam, caption)
 
-	sendKey, err := discord.SaveCustomID(ctx, a.redisApp, cachePrefix, sendValues)
+	sendKey, err := discord.SaveCustomID(ctx, a.redisClient, cachePrefix, sendValues)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
@@ -167,7 +167,7 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 	nextValues.Add(captionParam, caption)
 	nextValues.Add("next", next)
 
-	nextKey, err := discord.SaveCustomID(ctx, a.redisApp, cachePrefix, nextValues)
+	nextKey, err := discord.SaveCustomID(ctx, a.redisClient, cachePrefix, nextValues)
 	if err != nil {
 		return discord.NewError(replace, err)
 	}
@@ -186,7 +186,7 @@ func (a App) handleDiscordSearch(ctx context.Context, kind memeKind, interaction
 	return response
 }
 
-func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
+func (a Service) getDiscordUnsplashResponse(ctx context.Context, content string, ephemeral bool, image unsplash.Image, caption string) discord.InteractionResponse {
 	imagePath, size, err := a.generateAndStoreImage(ctx, image.ID, image.Raw, caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("generate image: %w", err))
@@ -206,7 +206,7 @@ func (a App) getDiscordUnsplashResponse(ctx context.Context, content string, eph
 	})
 }
 
-func (a App) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image tenor.ResponseObject, caption string) discord.InteractionResponse {
+func (a Service) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image tenor.ResponseObject, caption string) discord.InteractionResponse {
 	imagePath, size, err := a.generateAndStoreGif(ctx, image.ID, image.GetImageURL(), caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("generate gif: %w", err))

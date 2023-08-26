@@ -22,7 +22,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Image describe an image use by app
 type Image struct {
 	ID          string
 	Raw         string
@@ -32,7 +31,6 @@ type Image struct {
 	AuthorURL   string
 }
 
-// IsZero checks if instance has value
 func (i Image) IsZero() bool {
 	return len(i.ID) == 0
 }
@@ -52,44 +50,41 @@ type unsplashResponse struct {
 const root = "https://api.unsplash.com"
 
 var (
-	// ErrRateLimitExceeded occurs when rate limit is exceeded
 	ErrRateLimitExceeded = errors.New("rate limit exceeded")
 
 	cacheDuration = time.Hour * 24 * 7
 )
 
-// App of package
-type App struct {
-	cacheApp    *cache.App[string, Image]
+type Service struct {
+	cache       *cache.Cache[string, Image]
 	appName     string
 	req         request.Request
 	downloadReq request.Request
 }
 
-// Config of package
 type Config struct {
-	appName   *string
-	accessKey *string
+	appName   string
+	accessKey string
 }
 
-// Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		appName:   flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").String(fs, "SayIt", overrides),
-		accessKey: flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").String(fs, "", overrides),
-	}
+	var config Config
+
+	flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.appName, "SayIt", overrides)
+	flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.accessKey, "", overrides)
+
+	return config
 }
 
-// New creates new App from Config
-func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvider) App {
-	app := App{
-		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
-		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", strings.TrimSpace(*config.accessKey))),
-		appName:     strings.TrimSpace(*config.appName),
+func New(config Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+	service := Service{
+		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
+		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)),
+		appName:     config.appName,
 	}
 
-	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (Image, error) {
-		resp, err := app.req.Path("/photos/%s", url.PathEscape(id)).Send(ctx, nil)
+	service.cache = cache.New(redisClient, cacheID, func(ctx context.Context, id string) (Image, error) {
+		resp, err := service.req.Path("/photos/%s", url.PathEscape(id)).Send(ctx, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 				return Image{}, ErrRateLimitExceeded
@@ -98,14 +93,13 @@ func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvid
 			return Image{}, httperror.FromResponse(resp, fmt.Errorf("get image `%s`: %w", id, err))
 		}
 
-		return app.getImageFromResponse(ctx, resp)
+		return service.getImageFromResponse(ctx, resp)
 	}, tracerProvider).WithTTL(cacheDuration)
 
-	return app
+	return service
 }
 
-// SendDownload event
-func (a App) SendDownload(ctx context.Context, content Image) {
+func (a Service) SendDownload(ctx context.Context, content Image) {
 	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
 		slog.Error("send download request to unsplash", "err", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
@@ -113,13 +107,11 @@ func (a App) SendDownload(ctx context.Context, content Image) {
 	}
 }
 
-// Get from unsplash for given id
-func (a App) Get(ctx context.Context, id string) (Image, error) {
-	return a.cacheApp.Get(ctx, id)
+func (a Service) Get(ctx context.Context, id string) (Image, error) {
+	return a.cache.Get(ctx, id)
 }
 
-// Search from unsplash for given keyword
-func (a App) Search(ctx context.Context, query string) (Image, error) {
+func (a Service) Search(ctx context.Context, query string) (Image, error) {
 	resp, err := a.req.Path("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
@@ -137,7 +129,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 	image, err := a.getImageFromResponse(ctx, resp)
 	if err != nil {
 		go func(ctx context.Context) {
-			if err = a.cacheApp.Store(ctx, image.ID, image); err != nil {
+			if err = a.cache.Store(ctx, image.ID, image); err != nil {
 				slog.Error("save image in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
@@ -146,7 +138,7 @@ func (a App) Search(ctx context.Context, query string) (Image, error) {
 	return image, err
 }
 
-func (a App) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
+func (a Service) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("parse random response: %w", err)

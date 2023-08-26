@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/ViBiOh/flags"
@@ -36,7 +35,6 @@ type image struct {
 	Size uint64 `json:"size"`
 }
 
-// ResponseObject described from tenor API
 type ResponseObject struct {
 	Images map[string]image `json:"media_formats"`
 	URL    string           `json:"url"`
@@ -56,38 +54,36 @@ type response struct {
 	Results []ResponseObject `json:"results"`
 }
 
-// App of package
-type App struct {
-	cacheApp  *cache.App[string, ResponseObject]
+type Service struct {
+	cache     *cache.Cache[string, ResponseObject]
 	apiKey    string
 	clientKey string
 	req       request.Request
 }
 
-// Config of package
 type Config struct {
-	apiKey    *string
-	clientKey *string
+	apiKey    string
+	clientKey string
 }
 
-// Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		apiKey:    flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("tenor").String(fs, "", overrides),
-		clientKey: flags.New("ClientKey", "Client Key").Prefix(prefix).DocPrefix("tenor").String(fs, "", overrides),
-	}
+	var config Config
+
+	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.apiKey, "", overrides)
+	flags.New("ClientKey", "Client Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.clientKey, "", overrides)
+
+	return config
 }
 
-// New creates new App from Config
-func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvider) App {
-	app := App{
+func New(config Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+	service := Service{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
-		apiKey:    url.QueryEscape(strings.TrimSpace(*config.apiKey)),
-		clientKey: url.QueryEscape(strings.TrimSpace(*config.clientKey)),
+		apiKey:    url.QueryEscape(config.apiKey),
+		clientKey: url.QueryEscape(config.clientKey),
 	}
 
-	app.cacheApp = cache.New(redisApp, cacheID, func(ctx context.Context, id string) (ResponseObject, error) {
-		resp, err := app.req.Path("/posts?key=%s&client_key=%s&ids=%s", app.apiKey, app.clientKey, url.QueryEscape(id)).Send(ctx, nil)
+	service.cache = cache.New(redisClient, cacheID, func(ctx context.Context, id string) (ResponseObject, error) {
+		resp, err := service.req.Path("/posts?key=%s&client_key=%s&ids=%s", service.apiKey, service.clientKey, url.QueryEscape(id)).Send(ctx, nil)
 		if err != nil {
 			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
 		}
@@ -104,11 +100,10 @@ func New(config Config, redisApp redis.Client, tracerProvider trace.TracerProvid
 		return result.Results[0], nil
 	}, tracerProvider).WithTTL(cacheDuration)
 
-	return app
+	return service
 }
 
-// Search from a gif from Tenor
-func (a App) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
+func (a Service) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
 	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
@@ -127,7 +122,7 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 
 	if err != nil {
 		go func(ctx context.Context) {
-			if err = a.cacheApp.Store(ctx, gif.ID, gif); err != nil {
+			if err = a.cache.Store(ctx, gif.ID, gif); err != nil {
 				slog.Error("save gif in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
@@ -136,13 +131,11 @@ func (a App) Search(ctx context.Context, query string, pos string) (ResponseObje
 	return gif, search.Next, nil
 }
 
-// Get gif by id
-func (a App) Get(ctx context.Context, id string) (ResponseObject, error) {
-	return a.cacheApp.Get(ctx, id)
+func (a Service) Get(ctx context.Context, id string) (ResponseObject, error) {
+	return a.cache.Get(ctx, id)
 }
 
-// SendAnalytics send anonymous analytics event
-func (a App) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
+func (a Service) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
 	resp, err := a.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		slog.Error("send share events to tenor", "err", err)

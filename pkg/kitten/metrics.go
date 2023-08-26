@@ -6,7 +6,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/model"
 )
 
-func (a App) increaseServed(ctx context.Context) {
+func (a Service) increaseServed(ctx context.Context) {
 	if model.IsNil(a.servedMetric) {
 		return
 	}
@@ -14,7 +14,7 @@ func (a App) increaseServed(ctx context.Context) {
 	a.servedMetric.Add(ctx, 1)
 }
 
-func (a App) increaseCached(ctx context.Context) {
+func (a Service) increaseCached(ctx context.Context) {
 	if model.IsNil(a.cachedMetric) {
 		return
 	}

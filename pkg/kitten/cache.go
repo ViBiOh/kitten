@@ -15,7 +15,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
 )
 
-func (a App) serveCached(ctx context.Context, w http.ResponseWriter, id, caption string, gif bool) bool {
+func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, caption string, gif bool) bool {
 	var filename string
 	if gif {
 		filename = a.getGifCacheFilename(id, caption)
@@ -53,7 +53,7 @@ func (a App) serveCached(ctx context.Context, w http.ResponseWriter, id, caption
 	return true
 }
 
-func (a App) storeInCache(id, caption string, image image.Image) {
+func (a Service) storeInCache(id, caption string, image image.Image) {
 	if file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
 		slog.Error("open image to local cache", "err", err)
 	} else if err := jpeg.Encode(file, image, &jpeg.Options{Quality: 80}); err != nil {
@@ -61,11 +61,11 @@ func (a App) storeInCache(id, caption string, image image.Image) {
 	}
 }
 
-func (a App) getCacheFilename(id, caption string) string {
+func (a Service) getCacheFilename(id, caption string) string {
 	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
 }
 
-func (a App) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
+func (a Service) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
 	imagePath := a.getCacheFilename(id, caption)
 
 	info, err := os.Stat(imagePath)

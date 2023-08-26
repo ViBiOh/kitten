@@ -76,52 +76,52 @@ func main() {
 
 	ctx := context.Background()
 
-	telemetryApp, err := telemetry.New(ctx, telemetryConfig)
+	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	if err != nil {
 		slog.Error("create telemetry", "err", err)
 		os.Exit(1)
 	}
 
-	defer telemetryApp.Close(ctx)
-	request.AddOpenTelemetryToDefaultClient(telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	defer telemetryService.Close(ctx)
+	request.AddOpenTelemetryToDefaultClient(telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthApp := health.New(healthConfig)
+	healthService := health.New(healthConfig)
 
-	rendererApp, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	rendererService, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil {
 		slog.Error("create renderer", "err", err)
 		os.Exit(1)
 	}
 
-	kittenHandler := rendererApp.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
+	kittenHandler := rendererService.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	redisApp, err := redis.New(redisConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	redisClient, err := redis.New(redisConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil {
 		slog.Error("create redis", "err", err)
 		os.Exit(1)
 	}
 
-	defer redisApp.Close()
+	defer redisClient.Close()
 
-	kittenApp := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisApp, telemetryApp.TracerProvider()), tenor.New(tenorConfig, redisApp, telemetryApp.TracerProvider()), redisApp, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), rendererApp.PublicURL(""))
+	kittenService := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisClient, telemetryService.TracerProvider()), tenor.New(tenorConfig, redisClient, telemetryService.TracerProvider()), redisClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), rendererService.PublicURL(""))
 
-	discordApp, err := discord.New(discordConfig, rendererApp.PublicURL(""), kittenApp.DiscordHandler, telemetryApp.TracerProvider())
+	discordService, err := discord.New(discordConfig, rendererService.PublicURL(""), kittenService.DiscordHandler, telemetryService.TracerProvider())
 	if err != nil {
 		slog.Error("create discord", "err", err)
 		os.Exit(1)
 	}
 
-	apiHandler := http.StripPrefix(apiPrefix, kittenApp.Handler())
-	gifHandler := http.StripPrefix(gifPrefix, kittenApp.GifHandler())
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenApp.SlackCommand, kittenApp.SlackInteract, telemetryApp.TracerProvider()).Handler())
-	discordHandler := http.StripPrefix(discordPrefix, discordApp.Handler())
+	apiHandler := http.StripPrefix(apiPrefix, kittenService.Handler())
+	gifHandler := http.StripPrefix(gifPrefix, kittenService.GifHandler())
+	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenService.SlackCommand, kittenService.SlackInteract, telemetryService.TracerProvider()).Handler())
+	discordHandler := http.StripPrefix(discordPrefix, discordService.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, apiPrefix) {
@@ -147,10 +147,10 @@ func main() {
 		kittenHandler.ServeHTTP(w, r)
 	})
 
-	endCtx := healthApp.End(ctx)
+	endCtx := healthService.End(ctx)
 
-	go appServer.Start(endCtx, "http", httputils.Handler(appHandler, healthApp, recoverer.Middleware, telemetryApp.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
+	go appServer.Start(endCtx, "http", httputils.Handler(appHandler, healthService, recoverer.Middleware, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 
-	healthApp.WaitForTermination(appServer.Done())
+	healthService.WaitForTermination(appServer.Done())
 	server.GracefulWait(appServer.Done())
 }

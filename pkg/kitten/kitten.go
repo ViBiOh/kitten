@@ -35,38 +35,36 @@ var (
 	cacheControlDuration = fmt.Sprintf("public, max-age=%.0f", cacheDuration.Seconds())
 )
 
-// App of package
-type App struct {
-	redisApp     redis.Client
-	tracer       trace.Tracer
-	cachedMetric metric.Int64Counter
-	servedMetric metric.Int64Counter
-	tmpFolder    string
-	website      string
-	unsplashApp  unsplash.App
-	tenorApp     tenor.App
+type Service struct {
+	redisClient     redis.Client
+	tracer          trace.Tracer
+	cachedMetric    metric.Int64Counter
+	servedMetric    metric.Int64Counter
+	tmpFolder       string
+	website         string
+	unsplashService unsplash.Service
+	tenorService    tenor.Service
 }
 
-// Config of package
 type Config struct {
-	tmpFolder *string
+	TmpFolder string
 }
 
-// Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		tmpFolder: flags.New("TmpFolder", "Temp folder for storing cache image").Prefix(prefix).DocPrefix("kitten").String(fs, "/tmp", overrides),
-	}
+	var config Config
+
+	flags.New("TmpFolder", "Temp folder for storing cache image").Prefix(prefix).DocPrefix("kitten").StringVar(fs, &config.TmpFolder, "/tmp", overrides)
+
+	return config
 }
 
-// New creates new App from Config
-func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, redisApp redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) App {
-	app := App{
-		unsplashApp: unsplashApp,
-		tenorApp:    tenorApp,
-		redisApp:    redisApp,
-		website:     website,
-		tmpFolder:   strings.TrimSpace(*config.tmpFolder),
+func New(config Config, unsplashService unsplash.Service, tenorService tenor.Service, redisClient redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) Service {
+	service := Service{
+		unsplashService: unsplashService,
+		tenorService:    tenorService,
+		redisClient:     redisClient,
+		website:         website,
+		tmpFolder:       config.TmpFolder,
 	}
 
 	if meterProvider != nil {
@@ -74,26 +72,25 @@ func New(config Config, unsplashApp unsplash.App, tenorApp tenor.App, redisApp r
 
 		var err error
 
-		app.cachedMetric, err = meter.Int64Counter("kitten.image_cached")
+		service.cachedMetric, err = meter.Int64Counter("kitten.image_cached")
 		if err != nil {
 			slog.Error("create cached counter", "err", err)
 		}
 
-		app.servedMetric, err = meter.Int64Counter("kitten.image_served")
+		service.servedMetric, err = meter.Int64Counter("kitten.image_served")
 		if err != nil {
 			slog.Error("create served counter", "err", err)
 		}
 	}
 
 	if tracerProvider != nil {
-		app.tracer = tracerProvider.Tracer("kitten")
+		service.tracer = tracerProvider.Tracer("kitten")
 	}
 
-	return app
+	return service
 }
 
-// Handler for image request. Should be use with net/http
-func (a App) Handler() http.Handler {
+func (a Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -171,7 +168,7 @@ func parseRequest(query url.Values) (string, string, string, error) {
 	return id, search, caption, nil
 }
 
-func (a App) caption(imageCtx *gg.Context, text string) (image.Image, error) {
+func (a Service) caption(imageCtx *gg.Context, text string) (image.Image, error) {
 	fontSize := float64(imageCtx.Width()) * fontSizeCoeff
 	fontFace, resolve := getFontFace(fontSize)
 	defer resolve()

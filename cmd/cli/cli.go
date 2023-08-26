@@ -40,7 +40,7 @@ func main() {
 
 	ctx := context.Background()
 
-	kittenApp := kitten.New(kittenConfig, unsplash.App{}, tenor.App{}, nil, nil, nil, "")
+	kittenService := kitten.New(kittenConfig, unsplash.Service{}, tenor.Service{}, nil, nil, nil, "")
 
 	if len(*input) == 0 {
 		slog.Error("input filename is required")
@@ -82,9 +82,9 @@ func main() {
 	}()
 
 	if filepath.Ext(*input) == ".gif" {
-		err = generateGif(ctx, kittenApp, inputFile, outputFile, *caption)
+		err = generateGif(ctx, kittenService, inputFile, outputFile, *caption)
 	} else {
-		err = generateImage(ctx, kittenApp, inputFile, outputFile, *caption)
+		err = generateImage(ctx, kittenService, inputFile, outputFile, *caption)
 	}
 
 	if err != nil {
@@ -93,13 +93,13 @@ func main() {
 	}
 }
 
-func generateGif(ctx context.Context, kittenApp kitten.App, input, output *os.File, caption string) error {
+func generateGif(ctx context.Context, kittenService kitten.Service, input, output *os.File, caption string) error {
 	inputContent, err := gif.DecodeAll(input)
 	if err != nil {
 		return fmt.Errorf("decode gif: %w", err)
 	}
 
-	outputContent, err := kittenApp.CaptionGif(ctx, inputContent, caption)
+	outputContent, err := kittenService.CaptionGif(ctx, inputContent, caption)
 	if err != nil {
 		return fmt.Errorf("caption gif: %w", err)
 	}
@@ -107,13 +107,13 @@ func generateGif(ctx context.Context, kittenApp kitten.App, input, output *os.Fi
 	return gif.EncodeAll(output, outputContent)
 }
 
-func generateImage(ctx context.Context, kittenApp kitten.App, input, output *os.File, caption string) error {
+func generateImage(ctx context.Context, kittenService kitten.Service, input, output *os.File, caption string) error {
 	inputContent, _, err := image.Decode(input)
 	if err != nil {
 		return fmt.Errorf("decode image: %w", err)
 	}
 
-	outputContent, err := kittenApp.CaptionImage(ctx, inputContent, caption)
+	outputContent, err := kittenService.CaptionImage(ctx, inputContent, caption)
 	if err != nil {
 		return fmt.Errorf("caption image: %w", err)
 	}

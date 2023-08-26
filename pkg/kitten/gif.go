@@ -20,7 +20,7 @@ import (
 	"github.com/fogleman/gg"
 )
 
-func (a App) GifHandler() http.Handler {
+func (a Service) GifHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -69,11 +69,11 @@ func (a App) GifHandler() http.Handler {
 	})
 }
 
-func (a App) getGifCacheFilename(id, caption string) string {
+func (a Service) getGifCacheFilename(id, caption string) string {
 	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".gif")
 }
 
-func (a App) storeGifInCache(id, caption string, image *gif.GIF) {
+func (a Service) storeGifInCache(id, caption string, image *gif.GIF) {
 	if file, err := os.OpenFile(a.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
 		slog.Error("open gif to local cache", "err", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
@@ -81,7 +81,7 @@ func (a App) storeGifInCache(id, caption string, image *gif.GIF) {
 	}
 }
 
-func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
+func (a Service) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
 	image, err := getGif(ctx, from)
 	if err != nil {
 		return nil, fmt.Errorf("get gif: %w", err)
@@ -95,7 +95,7 @@ func (a App) generateGif(ctx context.Context, from, caption string) (*gif.GIF, e
 	return image, nil
 }
 
-func (a App) generateAndStoreGif(ctx context.Context, id, from, caption string) (string, int64, error) {
+func (a Service) generateAndStoreGif(ctx context.Context, id, from, caption string) (string, int64, error) {
 	imagePath := a.getGifCacheFilename(id, caption)
 
 	info, err := os.Stat(imagePath)
@@ -134,7 +134,7 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	return output, nil
 }
 
-func (a App) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
+func (a Service) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
 	var err error
 
 	_, end := telemetry.StartSpan(ctx, a.tracer, "captionGif")
