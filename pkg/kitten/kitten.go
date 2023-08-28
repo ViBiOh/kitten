@@ -50,15 +50,15 @@ type Config struct {
 	TmpFolder string
 }
 
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
 	flags.New("TmpFolder", "Temp folder for storing cache image").Prefix(prefix).DocPrefix("kitten").StringVar(fs, &config.TmpFolder, "/tmp", overrides)
 
-	return config
+	return &config
 }
 
-func New(config Config, unsplashService unsplash.Service, tenorService tenor.Service, redisClient redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) Service {
+func New(config *Config, unsplashService unsplash.Service, tenorService tenor.Service, redisClient redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) Service {
 	service := Service{
 		unsplashService: unsplashService,
 		tenorService:    tenorService,

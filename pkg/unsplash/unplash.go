@@ -67,16 +67,16 @@ type Config struct {
 	accessKey string
 }
 
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
 	flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.appName, "SayIt", overrides)
 	flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.accessKey, "", overrides)
 
-	return config
+	return &config
 }
 
-func New(config Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
 	service := Service{
 		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)),

@@ -66,16 +66,16 @@ type Config struct {
 	clientKey string
 }
 
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
 	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.apiKey, "", overrides)
 	flags.New("ClientKey", "Client Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.clientKey, "", overrides)
 
-	return config
+	return &config
 }
 
-func New(config Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
 	service := Service{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(config.apiKey),
