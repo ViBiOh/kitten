@@ -45,7 +45,7 @@ Usage of kitten:
   --discordClientSecret   string        [discord] Client Secret ${KITTEN_DISCORD_CLIENT_SECRET}
   --discordPublicKey      string        [discord] Public Key ${KITTEN_DISCORD_PUBLIC_KEY}
   --frameOptions          string        [owasp] X-Frame-Options ${KITTEN_FRAME_OPTIONS} (default "deny")
-  --graceDuration         duration      [http] Grace duration when SIGTERM received ${KITTEN_GRACE_DURATION} (default 30s)
+  --graceDuration         duration      [http] Grace duration when signal received ${KITTEN_GRACE_DURATION} (default 30s)
   --hsts                                [owasp] Indicate Strict Transport Security ${KITTEN_HSTS} (default true)
   --idleTimeout           duration      [server] Idle Timeout ${KITTEN_IDLE_TIMEOUT} (default 2m0s)
   --key                   string        [server] Key file ${KITTEN_KEY}
@@ -61,7 +61,6 @@ Usage of kitten:
   --publicURL             string        Public URL ${KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
   --readTimeout           duration      [server] Read Timeout ${KITTEN_READ_TIMEOUT} (default 5s)
   --redisAddress          string slice  [redis] Redis Address host:port (blank to disable) ${KITTEN_REDIS_ADDRESS}, as a string slice, environment variable separated by "," (default [127.0.0.1:6379])
-  --redisAlias            string        [redis] Connection alias, for metric ${KITTEN_REDIS_ALIAS}
   --redisDatabase         int           [redis] Redis Database ${KITTEN_REDIS_DATABASE} (default 0)
   --redisMinIdleConn      int           [redis] Redis Minimum Idle Connections ${KITTEN_REDIS_MIN_IDLE_CONN} (default 0)
   --redisPassword         string        [redis] Redis Password, if any ${KITTEN_REDIS_PASSWORD}
