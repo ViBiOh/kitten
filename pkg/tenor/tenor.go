@@ -75,7 +75,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	return &config
 }
 
-func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+func New(ctx context.Context, config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
 	service := Service{
 		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		apiKey:    url.QueryEscape(config.apiKey),
@@ -98,7 +98,9 @@ func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerPr
 		}
 
 		return result.Results[0], nil
-	}, tracerProvider).WithTTL(cacheDuration)
+	}, tracerProvider).
+		WithTTL(cacheDuration).
+		WithClientSideCaching(ctx, "kitten_tenor", 50)
 
 	return service
 }

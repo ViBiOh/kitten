@@ -110,7 +110,17 @@ func main() {
 
 	defer redisClient.Close()
 
-	kittenService := kitten.New(kittenConfig, unsplash.New(unsplashConfig, redisClient, telemetryService.TracerProvider()), tenor.New(tenorConfig, redisClient, telemetryService.TracerProvider()), redisClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), rendererService.PublicURL(""))
+	endCtx := healthService.End(ctx)
+
+	kittenService := kitten.New(
+		kittenConfig,
+		unsplash.New(endCtx, unsplashConfig, redisClient, telemetryService.TracerProvider()),
+		tenor.New(endCtx, tenorConfig, redisClient, telemetryService.TracerProvider()),
+		redisClient,
+		telemetryService.MeterProvider(),
+		telemetryService.TracerProvider(),
+		rendererService.PublicURL(""),
+	)
 
 	discordService, err := discord.New(discordConfig, rendererService.PublicURL(""), kittenService.DiscordHandler, telemetryService.TracerProvider())
 	if err != nil {
@@ -146,8 +156,6 @@ func main() {
 
 		kittenHandler.ServeHTTP(w, r)
 	})
-
-	endCtx := healthService.End(ctx)
 
 	go appServer.Start(endCtx, "http", httputils.Handler(appHandler, healthService, recoverer.Middleware, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 

@@ -76,7 +76,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	return &config
 }
 
-func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
+func New(ctx context.Context, config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
 	service := Service{
 		req:         request.Get(root).Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
 		downloadReq: request.New().Header("Authorization", fmt.Sprintf("Client-ID %s", config.accessKey)),
@@ -94,7 +94,9 @@ func New(config *Config, redisClient redis.Client, tracerProvider trace.TracerPr
 		}
 
 		return service.getImageFromResponse(ctx, resp)
-	}, tracerProvider).WithTTL(cacheDuration)
+	}, tracerProvider).
+		WithTTL(cacheDuration).
+		WithClientSideCaching(ctx, "kitten_unsplash", 50)
 
 	return service
 }
