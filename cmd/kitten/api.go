@@ -90,7 +90,7 @@ func main() {
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthService := health.New(healthConfig)
+	healthService := health.New(ctx, healthConfig)
 
 	rendererService, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil {
@@ -110,7 +110,7 @@ func main() {
 
 	defer redisClient.Close()
 
-	endCtx := healthService.End(ctx)
+	endCtx := healthService.EndCtx()
 
 	kittenService := kitten.New(
 		kittenConfig,
@@ -160,5 +160,6 @@ func main() {
 	go appServer.Start(endCtx, "http", httputils.Handler(appHandler, healthService, recoverer.Middleware, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 
 	healthService.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done())
+
+	appServer.Stop(ctx)
 }
