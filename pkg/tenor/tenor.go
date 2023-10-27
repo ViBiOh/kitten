@@ -100,6 +100,7 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 		return result.Results[0], nil
 	}, tracerProvider).
 		WithTTL(cacheDuration).
+		WithExtendOnHit(ctx, cacheDuration/4, 50).
 		WithClientSideCaching(ctx, "kitten_tenor", 50)
 
 	return service

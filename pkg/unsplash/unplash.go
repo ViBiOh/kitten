@@ -96,6 +96,7 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 		return service.getImageFromResponse(ctx, resp)
 	}, tracerProvider).
 		WithTTL(cacheDuration).
+		WithExtendOnHit(ctx, cacheDuration/4, 50).
 		WithClientSideCaching(ctx, "kitten_unsplash", 50)
 
 	return service

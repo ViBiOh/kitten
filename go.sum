@@ -2,8 +2,8 @@ github.com/ViBiOh/ChatPotte v0.3.3 h1:WoOAmSSiuXVpcz1X3iDSpvCmJF5IA2a38Hqm0klZUM
 github.com/ViBiOh/ChatPotte v0.3.3/go.mod h1:hK71q8Yufgo+BVJvn9SmyLP5/ZktuaOj+AcmtoUn+RM=
 github.com/ViBiOh/flags v1.4.1 h1:qEAO70rWTYcVlU9BgCuz0SgMjth12oi502cq3SHDudg=
 github.com/ViBiOh/flags v1.4.1/go.mod h1:Ocgx/QhY7WYNfGokFT3kw5C05pDooQyLbI/9ZWwylI4=
-github.com/ViBiOh/httputils/v4 v4.68.0 h1:0HweaVvKdx6igccek1v4k9MIPBqArUgzdBtaHzsyTKE=
-github.com/ViBiOh/httputils/v4 v4.68.0/go.mod h1:7KTWHkVw50L+UG7XHK9mtPQpTHMPdDyWV0MY+cCNpqw=
+github.com/ViBiOh/httputils/v4 v4.68.1 h1:hz/XEBqYcrv/+eomAFbde/Ph2KPibEZ8UPCuuWZksu8=
+github.com/ViBiOh/httputils/v4 v4.68.1/go.mod h1:gHAIBbkHFKYIi72ZfoLmtW4GsGW7Gndi/mWALuFNki8=
 github.com/bsm/ginkgo/v2 v2.7.0/go.mod h1:AiKlXPm7ItEHNc/2+OkrNG4E0ITzojb9/xWzvQ9XZ9w=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
@@ -27,8 +27,8 @@ github.com/felixge/httpsnoop v1.0.3/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSw
 github.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=
 github.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
-github.com/go-logr/logr v1.2.4 h1:g01GSCwiDw2xSZfjJ2/T9M+S6pFdcNtFYsp+Y43HYDQ=
-github.com/go-logr/logr v1.2.4/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
+github.com/go-logr/logr v1.3.0 h1:2y3SDp0ZXuc6/cjLSZ+Q3ir+QB9T/iG5yYRXqsagWSY=
+github.com/go-logr/logr v1.3.0/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=
 github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre4VKE=
 github.com/go-oss/image v0.1.0 h1:GkVtTLbD5B5qOYRl+sdHYMZQIYSPG/r6s9uwCElXJxo=

@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/ViBiOh/ChatPotte v0.3.3
 	github.com/ViBiOh/flags v1.4.1
-	github.com/ViBiOh/httputils/v4 v4.68.0
+	github.com/ViBiOh/httputils/v4 v4.68.1
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -24,7 +24,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
