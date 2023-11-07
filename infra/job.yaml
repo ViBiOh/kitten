@@ -104,3 +104,18 @@ spec:
                 secretKeyRef:
                   name: kitten
                   key: KITTEN_DISCORD_CLIENT_SECRET
+
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
