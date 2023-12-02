@@ -29,13 +29,13 @@ func (a Service) GifHandler() http.Handler {
 
 		query, err := getQuery(r)
 		if err != nil {
-			httperror.BadRequest(w, err)
+			httperror.BadRequest(r.Context(), w, err)
 			return
 		}
 
 		id, search, caption, err := parseRequest(query)
 		if err != nil {
-			httperror.BadRequest(w, err)
+			httperror.BadRequest(r.Context(), w, err)
 			return
 		}
 
@@ -46,9 +46,9 @@ func (a Service) GifHandler() http.Handler {
 		image, err := a.GetGif(r.Context(), id, search, caption)
 		if err != nil {
 			if errors.Is(err, tenor.ErrNotFound) {
-				httperror.NotFound(w)
+				httperror.NotFound(r.Context(), w)
 			} else {
-				httperror.InternalServerError(w, err)
+				httperror.InternalServerError(r.Context(), w, err)
 			}
 
 			return
@@ -59,13 +59,13 @@ func (a Service) GifHandler() http.Handler {
 		w.WriteHeader(http.StatusOK)
 
 		if err = gif.EncodeAll(w, image); err != nil {
-			httperror.InternalServerError(w, err)
+			httperror.InternalServerError(r.Context(), w, err)
 			return
 		}
 
 		a.increaseServed(r.Context())
 
-		go a.storeGifInCache(id, caption, image)
+		go a.storeGifInCache(r.Context(), id, caption, image)
 	})
 }
 
@@ -73,11 +73,11 @@ func (a Service) getGifCacheFilename(id, caption string) string {
 	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".gif")
 }
 
-func (a Service) storeGifInCache(id, caption string, image *gif.GIF) {
+func (a Service) storeGifInCache(ctx context.Context, id, caption string, image *gif.GIF) {
 	if file, err := os.OpenFile(a.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		slog.Error("open gif to local cache", "err", err)
+		slog.ErrorContext(ctx, "open gif to local cache", "err", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
-		slog.Error("write gif to local cache", "err", err)
+		slog.ErrorContext(ctx, "write gif to local cache", "err", err)
 	}
 }
 
@@ -109,7 +109,7 @@ func (a Service) generateAndStoreGif(ctx context.Context, id, from, caption stri
 			return "", 0, fmt.Errorf("generate image: %w", err)
 		}
 
-		a.storeGifInCache(id, caption, image)
+		a.storeGifInCache(ctx, id, caption, image)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {

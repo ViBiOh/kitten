@@ -104,9 +104,9 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 
 func (a Service) SendDownload(ctx context.Context, content Image) {
 	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
-		slog.Error("send download request to unsplash", "err", err)
+		slog.ErrorContext(ctx, "send download request to unsplash", "err", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
-		slog.Error("discard download body", "err", err)
+		slog.ErrorContext(ctx, "discard download body", "err", err)
 	}
 }
 
@@ -133,7 +133,7 @@ func (a Service) Search(ctx context.Context, query string) (Image, error) {
 	if err != nil {
 		go func(ctx context.Context) {
 			if err = a.cache.Store(ctx, image.ID, image); err != nil {
-				slog.Error("save image in cache", "err", err)
+				slog.ErrorContext(ctx, "save image in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}

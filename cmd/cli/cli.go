@@ -43,23 +43,23 @@ func main() {
 	kittenService := kitten.New(kittenConfig, unsplash.Service{}, tenor.Service{}, nil, nil, nil, "")
 
 	if len(*input) == 0 {
-		slog.Error("input filename is required")
+		slog.ErrorContext(ctx, "input filename is required")
 		os.Exit(1)
 	}
 
 	if len(*output) == 0 {
-		slog.Error("output filename is required")
+		slog.ErrorContext(ctx, "output filename is required")
 		os.Exit(1)
 	}
 
 	if len(*caption) == 0 {
-		slog.Error("caption is required")
+		slog.ErrorContext(ctx, "caption is required")
 		os.Exit(1)
 	}
 
 	inputFile, err := os.OpenFile(*input, os.O_RDONLY, mode)
 	if err != nil {
-		slog.Error("open input", "err", err)
+		slog.ErrorContext(ctx, "open input", "err", err)
 		os.Exit(1)
 	}
 
@@ -71,7 +71,7 @@ func main() {
 
 	outputFile, err := os.OpenFile(*output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
-		slog.Error("create output", "err", err)
+		slog.ErrorContext(ctx, "create output", "err", err)
 		os.Exit(1)
 	}
 
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	if err != nil {
-		slog.Error("generate", "err", err)
+		slog.ErrorContext(ctx, "generate", "err", err)
 		os.Exit(1)
 	}
 }

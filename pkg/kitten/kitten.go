@@ -99,13 +99,13 @@ func (a Service) Handler() http.Handler {
 
 		query, err := getQuery(r)
 		if err != nil {
-			httperror.BadRequest(w, err)
+			httperror.BadRequest(r.Context(), w, err)
 			return
 		}
 
 		id, _, caption, err := parseRequest(query)
 		if err != nil {
-			httperror.BadRequest(w, err)
+			httperror.BadRequest(r.Context(), w, err)
 			return
 		}
 
@@ -115,7 +115,7 @@ func (a Service) Handler() http.Handler {
 
 		imageOutput, err := a.GetFromUnsplash(r.Context(), id, caption)
 		if err != nil {
-			httperror.InternalServerError(w, err)
+			httperror.InternalServerError(r.Context(), w, err)
 			return
 		}
 
@@ -123,13 +123,13 @@ func (a Service) Handler() http.Handler {
 		w.Header().Set("Content-Type", "imageOutput/jpeg")
 		w.WriteHeader(http.StatusOK)
 		if err = jpeg.Encode(w, imageOutput, &jpeg.Options{Quality: 80}); err != nil {
-			httperror.InternalServerError(w, err)
+			httperror.InternalServerError(r.Context(), w, err)
 			return
 		}
 
 		a.increaseServed(r.Context())
 
-		go a.storeInCache(id, caption, imageOutput)
+		go a.storeInCache(r.Context(), id, caption, imageOutput)
 	})
 }
 

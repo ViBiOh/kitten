@@ -26,7 +26,7 @@ func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, cap
 	file, err := os.OpenFile(filename, os.O_RDONLY, 0o600)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			slog.Error("open file from local cache", "err", err)
+			slog.ErrorContext(ctx, "open file from local cache", "err", err)
 		}
 
 		return false
@@ -44,7 +44,7 @@ func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, cap
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.CopyBuffer(w, file, buffer.Bytes()); err != nil {
-		slog.Error("write file from local cache", "err", err)
+		slog.ErrorContext(ctx, "write file from local cache", "err", err)
 		return false
 	}
 
@@ -53,11 +53,11 @@ func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, cap
 	return true
 }
 
-func (a Service) storeInCache(id, caption string, image image.Image) {
+func (a Service) storeInCache(ctx context.Context, id, caption string, image image.Image) {
 	if file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		slog.Error("open image to local cache", "err", err)
+		slog.ErrorContext(ctx, "open image to local cache", "err", err)
 	} else if err := jpeg.Encode(file, image, &jpeg.Options{Quality: 80}); err != nil {
-		slog.Error("write image to local cache", "err", err)
+		slog.ErrorContext(ctx, "write image to local cache", "err", err)
 	}
 }
 
@@ -79,7 +79,7 @@ func (a Service) generateAndStoreImage(ctx context.Context, id, from, caption st
 			return "", 0, fmt.Errorf("generate imageOutput: %w", err)
 		}
 
-		a.storeInCache(id, caption, imageOutput)
+		a.storeInCache(ctx, id, caption, imageOutput)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {
