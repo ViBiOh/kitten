@@ -2,7 +2,9 @@ package kitten
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
+	"errors"
 	"flag"
 	"fmt"
 	"image"
@@ -90,46 +92,88 @@ func New(config *Config, unsplashService unsplash.Service, tenorService tenor.Se
 	return service
 }
 
-func (a Service) Handler() http.Handler {
+func (s Service) SearchHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
+		ctx := r.Context()
+
+		urlQuery := r.URL.Query()
+
+		query := urlQuery.Get("query")
+		caption := urlQuery.Get("caption")
+
+		kind := parseKind(urlQuery.Get("kind"))
+		if kind == unkownKind {
+			httperror.BadRequest(ctx, w, fmt.Errorf("unknown kind: %s", urlQuery.Get("kind")))
+			return
+		}
+
+		switch kind {
+		case imageKind:
+			image, err := s.unsplashService.Search(ctx, query)
+			if err != nil {
+				httperror.InternalServerError(ctx, w, fmt.Errorf("search image: %s", err))
+				return
+			}
+
+			s.serveImage(ctx, w, image, caption)
+
+		case gifKind:
+			httperror.InternalServerError(ctx, w, errors.New("not implemented"))
+		}
+	})
+}
+
+func (s Service) serveImage(ctx context.Context, w http.ResponseWriter, image unsplash.Image, caption string) {
+	output, err := s.generateImage(ctx, image.Raw, caption)
+	if err != nil {
+		httperror.InternalServerError(ctx, w, err)
+		return
+	}
+
+	w.Header().Add("Cache-Control", cacheControlDuration)
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.WriteHeader(http.StatusOK)
+	if err := jpeg.Encode(w, output, &jpeg.Options{Quality: 80}); err != nil {
+		httperror.InternalServerError(ctx, w, err)
+		return
+	}
+
+	s.increaseServed(ctx)
+
+	go s.storeInCache(ctx, image.ID, caption, output)
+}
+
+func (s Service) Handler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		ctx := r.Context()
+
 		query, err := getQuery(r)
 		if err != nil {
-			httperror.BadRequest(r.Context(), w, err)
+			httperror.BadRequest(ctx, w, err)
 			return
 		}
 
 		id, _, caption, err := parseRequest(query)
 		if err != nil {
-			httperror.BadRequest(r.Context(), w, err)
+			httperror.BadRequest(ctx, w, err)
 			return
 		}
 
-		if a.serveCached(r.Context(), w, id, caption, false) {
+		if s.serveCached(ctx, w, id, caption, false) {
 			return
 		}
 
-		imageOutput, err := a.GetFromUnsplash(r.Context(), id, caption)
-		if err != nil {
-			httperror.InternalServerError(r.Context(), w, err)
-			return
-		}
-
-		w.Header().Add("Cache-Control", cacheControlDuration)
-		w.Header().Set("Content-Type", "imageOutput/jpeg")
-		w.WriteHeader(http.StatusOK)
-		if err = jpeg.Encode(w, imageOutput, &jpeg.Options{Quality: 80}); err != nil {
-			httperror.InternalServerError(r.Context(), w, err)
-			return
-		}
-
-		a.increaseServed(r.Context())
-
-		go a.storeInCache(r.Context(), id, caption, imageOutput)
+		s.GetFromUnsplash(ctx, w, id, caption)
 	})
 }
 
@@ -168,7 +212,7 @@ func parseRequest(query url.Values) (string, string, string, error) {
 	return id, search, caption, nil
 }
 
-func (a Service) caption(imageCtx *gg.Context, text string) (image.Image, error) {
+func (s Service) caption(imageCtx *gg.Context, text string) (image.Image, error) {
 	fontSize := float64(imageCtx.Width()) * fontSizeCoeff
 	fontFace, resolve := getFontFace(fontSize)
 	defer resolve()

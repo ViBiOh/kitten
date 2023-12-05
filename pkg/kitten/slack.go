@@ -49,7 +49,7 @@ var (
 )
 
 // SlackCommand handler
-func (a Service) SlackCommand(ctx context.Context, payload slack.SlashPayload) slack.Response {
+func (s Service) SlackCommand(ctx context.Context, payload slack.SlashPayload) slack.Response {
 	if len(payload.Text) == 0 {
 		return slack.NewEphemeralMessage("You must provide a caption")
 	}
@@ -62,10 +62,10 @@ func (a Service) SlackCommand(ctx context.Context, payload slack.SlashPayload) s
 		kind = imageKind
 	}
 
-	return a.getKittenBlock(ctx, kind, payload.UserID, payload.Command, payload.Text, "")
+	return s.getKittenBlock(ctx, kind, payload.UserID, payload.Command, payload.Text, "")
 }
 
-func (a Service) getKittenBlock(ctx context.Context, kind memeKind, user, search, caption string, next string) slack.Response {
+func (s Service) getKittenBlock(ctx context.Context, kind memeKind, user, search, caption string, next string) slack.Response {
 	var yolo bool
 
 	matches := customSearch.FindStringSubmatch(caption)
@@ -94,7 +94,7 @@ func (a Service) getKittenBlock(ctx context.Context, kind memeKind, user, search
 
 	switch kind {
 	case gifKind:
-		image, nextValue, err := a.tenorService.Search(ctx, search, next)
+		image, nextValue, err := s.tenorService.Search(ctx, search, next)
 
 		switch err {
 		case nil:
@@ -107,23 +107,23 @@ func (a Service) getKittenBlock(ctx context.Context, kind memeKind, user, search
 		}
 
 	default:
-		image, err := a.unsplashService.Search(ctx, search)
+		image, err := s.unsplashService.Search(ctx, search)
 		if err != nil {
 			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 		}
 		id = image.ID
 	}
 
-	return a.getSlackInteractResponse(kind, user, id, search, caption, next, yolo)
+	return s.getSlackInteractResponse(kind, user, id, search, caption, next, yolo)
 }
 
-func (a Service) getSlackInteractResponse(kind memeKind, user, id, search, caption, next string, yolo bool) slack.Response {
+func (s Service) getSlackInteractResponse(kind memeKind, user, id, search, caption, next string, yolo bool) slack.Response {
 	var accessory slack.Image
 	switch kind {
 	case gifKind:
-		accessory = a.getGifContent(id, search, caption)
+		accessory = s.getGifContent(id, search, caption)
 	default:
-		accessory = a.getMemeContent(id, search, caption)
+		accessory = s.getMemeContent(id, search, caption)
 	}
 
 	if yolo {
@@ -151,7 +151,7 @@ func (a Service) getSlackInteractResponse(kind memeKind, user, id, search, capti
 }
 
 // SlackInteract handler
-func (a Service) SlackInteract(ctx context.Context, payload slack.InteractivePayload) slack.Response {
+func (s Service) SlackInteract(ctx context.Context, payload slack.InteractivePayload) slack.Response {
 	if len(payload.Actions) == 0 {
 		return slack.NewEphemeralMessage("No action provided")
 	}
@@ -166,19 +166,19 @@ func (a Service) SlackInteract(ctx context.Context, payload slack.InteractivePay
 
 		switch kind {
 		case imageKind:
-			image, err := a.unsplashService.Get(ctx, id)
+			image, err := s.unsplashService.Get(ctx, id)
 			if err != nil {
 				return slack.NewError(err)
 			}
 
-			return a.getSlackImageResponse(image, action.BlockID, caption, payload.User.ID)
+			return s.getSlackImageResponse(image, action.BlockID, caption, payload.User.ID)
 		case gifKind:
-			image, err := a.tenorService.Get(ctx, id)
+			image, err := s.tenorService.Get(ctx, id)
 			if err != nil {
 				return slack.NewError(err)
 			}
 
-			return a.getSlackGifReponse(image, action.BlockID, caption, payload.User.ID)
+			return s.getSlackGifReponse(image, action.BlockID, caption, payload.User.ID)
 		default:
 			return slack.NewEphemeralMessage("Sorry, we don't that kind of meme.")
 		}
@@ -186,30 +186,30 @@ func (a Service) SlackInteract(ctx context.Context, payload slack.InteractivePay
 
 	if action.ActionID == nextValue {
 		kind, _, caption, next := parseValue(action.Value)
-		return a.getKittenBlock(ctx, kind, payload.User.ID, action.BlockID, caption, next)
+		return s.getKittenBlock(ctx, kind, payload.User.ID, action.BlockID, caption, next)
 	}
 
 	return slack.NewEphemeralMessage("We don't understand the action to perform.")
 }
 
-func (a Service) getSlackImageResponse(image unsplash.Image, search, caption, user string) slack.Response {
+func (s Service) getSlackImageResponse(image unsplash.Image, search, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user))).AddElement(slack.NewText(fmt.Sprintf("Image By <%s|%s>", image.AuthorURL, image.Author))).AddElement(slack.NewText(fmt.Sprintf("Powered By <%s|Unsplash>", image.URL))),
-			a.getMemeContent(image.ID, search, caption),
+			s.getMemeContent(image.ID, search, caption),
 		},
 	}
 }
 
-func (a Service) getSlackGifReponse(image tenor.ResponseObject, search, caption, user string) slack.Response {
+func (s Service) getSlackGifReponse(image tenor.ResponseObject, search, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
 		Blocks: []slack.Block{
 			getSlackHeadline(user),
-			a.getGifContent(image.ID, search, caption),
+			s.getGifContent(image.ID, search, caption),
 		},
 	}
 }
@@ -221,12 +221,12 @@ func getSlackHeadline(user string) slack.Context {
 	return slackCtx
 }
 
-func (a Service) getMemeContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/api/%s", a.website, getContent(id, search, caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
+func (s Service) getMemeContent(id, search, caption string) slack.Image {
+	return slack.NewImage(fmt.Sprintf("%s/api/%s", s.website, getContent(id, search, caption)), fmt.Sprintf("image with caption `%s` on it", caption), search)
 }
 
-func (a Service) getGifContent(id, search, caption string) slack.Image {
-	return slack.NewImage(fmt.Sprintf("%s/gif/%s", a.website, getContent(id, search, caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
+func (s Service) getGifContent(id, search, caption string) slack.Image {
+	return slack.NewImage(fmt.Sprintf("%s/gif/%s", s.website, getContent(id, search, caption)), fmt.Sprintf("gif with caption `%s` on it", caption), search)
 }
 
 func getContent(id, search, caption string) string {

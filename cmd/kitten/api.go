@@ -38,6 +38,7 @@ import (
 var content embed.FS
 
 const (
+	searchPrefix  = "/search"
 	apiPrefix     = "/api"
 	gifPrefix     = "/gif"
 	slackPrefix   = "/slack"
@@ -130,12 +131,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	searchHandler := http.StripPrefix(searchPrefix, kittenService.SearchHandler())
 	apiHandler := http.StripPrefix(apiPrefix, kittenService.Handler())
 	gifHandler := http.StripPrefix(gifPrefix, kittenService.GifHandler())
 	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenService.SlackCommand, kittenService.SlackInteract, telemetryService.TracerProvider()).Handler())
 	discordHandler := http.StripPrefix(discordPrefix, discordService.Handler())
 
 	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, searchPrefix) {
+			searchHandler.ServeHTTP(w, r)
+			return
+		}
+
 		if strings.HasPrefix(r.URL.Path, apiPrefix) {
 			apiHandler.ServeHTTP(w, r)
 			return

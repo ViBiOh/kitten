@@ -102,20 +102,20 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 	return service
 }
 
-func (a Service) SendDownload(ctx context.Context, content Image) {
-	if resp, err := a.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
+func (s Service) SendDownload(ctx context.Context, content Image) {
+	if resp, err := s.downloadReq.Get(content.DownloadURL).Send(ctx, nil); err != nil {
 		slog.ErrorContext(ctx, "send download request to unsplash", "err", err)
 	} else if err = request.DiscardBody(resp.Body); err != nil {
 		slog.ErrorContext(ctx, "discard download body", "err", err)
 	}
 }
 
-func (a Service) Get(ctx context.Context, id string) (Image, error) {
-	return a.cache.Get(ctx, id)
+func (s Service) Get(ctx context.Context, id string) (Image, error) {
+	return s.cache.Get(ctx, id)
 }
 
-func (a Service) Search(ctx context.Context, query string) (Image, error) {
-	resp, err := a.req.Path("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query)).Send(ctx, nil)
+func (s Service) Search(ctx context.Context, query string) (Image, error) {
+	resp, err := s.req.Path("/photos/random?query=%s&orientation=landscape", url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "Rate Limit Exceeded") {
 			return Image{}, ErrRateLimitExceeded
@@ -129,10 +129,10 @@ func (a Service) Search(ctx context.Context, query string) (Image, error) {
 		return Image{}, httperror.FromResponse(resp, fmt.Errorf("get random image for `%s`: %w", query, err))
 	}
 
-	image, err := a.getImageFromResponse(ctx, resp)
+	image, err := s.getImageFromResponse(ctx, resp)
 	if err != nil {
 		go func(ctx context.Context) {
-			if err = a.cache.Store(ctx, image.ID, image); err != nil {
+			if err = s.cache.Store(ctx, image.ID, image); err != nil {
 				slog.ErrorContext(ctx, "save image in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
@@ -141,7 +141,7 @@ func (a Service) Search(ctx context.Context, query string) (Image, error) {
 	return image, err
 }
 
-func (a Service) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
+func (s Service) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("parse random response: %w", err)
@@ -150,10 +150,10 @@ func (a Service) getImageFromResponse(ctx context.Context, resp *http.Response) 
 
 	output.ID = imageContent.ID
 	output.Raw = fmt.Sprintf("%s?fm=jpeg&w=800&fit=clip", imageContent.URLs["raw"])
-	output.URL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.Links["html"], url.QueryEscape(a.appName))
+	output.URL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.Links["html"], url.QueryEscape(s.appName))
 	output.DownloadURL = imageContent.Links["download_location"]
 	output.Author = imageContent.User.Name
-	output.AuthorURL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.User.Links["html"], url.QueryEscape(a.appName))
+	output.AuthorURL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.User.Links["html"], url.QueryEscape(s.appName))
 
 	return
 }

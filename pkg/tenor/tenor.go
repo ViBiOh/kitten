@@ -106,8 +106,8 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 	return service
 }
 
-func (a Service) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
-	resp, err := a.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", a.apiKey, a.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
+func (s Service) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
+	resp, err := s.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", s.apiKey, s.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
@@ -125,7 +125,7 @@ func (a Service) Search(ctx context.Context, query string, pos string) (Response
 
 	if err != nil {
 		go func(ctx context.Context) {
-			if err = a.cache.Store(ctx, gif.ID, gif); err != nil {
+			if err = s.cache.Store(ctx, gif.ID, gif); err != nil {
 				slog.ErrorContext(ctx, "save gif in cache", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
@@ -134,12 +134,12 @@ func (a Service) Search(ctx context.Context, query string, pos string) (Response
 	return gif, search.Next, nil
 }
 
-func (a Service) Get(ctx context.Context, id string) (ResponseObject, error) {
-	return a.cache.Get(ctx, id)
+func (s Service) Get(ctx context.Context, id string) (ResponseObject, error) {
+	return s.cache.Get(ctx, id)
 }
 
-func (a Service) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
-	resp, err := a.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", a.apiKey, a.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
+func (s Service) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
+	resp, err := s.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", s.apiKey, s.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
 		slog.ErrorContext(ctx, "send share events to tenor", "err", err)
 		return

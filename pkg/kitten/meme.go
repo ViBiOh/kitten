@@ -7,9 +7,11 @@ import (
 	"image"
 	"image/gif"
 	"log/slog"
+	"net/http"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
+	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
@@ -65,59 +67,60 @@ func getFontFace(size float64) (font.Face, func()) {
 }
 
 // GetFromUnsplash generates a meme from the given id with caption text
-func (a Service) GetFromUnsplash(ctx context.Context, id, caption string) (image.Image, error) {
+func (s Service) GetFromUnsplash(ctx context.Context, w http.ResponseWriter, id, caption string) {
 	var err error
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromUnsplash")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "GetFromUnsplash")
 	defer end(&err)
 
-	unsplashImage, err := a.unsplashService.Get(ctx, id)
+	unsplashImage, err := s.unsplashService.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("get image from unsplash: %w", err)
+		httperror.InternalServerError(ctx, w, fmt.Errorf("get image: %s", err))
+		return
 	}
 
-	go a.unsplashService.SendDownload(cntxt.WithoutDeadline(ctx), unsplashImage)
+	go s.unsplashService.SendDownload(cntxt.WithoutDeadline(ctx), unsplashImage)
 
-	return a.generateImage(ctx, unsplashImage.Raw, caption)
+	s.serveImage(ctx, w, unsplashImage, caption)
 }
 
 // GetGif generates a meme from the given id with caption text
-func (a Service) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
+func (s Service) GetGif(ctx context.Context, id, search, caption string) (*gif.GIF, error) {
 	var err error
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGif")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "GetGif")
 	defer end(&err)
 
-	gifContent, err := a.tenorService.Get(ctx, id)
+	gifContent, err := s.tenorService.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get from tenor: %w", err)
 	}
 
-	go a.tenorService.SendAnalytics(cntxt.WithoutDeadline(ctx), gifContent, search)
+	go s.tenorService.SendAnalytics(cntxt.WithoutDeadline(ctx), gifContent, search)
 
-	return a.generateGif(ctx, gifContent.GetImageURL(), caption)
+	return s.generateGif(ctx, gifContent.GetImageURL(), caption)
 }
 
 // GetGifFromURL generates a meme gif from the given id with caption text
-func (a Service) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *gif.GIF, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetGifFromURL")
+func (s Service) GetGifFromURL(ctx context.Context, imageURL, caption string) (img *gif.GIF, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "GetGifFromURL")
 	defer end(&err)
 
-	return a.generateGif(ctx, imageURL, caption)
+	return s.generateGif(ctx, imageURL, caption)
 }
 
 // GetFromURL a meme caption to the given image name from url
-func (a Service) GetFromURL(ctx context.Context, imageURL, caption string) (img image.Image, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "GetFromURL")
+func (s Service) GetFromURL(ctx context.Context, imageURL, caption string) (img image.Image, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "GetFromURL")
 	defer end(&err)
 
-	return a.generateImage(ctx, imageURL, caption)
+	return s.generateImage(ctx, imageURL, caption)
 }
 
 // CaptionImage add caption on an image
-func (a Service) CaptionImage(ctx context.Context, source image.Image, text string) (img image.Image, err error) {
-	_, end := telemetry.StartSpan(ctx, a.tracer, "captionImage")
+func (s Service) CaptionImage(ctx context.Context, source image.Image, text string) (img image.Image, err error) {
+	_, end := telemetry.StartSpan(ctx, s.tracer, "captionImage")
 	defer end(&err)
 
-	return a.caption(gg.NewContextForImage(source), text)
+	return s.caption(gg.NewContextForImage(source), text)
 }

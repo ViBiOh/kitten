@@ -15,12 +15,12 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
 )
 
-func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, caption string, gif bool) bool {
+func (s Service) serveCached(ctx context.Context, w http.ResponseWriter, id, caption string, gif bool) bool {
 	var filename string
 	if gif {
-		filename = a.getGifCacheFilename(id, caption)
+		filename = s.getGifCacheFilename(id, caption)
 	} else {
-		filename = a.getCacheFilename(id, caption)
+		filename = s.getCacheFilename(id, caption)
 	}
 
 	file, err := os.OpenFile(filename, os.O_RDONLY, 0o600)
@@ -48,25 +48,25 @@ func (a Service) serveCached(ctx context.Context, w http.ResponseWriter, id, cap
 		return false
 	}
 
-	a.increaseCached(ctx)
+	s.increaseCached(ctx)
 
 	return true
 }
 
-func (a Service) storeInCache(ctx context.Context, id, caption string, image image.Image) {
-	if file, err := os.OpenFile(a.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
+func (s Service) storeInCache(ctx context.Context, id, caption string, image image.Image) {
+	if file, err := os.OpenFile(s.getCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
 		slog.ErrorContext(ctx, "open image to local cache", "err", err)
 	} else if err := jpeg.Encode(file, image, &jpeg.Options{Quality: 80}); err != nil {
 		slog.ErrorContext(ctx, "write image to local cache", "err", err)
 	}
 }
 
-func (a Service) getCacheFilename(id, caption string) string {
-	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
+func (s Service) getCacheFilename(id, caption string) string {
+	return filepath.Join(s.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".jpeg")
 }
 
-func (a Service) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
-	imagePath := a.getCacheFilename(id, caption)
+func (s Service) generateAndStoreImage(ctx context.Context, id, from, caption string) (string, int64, error) {
+	imagePath := s.getCacheFilename(id, caption)
 
 	info, err := os.Stat(imagePath)
 	if err != nil && !os.IsNotExist(err) {
@@ -74,12 +74,12 @@ func (a Service) generateAndStoreImage(ctx context.Context, id, from, caption st
 	}
 
 	if info == nil {
-		imageOutput, err := a.generateImage(ctx, from, caption)
+		imageOutput, err := s.generateImage(ctx, from, caption)
 		if err != nil {
 			return "", 0, fmt.Errorf("generate imageOutput: %w", err)
 		}
 
-		a.storeInCache(ctx, id, caption, imageOutput)
+		s.storeInCache(ctx, id, caption, imageOutput)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {

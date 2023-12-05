@@ -20,7 +20,7 @@ import (
 	"github.com/fogleman/gg"
 )
 
-func (a Service) GifHandler() http.Handler {
+func (s Service) GifHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -39,11 +39,11 @@ func (a Service) GifHandler() http.Handler {
 			return
 		}
 
-		if a.serveCached(r.Context(), w, id, caption, true) {
+		if s.serveCached(r.Context(), w, id, caption, true) {
 			return
 		}
 
-		image, err := a.GetGif(r.Context(), id, search, caption)
+		image, err := s.GetGif(r.Context(), id, search, caption)
 		if err != nil {
 			if errors.Is(err, tenor.ErrNotFound) {
 				httperror.NotFound(r.Context(), w)
@@ -63,31 +63,31 @@ func (a Service) GifHandler() http.Handler {
 			return
 		}
 
-		a.increaseServed(r.Context())
+		s.increaseServed(r.Context())
 
-		go a.storeGifInCache(r.Context(), id, caption, image)
+		go s.storeGifInCache(r.Context(), id, caption, image)
 	})
 }
 
-func (a Service) getGifCacheFilename(id, caption string) string {
-	return filepath.Join(a.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".gif")
+func (s Service) getGifCacheFilename(id, caption string) string {
+	return filepath.Join(s.tmpFolder, hash.String(fmt.Sprintf("%s:%s", id, caption))+".gif")
 }
 
-func (a Service) storeGifInCache(ctx context.Context, id, caption string, image *gif.GIF) {
-	if file, err := os.OpenFile(a.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
+func (s Service) storeGifInCache(ctx context.Context, id, caption string, image *gif.GIF) {
+	if file, err := os.OpenFile(s.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
 		slog.ErrorContext(ctx, "open gif to local cache", "err", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
 		slog.ErrorContext(ctx, "write gif to local cache", "err", err)
 	}
 }
 
-func (a Service) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
+func (s Service) generateGif(ctx context.Context, from, caption string) (*gif.GIF, error) {
 	image, err := getGif(ctx, from)
 	if err != nil {
 		return nil, fmt.Errorf("get gif: %w", err)
 	}
 
-	image, err = a.CaptionGif(ctx, image, caption)
+	image, err = s.CaptionGif(ctx, image, caption)
 	if err != nil {
 		return nil, fmt.Errorf("caption gif: %w", err)
 	}
@@ -95,8 +95,8 @@ func (a Service) generateGif(ctx context.Context, from, caption string) (*gif.GI
 	return image, nil
 }
 
-func (a Service) generateAndStoreGif(ctx context.Context, id, from, caption string) (string, int64, error) {
-	imagePath := a.getGifCacheFilename(id, caption)
+func (s Service) generateAndStoreGif(ctx context.Context, id, from, caption string) (string, int64, error) {
+	imagePath := s.getGifCacheFilename(id, caption)
 
 	info, err := os.Stat(imagePath)
 	if err != nil && !os.IsNotExist(err) {
@@ -104,12 +104,12 @@ func (a Service) generateAndStoreGif(ctx context.Context, id, from, caption stri
 	}
 
 	if info == nil {
-		image, err := a.generateGif(ctx, from, caption)
+		image, err := s.generateGif(ctx, from, caption)
 		if err != nil {
 			return "", 0, fmt.Errorf("generate image: %w", err)
 		}
 
-		a.storeGifInCache(ctx, id, caption, image)
+		s.storeGifInCache(ctx, id, caption, image)
 
 		info, err = os.Stat(imagePath)
 		if err != nil {
@@ -134,15 +134,15 @@ func getGif(ctx context.Context, imageURL string) (*gif.GIF, error) {
 	return output, nil
 }
 
-func (a Service) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
+func (s Service) CaptionGif(ctx context.Context, source *gif.GIF, text string) (*gif.GIF, error) {
 	var err error
 
-	_, end := telemetry.StartSpan(ctx, a.tracer, "captionGif")
+	_, end := telemetry.StartSpan(ctx, s.tracer, "captionGif")
 	defer end(&err)
 
 	wg := concurrent.NewFailFast(8)
 
-	textImage, err := a.caption(gg.NewContext(source.Config.Width, source.Config.Height), text)
+	textImage, err := s.caption(gg.NewContext(source.Config.Width, source.Config.Height), text)
 	if err != nil {
 		return source, fmt.Errorf("generate text layer: %w", err)
 	}
