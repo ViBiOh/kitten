@@ -59,25 +59,25 @@ func main() {
 
 	inputFile, err := os.OpenFile(*input, os.O_RDONLY, mode)
 	if err != nil {
-		slog.ErrorContext(ctx, "open input", "err", err)
+		slog.ErrorContext(ctx, "open input", "error", err)
 		os.Exit(1)
 	}
 
 	defer func() {
 		if closeErr := inputFile.Close(); closeErr != nil {
-			slog.Warn("close input file", "err", err)
+			slog.Warn("close input file", "error", err)
 		}
 	}()
 
 	outputFile, err := os.OpenFile(*output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
-		slog.ErrorContext(ctx, "create output", "err", err)
+		slog.ErrorContext(ctx, "create output", "error", err)
 		os.Exit(1)
 	}
 
 	defer func() {
 		if closeErr := outputFile.Close(); closeErr != nil {
-			slog.Warn("close output file", "err", err)
+			slog.Warn("close output file", "error", err)
 		}
 	}()
 
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	if err != nil {
-		slog.ErrorContext(ctx, "generate", "err", err)
+		slog.ErrorContext(ctx, "generate", "error", err)
 		os.Exit(1)
 	}
 }

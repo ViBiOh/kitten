@@ -52,7 +52,7 @@ func getFontFace(size float64) (font.Face, func()) {
 			New: func() any {
 				impactFace, err := loadFsFont("fonts/impact.ttf", size)
 				if err != nil {
-					slog.Error("load font face", "err", err)
+					slog.Error("load font face", "error", err)
 				}
 
 				return impactFace

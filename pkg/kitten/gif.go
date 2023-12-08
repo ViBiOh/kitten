@@ -75,9 +75,9 @@ func (s Service) getGifCacheFilename(id, caption string) string {
 
 func (s Service) storeGifInCache(ctx context.Context, id, caption string, image *gif.GIF) {
 	if file, err := os.OpenFile(s.getGifCacheFilename(id, caption), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600); err != nil {
-		slog.ErrorContext(ctx, "open gif to local cache", "err", err)
+		slog.ErrorContext(ctx, "open gif to local cache", "error", err)
 	} else if err := gif.EncodeAll(file, image); err != nil {
-		slog.ErrorContext(ctx, "write gif to local cache", "err", err)
+		slog.ErrorContext(ctx, "write gif to local cache", "error", err)
 	}
 }
 
