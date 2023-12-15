@@ -9,7 +9,10 @@ HEALTHCHECK --retries=5 CMD [ "/kitten", "-url", "http://localhost:1080/health" 
 ENTRYPOINT [ "/kitten" ]
 
 ARG VERSION
-ENV VERSION=${VERSION}
+ENV VERSION ${VERSION}
+
+ARG GIT_SHA
+ENV GIT_SHA ${GIT_SHA}
 
 ARG TARGETOS
 ARG TARGETARCH
