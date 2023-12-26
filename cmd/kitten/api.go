@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -78,10 +77,7 @@ func main() {
 	ctx := context.Background()
 
 	telemetryService, err := telemetry.New(ctx, telemetryConfig)
-	if err != nil {
-		slog.ErrorContext(ctx, "create telemetry", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create telemetry")
 
 	defer telemetryService.Close(ctx)
 
@@ -96,20 +92,14 @@ func main() {
 	healthService := health.New(ctx, healthConfig)
 
 	rendererService, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
-	if err != nil {
-		slog.ErrorContext(ctx, "create renderer", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create renderer")
 
 	kittenHandler := rendererService.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
 	redisClient, err := redis.New(redisConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
-	if err != nil {
-		slog.ErrorContext(ctx, "create redis", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create redis")
 
 	defer redisClient.Close()
 
@@ -126,10 +116,7 @@ func main() {
 	)
 
 	discordService, err := discord.New(discordConfig, rendererService.PublicURL(""), kittenService.DiscordHandler, telemetryService.TracerProvider())
-	if err != nil {
-		slog.ErrorContext(ctx, "create discord", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create discord")
 
 	searchHandler := http.StripPrefix(searchPrefix, kittenService.SearchHandler())
 	apiHandler := http.StripPrefix(apiPrefix, kittenService.Handler())

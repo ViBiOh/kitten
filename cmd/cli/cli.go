@@ -58,10 +58,7 @@ func main() {
 	}
 
 	inputFile, err := os.OpenFile(*input, os.O_RDONLY, mode)
-	if err != nil {
-		slog.ErrorContext(ctx, "open input", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "open input")
 
 	defer func() {
 		if closeErr := inputFile.Close(); closeErr != nil {
@@ -70,10 +67,7 @@ func main() {
 	}()
 
 	outputFile, err := os.OpenFile(*output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
-	if err != nil {
-		slog.ErrorContext(ctx, "create output", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create output")
 
 	defer func() {
 		if closeErr := outputFile.Close(); closeErr != nil {
@@ -87,10 +81,7 @@ func main() {
 		err = generateImage(ctx, kittenService, inputFile, outputFile, *caption)
 	}
 
-	if err != nil {
-		slog.ErrorContext(ctx, "generate", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "generate")
 }
 
 func generateGif(ctx context.Context, kittenService kitten.Service, input, output *os.File, caption string) error {
