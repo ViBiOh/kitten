@@ -26,8 +26,28 @@ spec:
     image:
       name: vibioh/kitten
       tag: "202401172227" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+    labels:
+      tags.datadoghq.com/env: "production"
+      tags.datadoghq.com/service: "kitten"
+      tags.datadoghq.com/version: "202401172227" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+    env:
+      - name: GOMAXPROCS
+        valueFrom:
+          resourceFieldRef:
+            resource: limits.cpu
+      - name: GOMEMLIMIT
+        valueFrom:
+          resourceFieldRef:
+            resource: limits.memory
+      - name: VERSION
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/version']
+      - name: OTEL_SERVICE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/service']
     config:
-      GOMAXPROCS: "1"
       KITTEN_DISCORD_APPLICATION_ID: "959191057835393044"
       KITTEN_DISCORD_PUBLIC_KEY: 2a1eb3b4786bc5dbd59d1f8d35eb44f5243e959158ae75367f57e0d4f169ba47
       KITTEN_LOGGER_JSON: "true"
@@ -36,7 +56,6 @@ spec:
       KITTEN_SLACK_CLIENT_ID: "2426300949335.3310973634019"
       KITTEN_TELEMETRY_URL: datadog.observability:4317
       OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/kitten
-      OTEL_SERVICE_NAME: kitten
     secrets:
       KITTEN_DISCORD_CLIENT_ID: AgB2BP/8Z/vJgcPxHedoahwu5Tq7kDq+ne1A9Ms1IOvptxk85wPu9LpAYXxKyFvWHErhjNr9qLNK7SiaFUvrz7lFHJUiQblUHeTqjUD9KRgzj3kMxrKO6is0jfx110S5X/xL3NV1k+7xyq6JSSHla/9CnxvCpDI5HEKLtOZGYPjnQKlubBOr+oi3Vt46JRdeWTexA8zxXGOXApdgEzimZhAn8kDbVoKLBqQ8vUIwrtK2rQ4cb64+RsMVQW/LzGFZ3qOknZ98T6zkS7qBWEK9BWw8ANjzMyR5d3ujZCaYK2efl2I5fGL9MoOZmtXObStfZrxQPZdP/Jvf7BoZqT0DOerODVCdzpG4+IlUz3Yetez+STKVxWe8TwKBDreKBUK1KOyDwa9kB6GtzJLvZal5AGguQrK/yBVLFanSfx2/2WX+9g74GXtiz2yPQGdCBnipgvpQdMOZVGgHGXZ9mYpFLR+uAMMjQdceXCeim9JZkleDmonSg0V56sJ6DSHFkaXHoxlfV6jrHIjrqyhhlSxtREfyLdKK+up5xl/od3nxMR61QHTZU/exN3TmyQaPdWpcXPJVfoGvMLMEiLPypABACiPH8IOKFWDN4VQNIgHptVW98eQThZ08OW58y6LXQFGwnzYk5o/EXfjkLVzKRouRfgW2jnnomH2g8/r7VgRcp95m6grP4KY2yP+eJjruyL/Ymi40p++B1z/byIfIe2WWU0wfxhA=
       KITTEN_DISCORD_CLIENT_SECRET: AgCHrlM/BSf550oYqM66SPpOUTRTT+o/eWQVX5WkfIbH6mUB3GRuHLxGt6VJnHper9Ct9ULMoFkcOXx6dsLDg6GOSW/q2kFTpOARtaZcHjdn8fB5RDi5nfzAEvq53hCoToSsHVr3rxw1GLv+c1elKWnLX/w9shUXET/hQBnLRLiBUjMx6vxqPuUkOyGh2PAvLIfFv59GEdCI28RNNCZVCXTbKsB3fA+aputDQPDapaDQSMCP+rBECp8NsT/NA5fu5H4gqA7virJ3VLr9RRxJSq4axMCoih3UhuYGegwOxSsUOFlE8ZbqNMMAnt70r7FxhnOtoOzvaDV7i3iQhRX32E/1OMDh4ImxIEEMMy0CElL//EYXpokXXHto9JvApqrMIRYGHokP4tOikAiS0Pe0PxM3dDizlTbnKaR0iGnOvflmRE7h3dvuM8y6lzhs7g5UbNQwFjOf/ueqyblCtGqgNpxxPJLdqgaMdawjoXfUarDNhMMj/VpJPjyJeaBgd0py7gf4Hb2mkr6q/lk/8XMnnToAFlxZo0QxUooXL+rUuDQSEfaCEaIX6u+6AtpfDgZxotz//QTh4xekaL032Il4ezg5+FHPyAy/P4JaA0CFehzy1vJLayjLznXxgbTmO2ucxDdgc2WOl/eIGmyE+fLPn8O3FAtfPKUbfmkmNb2hpQ2oGrE+ifwQeydu9AwmDhovahpmrgygO/TTXYweHIZMJ3UAqohNIfAVioSjR+Kw9fwoMw==
