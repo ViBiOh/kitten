@@ -126,7 +126,7 @@ func (s Service) Search(ctx context.Context, query string, pos string) (Response
 	if err != nil {
 		go func(ctx context.Context) {
 			if err = s.cache.Store(ctx, gif.ID, gif); err != nil {
-				slog.ErrorContext(ctx, "save gif in cache", "error", err)
+				slog.LogAttrs(ctx, slog.LevelError, "save gif in cache", slog.Any("error", err))
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}
@@ -141,12 +141,12 @@ func (s Service) Get(ctx context.Context, id string) (ResponseObject, error) {
 func (s Service) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
 	resp, err := s.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", s.apiKey, s.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "send share events to tenor", "error", err)
+		slog.LogAttrs(ctx, slog.LevelError, "send share events to tenor", slog.Any("error", err))
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		slog.ErrorContext(ctx, "discard analytics from tenor", "error", err)
+		slog.LogAttrs(ctx, slog.LevelError, "discard analytics from tenor", slog.Any("error", err))
 	}
 }
 

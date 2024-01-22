@@ -76,12 +76,12 @@ func New(config *Config, unsplashService unsplash.Service, tenorService tenor.Se
 
 		service.cachedMetric, err = meter.Int64Counter("kitten.image_cached")
 		if err != nil {
-			slog.Error("create cached counter", "error", err)
+			slog.LogAttrs(context.Background(), slog.LevelError, "create cached counter", slog.Any("error", err))
 		}
 
 		service.servedMetric, err = meter.Int64Counter("kitten.image_served")
 		if err != nil {
-			slog.Error("create served counter", "error", err)
+			slog.LogAttrs(context.Background(), slog.LevelError, "create served counter", slog.Any("error", err))
 		}
 	}
 

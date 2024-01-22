@@ -62,7 +62,7 @@ func main() {
 
 	defer func() {
 		if closeErr := inputFile.Close(); closeErr != nil {
-			slog.Warn("close input file", "error", err)
+			slog.LogAttrs(context.Background(), slog.LevelWarn, "close input file", slog.Any("error", err))
 		}
 	}()
 
@@ -71,7 +71,7 @@ func main() {
 
 	defer func() {
 		if closeErr := outputFile.Close(); closeErr != nil {
-			slog.Warn("close output file", "error", err)
+			slog.LogAttrs(context.Background(), slog.LevelWarn, "close output file", slog.Any("error", err))
 		}
 	}()
 
