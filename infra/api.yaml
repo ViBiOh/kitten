@@ -25,11 +25,11 @@ spec:
     nameOverride: kitten
     image:
       name: vibioh/kitten
-      tag: "202403102324" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202403191149" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "kitten"
-      tags.datadoghq.com/version: "202403102324" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tags.datadoghq.com/version: "202403191149" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     env:
       - name: GOMAXPROCS
         valueFrom:
