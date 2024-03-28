@@ -2,7 +2,6 @@
 
 [![Build](https://github.com/ViBiOh/kitten/workflows/Build/badge.svg)](https://github.com/ViBiOh/kitten/actions)
 [![codecov](https://codecov.io/gh/ViBiOh/kitten/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/kitten)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_kitten&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_kitten)
 
 ## Getting started
 
