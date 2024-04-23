@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -66,9 +65,7 @@ func main() {
 	discordConfig := discord.Flags(fs, "discord")
 	rendererConfig := renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr"))
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
-		log.Fatal(err)
-	}
+	_ = fs.Parse(os.Args[1:])
 
 	alcotest.DoAndExit(alcotestConfig)
 

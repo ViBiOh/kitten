@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/gif"
 	"image/jpeg"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -32,9 +31,7 @@ func main() {
 	caption := fs.String("caption", "", "caption text")
 	output := fs.String("output", "", "output file")
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
-		log.Fatal(err)
-	}
+	_ = fs.Parse(os.Args[1:])
 
 	logger.Init(loggerConfig)
 
