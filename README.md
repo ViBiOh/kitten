@@ -53,9 +53,11 @@ Usage of kitten:
   --loggerMessageKey      string        [logger] Key for message in JSON ${KITTEN_LOGGER_MESSAGE_KEY} (default "msg")
   --loggerTimeKey         string        [logger] Key for timestamp in JSON ${KITTEN_LOGGER_TIME_KEY} (default "time")
   --minify                              Minify HTML ${KITTEN_MINIFY} (default true)
+  --name                  string        [server] Name ${KITTEN_NAME} (default "http")
   --okStatus              int           [http] Healthy HTTP Status code ${KITTEN_OK_STATUS} (default 204)
   --pathPrefix            string        Root Path Prefix ${KITTEN_PATH_PREFIX}
   --port                  uint          [server] Listen port (0 to disable) ${KITTEN_PORT} (default 1080)
+  --pprofAgent            string        [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${KITTEN_PPROF_AGENT}
   --publicURL             string        Public URL ${KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
   --readTimeout           duration      [server] Read Timeout ${KITTEN_READ_TIMEOUT} (default 5s)
   --redisAddress          string slice  [redis] Redis Address host:port (blank to disable) ${KITTEN_REDIS_ADDRESS}, as a string slice, environment variable separated by "," (default [127.0.0.1:6379])
@@ -70,6 +72,7 @@ Usage of kitten:
   --slackSigningSecret    string        [slack] Signing secret ${KITTEN_SLACK_SIGNING_SECRET}
   --telemetryRate         string        [telemetry] OpenTelemetry sample rate, 'always', 'never' or a float value ${KITTEN_TELEMETRY_RATE} (default "always")
   --telemetryURL          string        [telemetry] OpenTelemetry gRPC endpoint (e.g. otel-exporter:4317) ${KITTEN_TELEMETRY_URL}
+  --telemetryUint64                     [telemetry] Change OpenTelemetry Trace ID format to an unsigned int 64 ${KITTEN_TELEMETRY_UINT64} (default true)
   --tenorApiKey           string        [tenor] API Key ${KITTEN_TENOR_API_KEY}
   --tenorClientKey        string        [tenor] Client Key ${KITTEN_TENOR_CLIENT_KEY}
   --title                 string        Application title ${KITTEN_TITLE} (default "KittenBot")
