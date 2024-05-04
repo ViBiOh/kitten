@@ -58,6 +58,7 @@ Usage of kitten:
   --pathPrefix            string        Root Path Prefix ${KITTEN_PATH_PREFIX}
   --port                  uint          [server] Listen port (0 to disable) ${KITTEN_PORT} (default 1080)
   --pprofAgent            string        [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${KITTEN_PPROF_AGENT}
+  --pprofPort             int           [pprof] Port of the HTTP server (0 to disable) ${KITTEN_PPROF_PORT} (default 0)
   --publicURL             string        Public URL ${KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
   --readTimeout           duration      [server] Read Timeout ${KITTEN_READ_TIMEOUT} (default 5s)
   --redisAddress          string slice  [redis] Redis Address host:port (blank to disable) ${KITTEN_REDIS_ADDRESS}, as a string slice, environment variable separated by "," (default [127.0.0.1:6379])

@@ -9,8 +9,6 @@ import (
 	"os"
 	"strings"
 
-	_ "net/http/pprof"
-
 	"github.com/ViBiOh/ChatPotte/discord"
 	"github.com/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/flags"
