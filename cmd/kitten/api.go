@@ -19,7 +19,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/owasp"
 	"github.com/ViBiOh/httputils/v4/pkg/pprof"
-	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
 	"github.com/ViBiOh/httputils/v4/pkg/renderer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
@@ -68,9 +67,9 @@ func main() {
 
 	alcotest.DoAndExit(alcotestConfig)
 
-	logger.Init(loggerConfig)
-
 	ctx := context.Background()
+
+	logger.Init(ctx, loggerConfig)
 
 	healthService := health.New(ctx, healthConfig)
 
@@ -89,17 +88,17 @@ func main() {
 
 	appServer := server.New(appServerConfig)
 
-	rendererService, err := renderer.New(rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	rendererService, err := renderer.New(ctx, rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create renderer")
 
 	kittenHandler := rendererService.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	redisClient, err := redis.New(redisConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	redisClient, err := redis.New(ctx, redisConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create redis")
 
-	defer redisClient.Close()
+	defer redisClient.Close(ctx)
 
 	endCtx := healthService.EndCtx()
 
@@ -151,7 +150,7 @@ func main() {
 		kittenHandler.ServeHTTP(w, r)
 	})
 
-	go appServer.Start(endCtx, httputils.Handler(appHandler, healthService, recoverer.Middleware, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
+	go appServer.Start(endCtx, httputils.Handler(appHandler, healthService, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 
 	healthService.WaitForTermination(appServer.Done())
 

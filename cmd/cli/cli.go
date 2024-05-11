@@ -33,9 +33,9 @@ func main() {
 
 	_ = fs.Parse(os.Args[1:])
 
-	logger.Init(loggerConfig)
-
 	ctx := context.Background()
+
+	logger.Init(ctx, loggerConfig)
 
 	kittenService := kitten.New(kittenConfig, unsplash.Service{}, tenor.Service{}, nil, nil, nil, "")
 
