@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/fogleman/gg"
@@ -79,7 +78,7 @@ func (s Service) GetFromUnsplash(ctx context.Context, w http.ResponseWriter, id,
 		return
 	}
 
-	go s.unsplashService.SendDownload(cntxt.WithoutDeadline(ctx), unsplashImage)
+	go s.unsplashService.SendDownload(context.WithoutCancel(ctx), unsplashImage)
 
 	s.serveImage(ctx, w, unsplashImage, caption)
 }
@@ -96,7 +95,7 @@ func (s Service) GetGif(ctx context.Context, id, search, caption string) (*gif.G
 		return nil, fmt.Errorf("get from tenor: %w", err)
 	}
 
-	go s.tenorService.SendAnalytics(cntxt.WithoutDeadline(ctx), gifContent, search)
+	go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), gifContent, search)
 
 	return s.generateGif(ctx, gifContent.GetImageURL(), caption)
 }

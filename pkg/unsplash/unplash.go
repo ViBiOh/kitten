@@ -13,7 +13,6 @@ import (
 
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/cache"
-	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
@@ -135,7 +134,7 @@ func (s Service) Search(ctx context.Context, query string) (Image, error) {
 			if err = s.cache.Store(ctx, image.ID, image); err != nil {
 				slog.LogAttrs(ctx, slog.LevelError, "save image in cache", slog.Any("error", err))
 			}
-		}(cntxt.WithoutDeadline(ctx))
+		}(context.WithoutCancel(ctx))
 	}
 
 	return image, err
