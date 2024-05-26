@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app
-      version: "0.1.2"
+      version: "0.1.3"
       sourceRef:
         kind: HelmRepository
         name: vibioh
@@ -81,3 +81,101 @@ spec:
     volumeMounts:
       - name: tmp
         mountPath: /tmp
+    initContainers:
+      - name: discord
+        image: vibioh/discord_configure
+        imagePullPolicy: Always
+        env:
+          - name: DISCORD_APPLICATION_ID
+            valueFrom:
+              configMapKeyRef:
+                name: kitten
+                key: KITTEN_DISCORD_APPLICATION_ID
+          - name: DISCORD_PUBLIC_KEY
+            valueFrom:
+              configMapKeyRef:
+                name: kitten
+                key: KITTEN_DISCORD_PUBLIC_KEY
+          - name: DISCORD_LOGGER_JSON
+            value: "true"
+          - name: DISCORD_COMMANDS
+            value: |
+              {
+                "meme": {
+                  "name": "meme",
+                  "description": "Generate a meme with caption from Unsplash",
+                  "options": [
+                    {
+                      "name": "search",
+                      "description": "Searched image",
+                      "type": 3,
+                      "required": true
+                    },
+                    {
+                      "name": "caption",
+                      "description": "Caption to add",
+                      "type": 3,
+                      "required": true
+                    }
+                  ]
+                },
+                "memedi": {
+                  "name": "memedi",
+                  "description": "Generate a meme with caption from Unsplash Image ID",
+                  "options": [
+                    {
+                      "name": "id",
+                      "description": "Image ID",
+                      "type": 3,
+                      "required": true
+                    },
+                    {
+                      "name": "caption",
+                      "description": "Caption to add",
+                      "type": 3,
+                      "required": true
+                    }
+                  ]
+                },
+                "memegif": {
+                  "name": "memegif",
+                  "description": "Generate a gif with caption from Tenor",
+                  "options": [
+                    {
+                      "name": "search",
+                      "description": "Searched image",
+                      "type": 3,
+                      "required": true
+                    },
+                    {
+                      "name": "caption",
+                      "description": "Caption to add",
+                      "type": 3,
+                      "required": true
+                    }
+                  ]
+                }
+              }
+          - name: DISCORD_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: kitten
+                key: KITTEN_DISCORD_CLIENT_ID
+          - name: DISCORD_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: kitten
+                key: KITTEN_DISCORD_CLIENT_SECRET
+        resources:
+          limits:
+            memory: 64Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
