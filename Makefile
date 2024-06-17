@@ -8,7 +8,7 @@ endif
 APP_NAME = kitten
 PACKAGES ?= ./...
 
-MAIN_SOURCE = cmd/kitten/api.go
+MAIN_SOURCE = ./cmd/kitten/
 MAIN_RUNNER = go run $(MAIN_SOURCE)
 ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --

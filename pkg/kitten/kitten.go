@@ -178,12 +178,12 @@ func (s Service) Handler() http.Handler {
 }
 
 func getQuery(r *http.Request) (url.Values, error) {
-	urlPath := strings.TrimPrefix(r.URL.Path, "/")
-	if len(urlPath) == 0 {
+	rawContent := r.PathValue("content")
+	if len(rawContent) == 0 {
 		return r.URL.Query(), nil
 	}
 
-	content, err := base64.URLEncoding.DecodeString(urlPath)
+	content, err := base64.URLEncoding.DecodeString(rawContent)
 	if err != nil {
 		return nil, fmt.Errorf("decode content: %w", err)
 	}

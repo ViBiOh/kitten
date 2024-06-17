@@ -5,9 +5,7 @@ import (
 	"embed"
 	"flag"
 	"html/template"
-	"net/http"
 	"os"
-	"strings"
 
 	"github.com/ViBiOh/ChatPotte/discord"
 	"github.com/ViBiOh/ChatPotte/slack"
@@ -31,14 +29,6 @@ import (
 
 //go:embed templates static
 var content embed.FS
-
-const (
-	searchPrefix  = "/search"
-	apiPrefix     = "/api"
-	gifPrefix     = "/gif"
-	slackPrefix   = "/slack"
-	discordPrefix = "/discord"
-)
 
 func main() {
 	fs := flag.NewFlagSet("kitten", flag.ExitOnError)
@@ -91,10 +81,6 @@ func main() {
 	rendererService, err := renderer.New(ctx, rendererConfig, content, template.FuncMap{}, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create renderer")
 
-	kittenHandler := rendererService.Handler(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
-		return renderer.NewPage("public", http.StatusOK, nil), nil
-	})
-
 	redisClient, err := redis.New(ctx, redisConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create redis")
 
@@ -112,45 +98,14 @@ func main() {
 		rendererService.PublicURL(""),
 	)
 
+	slackService := slack.New(slackConfig, kittenService.SlackCommand, kittenService.SlackInteract, telemetryService.TracerProvider())
+
 	discordService, err := discord.New(discordConfig, rendererService.PublicURL(""), kittenService.DiscordHandler, telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create discord")
 
-	searchHandler := http.StripPrefix(searchPrefix, kittenService.SearchHandler())
-	apiHandler := http.StripPrefix(apiPrefix, kittenService.Handler())
-	gifHandler := http.StripPrefix(gifPrefix, kittenService.GifHandler())
-	slackHandler := http.StripPrefix(slackPrefix, slack.New(slackConfig, kittenService.SlackCommand, kittenService.SlackInteract, telemetryService.TracerProvider()).Handler())
-	discordHandler := http.StripPrefix(discordPrefix, discordService.Handler())
+	port := newPort(rendererService, kittenService, slackService, discordService)
 
-	appHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, searchPrefix) {
-			searchHandler.ServeHTTP(w, r)
-			return
-		}
-
-		if strings.HasPrefix(r.URL.Path, apiPrefix) {
-			apiHandler.ServeHTTP(w, r)
-			return
-		}
-
-		if strings.HasPrefix(r.URL.Path, gifPrefix) {
-			gifHandler.ServeHTTP(w, r)
-			return
-		}
-
-		if strings.HasPrefix(r.URL.Path, slackPrefix) {
-			slackHandler.ServeHTTP(w, r)
-			return
-		}
-
-		if strings.HasPrefix(r.URL.Path, discordPrefix) {
-			discordHandler.ServeHTTP(w, r)
-			return
-		}
-
-		kittenHandler.ServeHTTP(w, r)
-	})
-
-	go appServer.Start(endCtx, httputils.Handler(appHandler, healthService, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
+	go appServer.Start(endCtx, httputils.Handler(port, healthService, telemetryService.Middleware("http"), owasp.New(owaspConfig).Middleware, cors.New(corsConfig).Middleware))
 
 	healthService.WaitForTermination(appServer.Done())
 
