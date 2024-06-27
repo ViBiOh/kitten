@@ -13,13 +13,15 @@ func newPort(config configuration, services services) http.Handler {
 	mux.Handle("/gif/{content...}", services.kitten.GifHandler())
 	mux.Handle("/api/{content...}", services.kitten.Handler())
 
-	mux.Handle("/slack/", services.slack.NewServeMux())
-	mux.Handle("/discord/", services.discord.NewServeMux())
+	mux.Handle("/slack/", http.StripPrefix("/slack", services.slack.NewServeMux()))
+	mux.Handle("/discord/", http.StripPrefix("/discord", services.discord.NewServeMux()))
 
-	mux.Handle(config.renderer.PathPrefix+"/", services.renderer.NewServeMux(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
-		return renderer.NewPage("public", http.StatusOK, nil), nil
-	}),
-	)
+	mux.Handle(config.renderer.PathPrefix+"/", http.StripPrefix(
+		config.renderer.PathPrefix,
+		services.renderer.NewServeMux(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
+			return renderer.NewPage("public", http.StatusOK, nil), nil
+		}),
+	))
 
 	return mux
 }
