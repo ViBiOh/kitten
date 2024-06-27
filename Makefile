@@ -14,7 +14,7 @@ ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --
 endif
 
-CLI_SOURCE = cmd/cli/cli.go
+CLI_SOURCE = ./cmd/cli/
 CLI_RUNNER = go run $(CLI_SOURCE)
 ifeq ($(DEBUG), true)
 	CLI_RUNNER = dlv debug $(CLI_SOURCE) --
