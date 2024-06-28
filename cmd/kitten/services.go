@@ -32,7 +32,14 @@ type services struct {
 }
 
 func newServices(ctx context.Context, config configuration, clients clients) (services, error) {
-	rendererService, err := renderer.New(ctx, config.renderer, content, template.FuncMap{}, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
+	var output services
+	var err error
+
+	output.server = server.New(config.server)
+	output.owasp = owasp.New(config.owasp)
+	output.cors = cors.New(config.cors)
+
+	output.renderer, err = renderer.New(ctx, config.renderer, content, template.FuncMap{}, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 	if err != nil {
 		return services{}, fmt.Errorf("renderer: %w", err)
 	}
@@ -40,31 +47,22 @@ func newServices(ctx context.Context, config configuration, clients clients) (se
 	unsplashService := unsplash.New(ctx, config.unsplash, clients.redis, clients.telemetry.TracerProvider())
 	tenorService := tenor.New(ctx, config.tenor, clients.redis, clients.telemetry.TracerProvider())
 
-	kittenService := kitten.New(
+	output.kitten = kitten.New(
 		config.kitten,
 		unsplashService,
 		tenorService,
 		clients.redis,
 		clients.telemetry.MeterProvider(),
 		clients.telemetry.TracerProvider(),
-		rendererService.PublicURL(""),
+		output.renderer.PublicURL(""),
 	)
 
-	discordService, err := discord.New(config.discord, rendererService.PublicURL(""), kittenService.DiscordHandler, clients.telemetry.TracerProvider())
+	output.discord, err = discord.New(config.discord, output.renderer.PublicURL(""), output.kitten.DiscordHandler, clients.telemetry.TracerProvider())
 	if err != nil {
 		return services{}, fmt.Errorf("discord: %w", err)
 	}
 
-	slackService := slack.New(config.slack, kittenService.SlackCommand, kittenService.SlackInteract, clients.telemetry.TracerProvider())
+	output.slack = slack.New(config.slack, output.kitten.SlackCommand, output.kitten.SlackInteract, clients.telemetry.TracerProvider())
 
-	return services{
-		server:   server.New(config.server),
-		owasp:    owasp.New(config.owasp),
-		cors:     cors.New(config.cors),
-		renderer: rendererService,
-
-		kitten:  kittenService,
-		discord: discordService,
-		slack:   slackService,
-	}, nil
+	return output, nil
 }

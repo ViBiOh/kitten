@@ -3,10 +3,11 @@ package main
 import (
 	"net/http"
 
+	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/renderer"
 )
 
-func newPort(config configuration, services services) http.Handler {
+func newPort(clients clients, services services) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("/search", services.kitten.SearchHandler())
@@ -16,12 +17,13 @@ func newPort(config configuration, services services) http.Handler {
 	mux.Handle("/slack/", http.StripPrefix("/slack", services.slack.NewServeMux()))
 	mux.Handle("/discord/", http.StripPrefix("/discord", services.discord.NewServeMux()))
 
-	mux.Handle(config.renderer.PathPrefix+"/", http.StripPrefix(
-		config.renderer.PathPrefix,
-		services.renderer.NewServeMux(func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
-			return renderer.NewPage("public", http.StatusOK, nil), nil
-		}),
-	))
+	services.renderer.RegisterMux(mux, func(w http.ResponseWriter, r *http.Request) (renderer.Page, error) {
+		return renderer.NewPage("public", http.StatusOK, nil), nil
+	})
 
-	return mux
+	return httputils.Handler(mux, clients.health,
+		clients.telemetry.Middleware("http"),
+		services.owasp.Middleware,
+		services.cors.Middleware,
+	)
 }
