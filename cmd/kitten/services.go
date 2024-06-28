@@ -41,7 +41,7 @@ func newServices(ctx context.Context, config configuration, clients clients) (se
 
 	output.renderer, err = renderer.New(ctx, config.renderer, content, template.FuncMap{}, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider())
 	if err != nil {
-		return services{}, fmt.Errorf("renderer: %w", err)
+		return output, fmt.Errorf("renderer: %w", err)
 	}
 
 	unsplashService := unsplash.New(ctx, config.unsplash, clients.redis, clients.telemetry.TracerProvider())
@@ -59,7 +59,7 @@ func newServices(ctx context.Context, config configuration, clients clients) (se
 
 	output.discord, err = discord.New(config.discord, output.renderer.PublicURL(""), output.kitten.DiscordHandler, clients.telemetry.TracerProvider())
 	if err != nil {
-		return services{}, fmt.Errorf("discord: %w", err)
+		return output, fmt.Errorf("discord: %w", err)
 	}
 
 	output.slack = slack.New(config.slack, output.kitten.SlackCommand, output.kitten.SlackInteract, clients.telemetry.TracerProvider())
