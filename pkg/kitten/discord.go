@@ -22,7 +22,6 @@ var (
 	cancelAction = fmt.Sprintf("action=%s", url.QueryEscape(cancelValue))
 )
 
-// DiscordHandler handle discord request
 func (s Service) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
 	replace, kind, id, search, caption, next, err := s.parseQuery(ctx, webhook)
 	if err != nil {
@@ -35,7 +34,7 @@ func (s Service) DiscordHandler(ctx context.Context, webhook discord.Interaction
 
 	if len(search) != 0 {
 		return discord.AsyncResponse(replace, true), func(ctx context.Context) discord.InteractionResponse {
-			return s.handleDiscordSearch(ctx, kind, webhook.Token, search, caption, replace, next)
+			return s.handleDiscordSearch(ctx, kind, search, caption, replace, next)
 		}
 	}
 
@@ -120,7 +119,7 @@ func (s Service) handleDiscordSend(ctx context.Context, kind memeKind, id, searc
 	}
 }
 
-func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, interactionToken, search, caption string, replace bool, next string) discord.InteractionResponse {
+func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, search, caption string, replace bool, next string) discord.InteractionResponse {
 	var response discord.InteractionResponse
 	var id string
 
