@@ -22,10 +22,10 @@ var (
 	cancelAction = fmt.Sprintf("action=%s", url.QueryEscape(cancelValue))
 )
 
-func (s Service) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
+func (s Service) DiscordHandler(ctx context.Context, webhook discord.InteractionRequest) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
 	replace, kind, id, search, caption, next, err := s.parseQuery(ctx, webhook)
 	if err != nil {
-		return discord.NewError(replace, err), nil
+		return discord.NewError(replace, err), false, nil
 	}
 
 	if len(id) != 0 {
@@ -33,12 +33,12 @@ func (s Service) DiscordHandler(ctx context.Context, webhook discord.Interaction
 	}
 
 	if len(search) != 0 {
-		return discord.AsyncResponse(replace, true), func(ctx context.Context) discord.InteractionResponse {
+		return discord.AsyncResponse(replace, true), false, func(ctx context.Context) discord.InteractionResponse {
 			return s.handleDiscordSearch(ctx, kind, search, caption, replace, next)
 		}
 	}
 
-	return discord.NewEphemeral(replace, "Ok, not now."), nil
+	return discord.NewEphemeral(replace, "Ok, not now."), true, nil
 }
 
 func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
@@ -58,7 +58,6 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 				search = option.Value
 			case captionParam:
 				caption = option.Value
-
 			}
 		}
 
@@ -79,11 +78,13 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 			kind = parseKind(values.Get("kind"))
 			id = values.Get(idParam)
 			caption = values.Get(captionParam)
+
 		case nextValue:
 			kind = parseKind(values.Get("kind"))
 			search = values.Get(searchParam)
 			caption = values.Get(captionParam)
 			next = values.Get("next")
+
 		case cancelValue:
 			return
 		}
@@ -92,28 +93,29 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 	return
 }
 
-func (s Service) handleDiscordSend(ctx context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, func(context.Context) discord.InteractionResponse) {
+func (s Service) handleDiscordSend(ctx context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
 	switch kind {
 	case gifKind:
 		image, err := s.tenorService.Get(ctx, id)
 		if err != nil {
-			return discord.NewError(true, err), nil
+			return discord.NewError(true, err), false, nil
 		}
 
 		go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), image, search)
 
-		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+		return discord.NewReplace("Sending it..."), true, func(ctx context.Context) discord.InteractionResponse {
 			return s.getDiscordGifResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
+
 	default:
 		image, err := s.unsplashService.Get(ctx, id)
 		if err != nil {
-			return discord.NewError(true, err), nil
+			return discord.NewError(true, err), false, nil
 		}
 
 		go s.unsplashService.SendDownload(context.WithoutCancel(ctx), image)
 
-		return discord.AsyncResponse(false, false), func(ctx context.Context) discord.InteractionResponse {
+		return discord.NewReplace("Sending it..."), true, func(ctx context.Context) discord.InteractionResponse {
 			return s.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
 	}
@@ -132,6 +134,7 @@ func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, search,
 		response = s.getDiscordGifResponse(ctx, "", true, image, caption)
 		id = image.ID
 		next = nextValue
+
 	default:
 		image, err := s.unsplashService.Search(ctx, search)
 		switch err {

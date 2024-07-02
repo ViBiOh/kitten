@@ -5,9 +5,9 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/ViBiOh/ChatPotte v0.4.7
+	github.com/ViBiOh/ChatPotte v0.5.0
 	github.com/ViBiOh/flags v1.5.0
-	github.com/ViBiOh/httputils/v4 v4.77.3
+	github.com/ViBiOh/httputils/v4 v4.78.0
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
