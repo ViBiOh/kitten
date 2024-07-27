@@ -92,7 +92,7 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 			return Image{}, httperror.FromResponse(resp, fmt.Errorf("get image `%s`: %w", id, err))
 		}
 
-		return service.getImageFromResponse(ctx, resp)
+		return service.getImageFromResponse(resp)
 	}, tracerProvider).
 		WithTTL(cacheDuration).
 		WithExtendOnHit(ctx, cacheDuration/4, 50).
@@ -128,7 +128,7 @@ func (s Service) Search(ctx context.Context, query string) (Image, error) {
 		return Image{}, httperror.FromResponse(resp, fmt.Errorf("get random image for `%s`: %w", query, err))
 	}
 
-	image, err := s.getImageFromResponse(ctx, resp)
+	image, err := s.getImageFromResponse(resp)
 	if err != nil {
 		go func(ctx context.Context) {
 			if err = s.cache.Store(ctx, image.ID, image); err != nil {
@@ -140,7 +140,7 @@ func (s Service) Search(ctx context.Context, query string) (Image, error) {
 	return image, err
 }
 
-func (s Service) getImageFromResponse(ctx context.Context, resp *http.Response) (output Image, err error) {
+func (s Service) getImageFromResponse(resp *http.Response) (output Image, err error) {
 	var imageContent unsplashResponse
 	if err = httpjson.Read(resp, &imageContent); err != nil {
 		err = fmt.Errorf("parse random response: %w", err)
