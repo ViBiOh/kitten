@@ -140,21 +140,20 @@ func (s Service) Search(ctx context.Context, query string) (Image, error) {
 	return image, err
 }
 
-func (s Service) getImageFromResponse(resp *http.Response) (output Image, err error) {
-	var imageContent unsplashResponse
-	if err = httpjson.Read(resp, &imageContent); err != nil {
-		err = fmt.Errorf("parse random response: %w", err)
-		return
+func (s Service) getImageFromResponse(resp *http.Response) (Image, error) {
+	imageContent, err := httpjson.Read[unsplashResponse](resp)
+	if err != nil {
+		return Image{}, fmt.Errorf("parse random response: %w", err)
 	}
 
-	output.ID = imageContent.ID
-	output.Raw = fmt.Sprintf("%s?fm=jpeg&w=800&fit=clip", imageContent.URLs["raw"])
-	output.URL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.Links["html"], url.QueryEscape(s.appName))
-	output.DownloadURL = imageContent.Links["download_location"]
-	output.Author = imageContent.User.Name
-	output.AuthorURL = fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.User.Links["html"], url.QueryEscape(s.appName))
-
-	return
+	return Image{
+		ID:          imageContent.ID,
+		Raw:         fmt.Sprintf("%s?fm=jpeg&w=800&fit=clip", imageContent.URLs["raw"]),
+		URL:         fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.Links["html"], url.QueryEscape(s.appName)),
+		DownloadURL: imageContent.Links["download_location"],
+		Author:      imageContent.User.Name,
+		AuthorURL:   fmt.Sprintf("%s?utm_source=%s&utm_medium=referral", imageContent.User.Links["html"], url.QueryEscape(s.appName)),
+	}, nil
 }
 
 func cacheID(id string) string {
