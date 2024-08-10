@@ -87,8 +87,8 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
 		}
 
-		var result response
-		if err := httpjson.Read(resp, &result); err != nil {
+		result, err := httpjson.Read[response](resp)
+		if err != nil {
 			return ResponseObject{}, fmt.Errorf("parse gif response: %w", err)
 		}
 
@@ -111,8 +111,8 @@ func (s Service) Search(ctx context.Context, query string, pos string) (Response
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
 
-	var search response
-	if err := httpjson.Read(resp, &search); err != nil {
+	search, err := httpjson.Read[response](resp)
+	if err != nil {
 		return ResponseObject{}, "", fmt.Errorf("parse gif response: %w", err)
 	}
 
