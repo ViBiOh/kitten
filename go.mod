@@ -6,8 +6,8 @@ toolchain go1.23.0
 
 require (
 	github.com/ViBiOh/ChatPotte v0.7.0
-	github.com/ViBiOh/flags v1.5.0
-	github.com/ViBiOh/httputils/v4 v4.79.2
+	github.com/ViBiOh/flags v1.6.0
+	github.com/ViBiOh/httputils/v4 v4.80.0
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
