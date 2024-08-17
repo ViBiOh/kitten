@@ -83,7 +83,7 @@ spec:
         mountPath: /tmp
     initContainers:
       - name: discord
-        image: vibioh/discord_configure:v0.7.0 # {"$imagepolicy": "default:discord-configure"}
+        image: vibioh/discord_configure:v0.7.1 # {"$imagepolicy": "default:discord-configure"}
         imagePullPolicy: Always
         env:
           - name: DISCORD_APPLICATION_ID
