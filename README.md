@@ -39,6 +39,7 @@ Usage of kitten:
   --corsOrigin            string        [cors] Access-Control-Allow-Origin ${KITTEN_CORS_ORIGIN} (default "*")
   --csp                   string        [owasp] Content-Security-Policy ${KITTEN_CSP} (default "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com")
   --discordApplicationID  string        [discord] Application ID ${KITTEN_DISCORD_APPLICATION_ID}
+  --discordBotToken       string        [discord] Bot Token ${KITTEN_DISCORD_BOT_TOKEN}
   --discordClientID       string        [discord] Client ID ${KITTEN_DISCORD_CLIENT_ID}
   --discordClientSecret   string        [discord] Client Secret ${KITTEN_DISCORD_CLIENT_SECRET}
   --discordPublicKey      string        [discord] Public Key ${KITTEN_DISCORD_PUBLIC_KEY}
