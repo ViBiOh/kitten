@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.0
 
 require (
-	github.com/ViBiOh/ChatPotte v0.7.0
+	github.com/ViBiOh/ChatPotte v0.7.1
 	github.com/ViBiOh/flags v1.6.0
 	github.com/ViBiOh/httputils/v4 v4.80.2
 	github.com/fogleman/gg v1.3.0
