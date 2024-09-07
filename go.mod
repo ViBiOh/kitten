@@ -14,7 +14,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	golang.org/x/image v0.19.0
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.18.0
 )
 
 require (
