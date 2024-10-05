@@ -13,8 +13,8 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	go.opentelemetry.io/otel/metric v1.30.0
 	go.opentelemetry.io/otel/trace v1.30.0
-	golang.org/x/image v0.20.0
-	golang.org/x/text v0.18.0
+	golang.org/x/image v0.21.0
+	golang.org/x/text v0.19.0
 )
 
 require (
