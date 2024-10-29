@@ -108,14 +108,14 @@ func (s Service) handleDiscordSend(ctx context.Context, kind memeKind, id, searc
 		}
 
 	default:
-		image, err := s.unsplashService.Get(ctx, id)
-		if err != nil {
-			return discord.NewError(true, err), false, nil
-		}
-
-		go s.unsplashService.SendDownload(context.WithoutCancel(ctx), image)
-
 		return discord.NewReplace("Sending it..."), true, func(ctx context.Context) discord.InteractionResponse {
+			image, err := s.unsplashService.Get(ctx, id)
+			if err != nil {
+				return discord.NewError(true, err)
+			}
+
+			go s.unsplashService.SendDownload(context.WithoutCancel(ctx), image)
+
 			return s.getDiscordUnsplashResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
 	}
