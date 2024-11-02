@@ -93,22 +93,29 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 	return
 }
 
-func (s Service) handleDiscordSend(ctx context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
+func (s Service) handleDiscordSend(_ context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
+	interactionResponse := discord.NewReplace("Sending it...")
+	delete := true
+	if len(search) == 0 {
+		interactionResponse = discord.AsyncResponse(false, false)
+		delete = false
+	}
+
 	switch kind {
 	case gifKind:
-		image, err := s.tenorService.Get(ctx, id)
-		if err != nil {
-			return discord.NewError(true, err), false, nil
-		}
+		return interactionResponse, delete, func(ctx context.Context) discord.InteractionResponse {
+			image, err := s.tenorService.Get(ctx, id)
+			if err != nil {
+				return discord.NewError(true, err)
+			}
 
-		go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), image, search)
+			go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), image, search)
 
-		return discord.NewReplace("Sending it..."), true, func(ctx context.Context) discord.InteractionResponse {
 			return s.getDiscordGifResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
 
 	default:
-		return discord.NewReplace("Sending it..."), true, func(ctx context.Context) discord.InteractionResponse {
+		return interactionResponse, delete, func(ctx context.Context) discord.InteractionResponse {
 			image, err := s.unsplashService.Get(ctx, id)
 			if err != nil {
 				return discord.NewError(true, err)
