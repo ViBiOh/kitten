@@ -161,6 +161,7 @@ func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, search,
 	sendValues.Add("action", sendValue)
 	sendValues.Add("kind", string(kind))
 	sendValues.Add(idParam, id)
+	sendValues.Add(searchParam, search)
 	sendValues.Add(captionParam, caption)
 
 	sendKey, err := discord.SaveCustomID(ctx, s.redisClient, cachePrefix, sendValues)
@@ -171,9 +172,9 @@ func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, search,
 	nextValues := url.Values{}
 	nextValues.Add("action", nextValue)
 	nextValues.Add("kind", string(kind))
+	nextValues.Add("next", next)
 	nextValues.Add(searchParam, search)
 	nextValues.Add(captionParam, caption)
-	nextValues.Add("next", next)
 
 	nextKey, err := discord.SaveCustomID(ctx, s.redisClient, cachePrefix, nextValues)
 	if err != nil {
