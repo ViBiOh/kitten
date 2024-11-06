@@ -76,8 +76,9 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 		switch values.Get("action") {
 		case sendValue:
 			kind = parseKind(values.Get("kind"))
-			id = values.Get(idParam)
+			search = values.Get(searchParam)
 			caption = values.Get(captionParam)
+			id = values.Get(idParam)
 
 		case nextValue:
 			kind = parseKind(values.Get("kind"))
