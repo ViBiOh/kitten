@@ -96,15 +96,15 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 
 func (s Service) handleDiscordSend(_ context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
 	interactionResponse := discord.NewReplace("Sending it...")
-	delete := true
+	deleteMessage := true
 	if len(search) == 0 {
 		interactionResponse = discord.AsyncResponse(false, false)
-		delete = false
+		deleteMessage = false
 	}
 
 	switch kind {
 	case gifKind:
-		return interactionResponse, delete, func(ctx context.Context) discord.InteractionResponse {
+		return interactionResponse, deleteMessage, func(ctx context.Context) discord.InteractionResponse {
 			image, err := s.tenorService.Get(ctx, id)
 			if err != nil {
 				return discord.NewError(true, err)
@@ -116,7 +116,7 @@ func (s Service) handleDiscordSend(_ context.Context, kind memeKind, id, search,
 		}
 
 	default:
-		return interactionResponse, delete, func(ctx context.Context) discord.InteractionResponse {
+		return interactionResponse, deleteMessage, func(ctx context.Context) discord.InteractionResponse {
 			image, err := s.unsplashService.Get(ctx, id)
 			if err != nil {
 				return discord.NewError(true, err)

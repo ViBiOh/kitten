@@ -114,13 +114,13 @@ func (s Service) SearchHandler() http.Handler {
 
 		switch kind {
 		case imageKind:
-			image, err := s.unsplashService.Search(ctx, query)
+			foundImage, err := s.unsplashService.Search(ctx, query)
 			if err != nil {
 				httperror.InternalServerError(ctx, w, fmt.Errorf("search image: %s", err))
 				return
 			}
 
-			s.serveImage(ctx, w, image, caption)
+			s.serveImage(ctx, w, foundImage, caption)
 
 		case gifKind:
 			httperror.InternalServerError(ctx, w, errors.New("not implemented"))

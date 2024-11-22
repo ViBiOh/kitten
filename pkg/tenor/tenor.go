@@ -122,13 +122,11 @@ func (s Service) Search(ctx context.Context, query string, pos string) (Response
 
 	gif := search.Results[0]
 
-	if err != nil {
-		go func(ctx context.Context) {
-			if err = s.cache.Store(ctx, gif.ID, gif); err != nil {
-				slog.LogAttrs(ctx, slog.LevelError, "save gif in cache", slog.Any("error", err))
-			}
-		}(context.WithoutCancel(ctx))
-	}
+	go func(ctx context.Context) {
+		if err = s.cache.Store(ctx, gif.ID, gif); err != nil {
+			slog.LogAttrs(ctx, slog.LevelError, "save gif in cache", slog.Any("error", err))
+		}
+	}(context.WithoutCancel(ctx))
 
 	return gif, search.Next, nil
 }

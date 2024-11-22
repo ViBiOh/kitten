@@ -120,7 +120,7 @@ func (s Service) Search(ctx context.Context, query string) (Image, error) {
 			return Image{}, ErrRateLimitExceeded
 		}
 
-		var httpError request.RequestError
+		var httpError request.Error
 		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return Image{}, httperror.FromResponse(resp, fmt.Errorf("nothing was found for the query `%s`", query))
 		}

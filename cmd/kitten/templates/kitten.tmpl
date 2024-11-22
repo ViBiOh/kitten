@@ -23,7 +23,7 @@
 {{ end }}
 
 {{ define "app" }}
-  <style type="text/css" nonce="{{ .nonce }}">
+  <style nonce="{{ .nonce }}">
     .screenshot {
       max-width: 100%;
     }
@@ -31,7 +31,7 @@
 
   <h2 class="center">
     Kitten adds a command in your Slack's workspace or Discord server for finding an image from Unsplash or a gif from Tenor and add caption on it.
-  </h2 class="center">
+  </h2>
 
   <figure class="center screenshot">
     <img class="screenshot" src="/images/welcome.png" alt="What did you say?!">
@@ -48,7 +48,7 @@
     <a href="https://discord.com/oauth2/authorize?client_id=959191057835393044">
       <img alt="Add to Discord" height="40" src="/images/discord.png" />
     </a>
-  </center>
+  </p>
 
   <p class="center margin">
     We don't log anything, we don't store any token. We just add a fun command in your workspace. Full code source is available <a href="https://github.com/ViBiOh/kitten" rel="noreferrer noopener">on GitHub</a>.
