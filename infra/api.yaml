@@ -81,6 +81,15 @@ spec:
     volumeMounts:
       - name: tmp
         mountPath: /tmp
+    autoscaling:
+      enabled: false
+    ingress:
+      enabled: true
+      compress: true
+      tls:
+        enabled: true
+      hosts:
+        - kitten.vibioh.fr
     initContainers:
       - name: discord
         image: vibioh/discord_configure:v0.7.7 # {"$imagepolicy": "default:discord-configure"}
