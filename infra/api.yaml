@@ -188,12 +188,3 @@ spec:
               - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-    autoscaling:
-      enabled: false
-    ingress:
-      enabled: true
-      compress: true
-      tls:
-        enabled: true
-      hosts:
-        - kitten.vibioh.fr
