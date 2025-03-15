@@ -2,8 +2,6 @@ module github.com/ViBiOh/kitten
 
 go 1.24
 
-toolchain go1.24.0
-
 require (
 	github.com/ViBiOh/ChatPotte v0.8.1
 	github.com/ViBiOh/flags v1.6.0
@@ -13,7 +11,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	go.opentelemetry.io/otel/metric v1.35.0
 	go.opentelemetry.io/otel/trace v1.35.0
-	golang.org/x/image v0.24.0
+	golang.org/x/image v0.25.0
 	golang.org/x/text v0.23.0
 )
 
