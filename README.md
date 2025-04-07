@@ -14,11 +14,9 @@ You'll find a Kubernetes exemple in the [`infra/`](infra) folder, using my [`app
 
 Following variables are required for CI:
 
-|            Name            |           Purpose           |
-| :------------------------: | :-------------------------: |
-|      **DOCKER_USER**       | for publishing Docker image |
-|      **DOCKER_PASS**       | for publishing Docker image |
-| **SCRIPTS_NO_INTERACTIVE** |  for running scripts in CI  |
+|            Name            |          Purpose          |
+| :------------------------: | :-----------------------: |
+| **SCRIPTS_NO_INTERACTIVE** | for running scripts in CI |
 
 ## Usage
 
