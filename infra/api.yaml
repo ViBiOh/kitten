@@ -92,7 +92,7 @@ spec:
         - kitten.vibioh.fr
     initContainers:
       - name: discord
-        image: rg.fr-par.scw.cloud/vibioh/discord_configure:v0.8.3 # {"$imagepolicy": "default:discord-configure"}
+        image: rg.fr-par.scw.cloud/vibioh/discord_configure:v0.8.4 # {"$imagepolicy": "default:discord-configure"}
         imagePullPolicy: Always
         env:
           - name: DISCORD_APPLICATION_ID
