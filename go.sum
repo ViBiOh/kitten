@@ -2,8 +2,8 @@ github.com/ViBiOh/ChatPotte v0.8.5 h1:WE1IbANAa6ZfoRUakU3XE97iCqweOpzl3Btnxjitre
 github.com/ViBiOh/ChatPotte v0.8.5/go.mod h1:0w0eYEAa4lKuBafr6v6+yp+UUVcUt1qKVIhXs/tpUQk=
 github.com/ViBiOh/flags v1.6.0 h1:f69V4ROK5XHAV71cL1yVP2UC/8xKiKJvunvgrtW/qsg=
 github.com/ViBiOh/flags v1.6.0/go.mod h1:sbFyRQ7u5xzCssqGHn/hLSTlxmMYKe09WaPneJxHveA=
-github.com/ViBiOh/httputils/v4 v4.81.14 h1:P7l8llVcAEBctUfPSQXrUeqHNHKyFR9ZIGP116Yvchg=
-github.com/ViBiOh/httputils/v4 v4.81.14/go.mod h1:Zis4PaUKYTZhz1GfqAipYrzfO8SHFWmkm369KJEjrx0=
+github.com/ViBiOh/httputils/v4 v4.82.1 h1:C88j7q+jheexxGXRc0NA9ppVUquDLRCzxiCRjQskPi4=
+github.com/ViBiOh/httputils/v4 v4.82.1/go.mod h1:Zis4PaUKYTZhz1GfqAipYrzfO8SHFWmkm369KJEjrx0=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
