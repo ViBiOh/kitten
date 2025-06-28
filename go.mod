@@ -9,8 +9,8 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	go.opentelemetry.io/otel/metric v1.36.0
-	go.opentelemetry.io/otel/trace v1.36.0
+	go.opentelemetry.io/otel/metric v1.37.0
+	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/image v0.28.0
 	golang.org/x/text v0.26.0
 )
@@ -38,7 +38,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.61.0 // indirect
-	go.opentelemetry.io/otel v1.36.0 // indirect
+	go.opentelemetry.io/otel v1.37.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.36.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.36.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.36.0 // indirect
