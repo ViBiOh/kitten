@@ -31,10 +31,6 @@ spec:
       tags.datadoghq.com/service: "kitten"
       tags.datadoghq.com/version: "202508120838" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     env:
-      - name: GOMAXPROCS
-        valueFrom:
-          resourceFieldRef:
-            resource: limits.cpu
       - name: GOMEMLIMIT
         valueFrom:
           resourceFieldRef:

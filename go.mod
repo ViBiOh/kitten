@@ -1,6 +1,6 @@
 module github.com/ViBiOh/kitten
 
-go 1.24
+go 1.25
 
 require (
 	github.com/ViBiOh/ChatPotte v0.8.5
