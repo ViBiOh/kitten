@@ -61,7 +61,7 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 			}
 		}
 
-		return
+		return replace, kind, id, search, caption, next, err
 	}
 
 	if webhook.Type == discord.MessageComponentInteraction {
@@ -70,7 +70,7 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 		var values url.Values
 		values, err = discord.RestoreCustomID(ctx, s.redisClient, cachePrefix, webhook.Data.CustomID, []string{cancelAction})
 		if err != nil {
-			return
+			return replace, kind, id, search, caption, next, err
 		}
 
 		switch values.Get("action") {
@@ -87,11 +87,11 @@ func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequ
 			next = values.Get("next")
 
 		case cancelValue:
-			return
+			return replace, kind, id, search, caption, next, err
 		}
 	}
 
-	return
+	return replace, kind, id, search, caption, next, err
 }
 
 func (s Service) handleDiscordSend(_ context.Context, kind memeKind, id, search, caption, userID string) (discord.InteractionResponse, bool, func(context.Context) discord.InteractionResponse) {
