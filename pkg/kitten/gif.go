@@ -46,7 +46,7 @@ func (s Service) GifHandler() http.Handler {
 		image, err := s.GetGif(r.Context(), id, search, caption)
 		if err != nil {
 			if errors.Is(err, tenor.ErrNotFound) {
-				httperror.NotFound(r.Context(), w)
+				httperror.NotFound(r.Context(), w, err)
 			} else {
 				httperror.InternalServerError(r.Context(), w, err)
 			}
