@@ -5,7 +5,7 @@ EXPOSE 1080
 
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-HEALTHCHECK --retries=5 CMD [ "/kitten", "-url", "http://localhost:1080/health" ]
+HEALTHCHECK --retries=5 CMD [ "/kitten", "-url", "http://127.0.0.1:1080/health" ]
 ENTRYPOINT [ "/kitten" ]
 
 ARG VERSION
