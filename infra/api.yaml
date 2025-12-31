@@ -88,7 +88,7 @@ spec:
         - kitten.vibioh.fr
     initContainers:
       - name: discord
-        image: rg.fr-par.scw.cloud/vibioh/chatpotte:202512300000 # {"$imagepolicy": "default:flux-chatpotte-web"}
+        image: rg.fr-par.scw.cloud/vibioh/chatpotte:202512302232 # {"$imagepolicy": "default:flux-chatpotte-web"}
         imagePullPolicy: Always
         env:
           - name: DISCORD_APPLICATION_ID
