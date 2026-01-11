@@ -41,7 +41,7 @@ func (s Service) DiscordHandler(ctx context.Context, webhook discord.Interaction
 	return discord.NewEphemeral(replace, "Ok, not now."), true, nil
 }
 
-func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id string, search string, caption string, next string, err error) {
+func (s Service) parseQuery(ctx context.Context, webhook discord.InteractionRequest) (replace bool, kind memeKind, id, search, caption, next string, err error) {
 	if webhook.Type == discord.ApplicationCommandInteraction {
 		switch webhook.Data.Name {
 		case "memegif":

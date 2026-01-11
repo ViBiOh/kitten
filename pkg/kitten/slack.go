@@ -65,7 +65,7 @@ func (s Service) SlackCommand(ctx context.Context, payload slack.SlashPayload) s
 	return s.getKittenBlock(ctx, kind, payload.UserID, payload.Command, payload.Text, "")
 }
 
-func (s Service) getKittenBlock(ctx context.Context, kind memeKind, user, search, caption string, next string) slack.Response {
+func (s Service) getKittenBlock(ctx context.Context, kind memeKind, user, search, caption, next string) slack.Response {
 	var yolo bool
 
 	matches := customSearch.FindStringSubmatch(caption)

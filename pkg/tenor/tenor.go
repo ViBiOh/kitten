@@ -105,7 +105,7 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 	return service
 }
 
-func (s Service) Search(ctx context.Context, query string, pos string) (ResponseObject, string, error) {
+func (s Service) Search(ctx context.Context, query, pos string) (ResponseObject, string, error) {
 	resp, err := s.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", s.apiKey, s.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
