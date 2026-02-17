@@ -230,7 +230,7 @@ func (s Service) getGifContent(id, search, caption string) slack.Image {
 }
 
 func getContent(id, search, caption string) string {
-	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("id=%s&search=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(search), url.QueryEscape(caption))))
+	return base64.URLEncoding.EncodeToString(fmt.Appendf(nil, "id=%s&search=%s&caption=%s", url.QueryEscape(id), url.QueryEscape(search), url.QueryEscape(caption)))
 }
 
 func parseValue(value string) (memeKind, string, string, string) {
