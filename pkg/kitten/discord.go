@@ -229,7 +229,7 @@ func (s Service) getDiscordGifResponse(ctx context.Context, content string, ephe
 	}
 
 	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
-		Title: "Powered By klipy",
+		Title: "Powered By Klipy",
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})

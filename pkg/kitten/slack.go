@@ -216,7 +216,7 @@ func (s Service) getSlackGifReponse(image klipy.ResponseObject, search, caption,
 
 func getSlackHeadline(user string) slack.Context {
 	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
-	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *klipy*"))
+	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *Klipy*"))
 
 	return slackCtx
 }

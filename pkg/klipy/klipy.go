@@ -30,7 +30,7 @@ var (
 )
 
 type image struct {
-	URL  string `json:"url"`
+	URL  string `json:"itemurl"`
 	Size uint64 `json:"size"`
 }
 
