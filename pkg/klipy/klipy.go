@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	root        = "https://api.klipy.com"
+	root        = "https://api.klipy.com/v2"
 	maxFileSize = 4 << 20
 )
 
