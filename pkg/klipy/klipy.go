@@ -30,13 +30,13 @@ var (
 )
 
 type image struct {
-	URL  string `json:"itemurl"`
+	URL  string `json:"url"`
 	Size uint64 `json:"size"`
 }
 
 type ResponseObject struct {
 	Images map[string]image `json:"media_formats"`
-	URL    string           `json:"url"`
+	URL    string           `json:"itemurl"`
 	ID     string           `json:"id"`
 }
 
