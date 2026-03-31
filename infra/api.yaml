@@ -123,24 +123,6 @@ spec:
                     }
                   ]
                 },
-                "memedi": {
-                  "name": "memedi",
-                  "description": "Generate a meme with caption from Unsplash Image ID",
-                  "options": [
-                    {
-                      "name": "id",
-                      "description": "Image ID",
-                      "type": 3,
-                      "required": true
-                    },
-                    {
-                      "name": "caption",
-                      "description": "Caption to add",
-                      "type": 3,
-                      "required": true
-                    }
-                  ]
-                },
                 "memegif": {
                   "name": "memegif",
                   "description": "Generate a gif with caption from Klipy",
