@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/ViBiOh/ChatPotte/discord"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/ViBiOh/kitten/pkg/version"
 )
@@ -105,12 +105,12 @@ func (s Service) handleDiscordSend(_ context.Context, kind memeKind, id, search,
 	switch kind {
 	case gifKind:
 		return interactionResponse, deleteMessage, func(ctx context.Context) discord.InteractionResponse {
-			image, err := s.tenorService.Get(ctx, id)
+			image, err := s.klipyService.Get(ctx, id)
 			if err != nil {
 				return discord.NewError(true, err)
 			}
 
-			go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), image, search)
+			go s.klipyService.SendAnalytics(context.WithoutCancel(ctx), image, search)
 
 			return s.getDiscordGifResponse(ctx, fmt.Sprintf("<@!%s> shares a meme", userID), false, image, caption)
 		}
@@ -135,7 +135,7 @@ func (s Service) handleDiscordSearch(ctx context.Context, kind memeKind, search,
 
 	switch kind {
 	case gifKind:
-		image, nextValue, err := s.tenorService.Search(ctx, search, next)
+		image, nextValue, err := s.klipyService.Search(ctx, search, next)
 		if err != nil {
 			return discord.NewError(replace, err)
 		}
@@ -216,7 +216,7 @@ func (s Service) getDiscordUnsplashResponse(ctx context.Context, content string,
 	})
 }
 
-func (s Service) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image tenor.ResponseObject, caption string) discord.InteractionResponse {
+func (s Service) getDiscordGifResponse(ctx context.Context, content string, ephemeral bool, image klipy.ResponseObject, caption string) discord.InteractionResponse {
 	imagePath, size, err := s.generateAndStoreGif(ctx, image.ID, image.GetImageURL(), caption)
 	if err != nil {
 		return discord.NewError(false, fmt.Errorf("generate gif: %w", err))
@@ -229,7 +229,7 @@ func (s Service) getDiscordGifResponse(ctx context.Context, content string, ephe
 	}
 
 	return resp.AddAttachment("meme.gif", imagePath, size).AddEmbed(discord.Embed{
-		Title: "Powered By tenor",
+		Title: "Powered By klipy",
 		URL:   image.URL,
 		Image: discord.NewImage("attachment://meme.gif"),
 	})

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/ChatPotte/slack"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -94,13 +94,13 @@ func (s Service) getKittenBlock(ctx context.Context, kind memeKind, user, search
 
 	switch kind {
 	case gifKind:
-		image, nextValue, err := s.tenorService.Search(ctx, search, next)
+		image, nextValue, err := s.klipyService.Search(ctx, search, next)
 
 		switch err {
 		case nil:
 			id = image.ID
 			next = nextValue
-		case tenor.ErrNotFound:
+		case klipy.ErrNotFound:
 			return slack.NewEphemeralMessage("No gif found")
 		default:
 			return slack.NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
@@ -173,7 +173,7 @@ func (s Service) SlackInteract(ctx context.Context, payload slack.InteractivePay
 
 			return s.getSlackImageResponse(image, action.BlockID, caption, payload.User.ID)
 		case gifKind:
-			image, err := s.tenorService.Get(ctx, id)
+			image, err := s.klipyService.Get(ctx, id)
 			if err != nil {
 				return slack.NewError(err)
 			}
@@ -203,7 +203,7 @@ func (s Service) getSlackImageResponse(image unsplash.Image, search, caption, us
 	}
 }
 
-func (s Service) getSlackGifReponse(image tenor.ResponseObject, search, caption, user string) slack.Response {
+func (s Service) getSlackGifReponse(image klipy.ResponseObject, search, caption, user string) slack.Response {
 	return slack.Response{
 		ResponseType:   "in_channel",
 		DeleteOriginal: true,
@@ -216,7 +216,7 @@ func (s Service) getSlackGifReponse(image tenor.ResponseObject, search, caption,
 
 func getSlackHeadline(user string) slack.Context {
 	slackCtx := slack.NewContext().AddElement(slack.NewText(fmt.Sprintf("Triggered By <@%s>", user)))
-	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *tenor*"))
+	slackCtx = slackCtx.AddElement(slack.NewText("Powered By *klipy*"))
 
 	return slackCtx
 }

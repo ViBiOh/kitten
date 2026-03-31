@@ -1,4 +1,4 @@
-package tenor
+package klipy
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	root        = "https://tenor.googleapis.com/v2/"
+	root        = "https://api.klipy.com"
 	maxFileSize = 4 << 20
 )
 
@@ -54,35 +54,31 @@ type response struct {
 }
 
 type Service struct {
-	cache     *cache.Cache[string, ResponseObject]
-	apiKey    string
-	clientKey string
-	req       request.Request
+	cache  *cache.Cache[string, ResponseObject]
+	apiKey string
+	req    request.Request
 }
 
 type Config struct {
-	apiKey    string
-	clientKey string
+	apiKey string
 }
 
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.apiKey, "", overrides)
-	flags.New("ClientKey", "Client Key").Prefix(prefix).DocPrefix("tenor").StringVar(fs, &config.clientKey, "", overrides)
+	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("klipy").StringVar(fs, &config.apiKey, "", overrides)
 
 	return &config
 }
 
 func New(ctx context.Context, config *Config, redisClient redis.Client, tracerProvider trace.TracerProvider) Service {
 	service := Service{
-		req:       request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
-		apiKey:    url.QueryEscape(config.apiKey),
-		clientKey: url.QueryEscape(config.clientKey),
+		req:    request.Get(root).WithClient(request.CreateClient(time.Second*30, request.NoRedirection)),
+		apiKey: url.QueryEscape(config.apiKey),
 	}
 
 	service.cache = cache.New(redisClient, cacheID, func(ctx context.Context, id string) (ResponseObject, error) {
-		resp, err := service.req.Path("/posts?key=%s&client_key=%s&ids=%s", service.apiKey, service.clientKey, url.QueryEscape(id)).Send(ctx, nil)
+		resp, err := service.req.Path("/posts?key=%s&ids=%s", service.apiKey, url.QueryEscape(id)).Send(ctx, nil)
 		if err != nil {
 			return ResponseObject{}, httperror.FromResponse(resp, fmt.Errorf("get gif: %w", err))
 		}
@@ -100,13 +96,13 @@ func New(ctx context.Context, config *Config, redisClient redis.Client, tracerPr
 	}, tracerProvider).
 		WithTTL(cacheDuration).
 		WithExtendOnHit(ctx, cacheDuration/4, 50).
-		WithClientSideCaching(ctx, "kitten_tenor", 50)
+		WithClientSideCaching(ctx, "kitten_klipy", 50)
 
 	return service
 }
 
 func (s Service) Search(ctx context.Context, query, pos string) (ResponseObject, string, error) {
-	resp, err := s.req.Path(fmt.Sprintf("/search?key=%s&client_key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", s.apiKey, s.clientKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
+	resp, err := s.req.Path(fmt.Sprintf("/search?key=%s&q=%s&limit=1&pos=%s&media_filter=mediumgif,tinygif", s.apiKey, url.QueryEscape(query), url.QueryEscape(pos))).Send(ctx, nil)
 	if err != nil {
 		return ResponseObject{}, "", httperror.FromResponse(resp, fmt.Errorf("search gif: %w", err))
 	}
@@ -136,17 +132,17 @@ func (s Service) Get(ctx context.Context, id string) (ResponseObject, error) {
 }
 
 func (s Service) SendAnalytics(ctx context.Context, content ResponseObject, query string) {
-	resp, err := s.req.Path("/registershare?key=%s&client_key=%s&id=%s&q=%s", s.apiKey, s.clientKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
+	resp, err := s.req.Path("/registershare?key=%s&id=%s&q=%s", s.apiKey, url.QueryEscape(content.ID), url.QueryEscape(query)).Send(ctx, nil)
 	if err != nil {
-		slog.LogAttrs(ctx, slog.LevelError, "send share events to tenor", slog.Any("error", err))
+		slog.LogAttrs(ctx, slog.LevelError, "send share events to klipy", slog.Any("error", err))
 		return
 	}
 
 	if err = request.DiscardBody(resp.Body); err != nil {
-		slog.LogAttrs(ctx, slog.LevelError, "discard analytics from tenor", slog.Any("error", err))
+		slog.LogAttrs(ctx, slog.LevelError, "discard analytics from klipy", slog.Any("error", err))
 	}
 }
 
 func cacheID(id string) string {
-	return version.Redis("tenor:" + id)
+	return version.Redis("klipy:" + id)
 }

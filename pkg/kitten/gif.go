@@ -16,7 +16,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/fogleman/gg"
 )
 
@@ -45,7 +45,7 @@ func (s Service) GifHandler() http.Handler {
 
 		image, err := s.GetGif(r.Context(), id, search, caption)
 		if err != nil {
-			if errors.Is(err, tenor.ErrNotFound) {
+			if errors.Is(err, klipy.ErrNotFound) {
 				httperror.NotFound(r.Context(), w, err)
 			} else {
 				httperror.InternalServerError(r.Context(), w, err)

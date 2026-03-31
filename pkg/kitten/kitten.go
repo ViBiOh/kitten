@@ -19,7 +19,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/fogleman/gg"
 	"go.opentelemetry.io/otel/metric"
@@ -45,7 +45,7 @@ type Service struct {
 	tmpFolder       string
 	website         string
 	unsplashService unsplash.Service
-	tenorService    tenor.Service
+	klipyService    klipy.Service
 }
 
 type Config struct {
@@ -60,10 +60,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	return &config
 }
 
-func New(config *Config, unsplashService unsplash.Service, tenorService tenor.Service, redisClient redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) Service {
+func New(config *Config, unsplashService unsplash.Service, klipyService klipy.Service, redisClient redis.Client, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider, website string) Service {
 	service := Service{
 		unsplashService: unsplashService,
-		tenorService:    tenorService,
+		klipyService:    klipyService,
 		redisClient:     redisClient,
 		website:         website,
 		tmpFolder:       config.TmpFolder,

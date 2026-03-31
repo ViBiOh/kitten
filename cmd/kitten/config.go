@@ -18,7 +18,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/kitten/pkg/kitten"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -38,7 +38,7 @@ type configuration struct {
 
 	kitten   *kitten.Config
 	unsplash *unsplash.Config
-	tenor    *tenor.Config
+	klipy    *klipy.Config
 	slack    *slack.Config
 	discord  *discord.Config
 }
@@ -63,7 +63,7 @@ func newConfig() configuration {
 
 		kitten:   kitten.Flags(fs, ""),
 		unsplash: unsplash.Flags(fs, "unsplash"),
-		tenor:    tenor.Flags(fs, "tenor"),
+		klipy:    klipy.Flags(fs, "klipy"),
 		slack:    slack.Flags(fs, "slack"),
 		discord:  discord.Flags(fs, "discord"),
 	}

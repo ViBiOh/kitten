@@ -13,7 +13,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/renderer"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/kitten/pkg/kitten"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -45,12 +45,12 @@ func newServices(ctx context.Context, config configuration, clients clients) (se
 	}
 
 	unsplashService := unsplash.New(ctx, config.unsplash, clients.redis, clients.telemetry.TracerProvider())
-	tenorService := tenor.New(ctx, config.tenor, clients.redis, clients.telemetry.TracerProvider())
+	klipyService := klipy.New(ctx, config.klipy, clients.redis, clients.telemetry.TracerProvider())
 
 	output.kitten = kitten.New(
 		config.kitten,
 		unsplashService,
-		tenorService,
+		klipyService,
 		clients.redis,
 		clients.telemetry.MeterProvider(),
 		clients.telemetry.TracerProvider(),

@@ -90,12 +90,12 @@ func (s Service) GetGif(ctx context.Context, id, search, caption string) (*gif.G
 	ctx, end := telemetry.StartSpan(ctx, s.tracer, "GetGif")
 	defer end(&err)
 
-	gifContent, err := s.tenorService.Get(ctx, id)
+	gifContent, err := s.klipyService.Get(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("get from tenor: %w", err)
+		return nil, fmt.Errorf("get from klipy: %w", err)
 	}
 
-	go s.tenorService.SendAnalytics(context.WithoutCancel(ctx), gifContent, search)
+	go s.klipyService.SendAnalytics(context.WithoutCancel(ctx), gifContent, search)
 
 	return s.generateGif(ctx, gifContent.GetImageURL(), caption)
 }

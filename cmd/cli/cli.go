@@ -14,7 +14,7 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/kitten/pkg/kitten"
-	"github.com/ViBiOh/kitten/pkg/tenor"
+	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )
 
@@ -37,7 +37,7 @@ func main() {
 
 	logger.Init(ctx, loggerConfig)
 
-	kittenService := kitten.New(kittenConfig, unsplash.Service{}, tenor.Service{}, nil, nil, nil, "")
+	kittenService := kitten.New(kittenConfig, unsplash.Service{}, klipy.Service{}, nil, nil, nil, "")
 
 	if len(*input) == 0 {
 		slog.ErrorContext(ctx, "input filename is required")
