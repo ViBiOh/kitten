@@ -25,11 +25,11 @@ spec:
     nameOverride: kitten
     image:
       name: rg.fr-par.scw.cloud/vibioh/kitten
-      tag: "202604261853" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tag: "202605021005" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "kitten"
-      tags.datadoghq.com/version: "202604261853" # {"$imagepolicy": "default:flux-kitten-api:tag"}
+      tags.datadoghq.com/version: "202605021005" # {"$imagepolicy": "default:flux-kitten-api:tag"}
     env:
       - name: GOMEMLIMIT
         valueFrom:
