@@ -141,7 +141,8 @@ func (s Service) getSlackInteractResponse(kind memeKind, user, id, search, capti
 		ReplaceOriginal: true,
 		Blocks: []slack.Block{
 			accessory,
-			slack.NewActions(search,
+			slack.NewActions(
+				search,
 				cancelButton,
 				slack.NewButtonElement("Another?", nextValue, fmt.Sprintf("%s:%s:%s", kind, caption, next), ""),
 				slack.NewButtonElement("Send", sendValue, fmt.Sprintf("%s:%s:%s: ", kind, id, caption), "primary"),

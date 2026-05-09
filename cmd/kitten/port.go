@@ -21,7 +21,8 @@ func newPort(clients clients, services services) http.Handler {
 		return renderer.NewPage("public", http.StatusOK, nil), nil
 	})
 
-	return httputils.Handler(mux, clients.health,
+	return httputils.Handler(
+		mux, clients.health,
 		clients.telemetry.Middleware("http"),
 		services.owasp.Middleware,
 		services.cors.Middleware,
