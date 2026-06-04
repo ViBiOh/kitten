@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/ViBiOh/ChatPotte/discord"
-	"github.com/ViBiOh/ChatPotte/slack"
+	"codeberg.org/ViBiOh/ChatPotte/discord"
+	"codeberg.org/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/httputils/v4/pkg/cors"
 	"github.com/ViBiOh/httputils/v4/pkg/owasp"
 	"github.com/ViBiOh/httputils/v4/pkg/renderer"

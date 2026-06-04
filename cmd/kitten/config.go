@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/ViBiOh/ChatPotte/discord"
-	"github.com/ViBiOh/ChatPotte/slack"
+	"codeberg.org/ViBiOh/ChatPotte/discord"
+	"codeberg.org/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
 	"github.com/ViBiOh/httputils/v4/pkg/cors"

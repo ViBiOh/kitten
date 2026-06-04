@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ViBiOh/ChatPotte/slack"
+	"codeberg.org/ViBiOh/ChatPotte/slack"
 	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 )

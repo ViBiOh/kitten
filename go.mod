@@ -3,7 +3,7 @@ module github.com/ViBiOh/kitten
 go 1.26
 
 require (
-	github.com/ViBiOh/ChatPotte v0.10.1
+	codeberg.org/ViBiOh/ChatPotte v0.11.0
 	github.com/ViBiOh/flags v1.6.1
 	github.com/ViBiOh/httputils/v4 v4.87.1
 	github.com/fogleman/gg v1.3.0

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/ViBiOh/ChatPotte/discord"
+	"codeberg.org/ViBiOh/ChatPotte/discord"
 	"github.com/ViBiOh/kitten/pkg/klipy"
 	"github.com/ViBiOh/kitten/pkg/unsplash"
 	"github.com/ViBiOh/kitten/pkg/version"
