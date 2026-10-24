@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	codeberg.org/ViBiOh/ChatPotte v0.11.0
 	github.com/ViBiOh/flags v1.6.1
-	github.com/ViBiOh/httputils/v4 v4.89.2
+	github.com/ViBiOh/httputils/v4 v4.90.0
 	github.com/fogleman/gg v1.3.0
 	github.com/go-oss/image v0.1.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -24,15 +24,15 @@ require (
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.32.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.15.0 // indirect
-	github.com/redis/go-redis/extra/rediscmd/v9 v9.22.0 // indirect
-	github.com/redis/go-redis/extra/redisotel/v9 v9.22.0 // indirect
-	github.com/redis/go-redis/v9 v9.22.0 // indirect
+	github.com/redis/go-redis/extra/rediscmd/v9 v9.23.0 // indirect
+	github.com/redis/go-redis/extra/redisotel/v9 v9.23.0 // indirect
+	github.com/redis/go-redis/v9 v9.23.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
-	github.com/tdewolff/minify/v2 v2.24.18 // indirect
-	github.com/tdewolff/parse/v2 v2.8.16 // indirect
+	github.com/tdewolff/minify/v2 v2.24.21 // indirect
+	github.com/tdewolff/parse/v2 v2.8.18 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.72.0 // indirect
@@ -46,14 +46,14 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.47.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.1 // indirect
 	go.uber.org/atomic v1.12.0 // indirect
-	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260924152758-ed294f943157 // indirect
-	golang.org/x/tools v0.51.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260928230214-8a89bd6388cc // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260928230214-8a89bd6388cc // indirect
+	golang.org/x/telemetry v0.0.0-20261009151841-97e8ea77aa2a // indirect
+	golang.org/x/tools v0.52.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261012220534-4341edf3f941 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	mvdan.cc/gofumpt v0.11.0 // indirect
