@@ -54,7 +54,7 @@ func newConfig() configuration {
 		pprof:     pprof.Flags(fs, "pprof"),
 		health:    health.Flags(fs, ""),
 
-		server:   server.Flags(fs, ""),
+		server:   server.Flags(fs, "server"),
 		owasp:    owasp.Flags(fs, "", flags.NewOverride("Csp", "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com")),
 		cors:     cors.Flags(fs, "cors"),
 		renderer: renderer.Flags(fs, "", flags.NewOverride("Title", "KittenBot"), flags.NewOverride("PublicURL", "https://kitten.vibioh.fr")),

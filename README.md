@@ -26,57 +26,57 @@ Be careful when using the CLI values, if someone list the processes on the syste
 
 ```bash
 Usage of kitten:
-  --address               string        [server] Listen address ${KITTEN_ADDRESS}
-  --cert                  string        [server] Certificate file ${KITTEN_CERT}
-  --corsCredentials                     [cors] Access-Control-Allow-Credentials ${KITTEN_CORS_CREDENTIALS} (default false)
-  --corsExpose            string        [cors] Access-Control-Expose-Headers ${KITTEN_CORS_EXPOSE}
-  --corsHeaders           string        [cors] Access-Control-Allow-Headers ${KITTEN_CORS_HEADERS} (default "Content-Type")
-  --corsMethods           string        [cors] Access-Control-Allow-Methods ${KITTEN_CORS_METHODS} (default "GET")
-  --corsOrigin            string        [cors] Access-Control-Allow-Origin ${KITTEN_CORS_ORIGIN} (default "*")
-  --csp                   string        [owasp] Content-Security-Policy ${KITTEN_CSP} (default "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com")
-  --discordApplicationID  string        [discord] Application ID ${KITTEN_DISCORD_APPLICATION_ID}
-  --discordBotToken       string        [discord] Bot Token ${KITTEN_DISCORD_BOT_TOKEN}
-  --discordClientID       string        [discord] Client ID ${KITTEN_DISCORD_CLIENT_ID}
-  --discordClientSecret   string        [discord] Client Secret ${KITTEN_DISCORD_CLIENT_SECRET}
-  --discordPublicKey      string        [discord] Public Key ${KITTEN_DISCORD_PUBLIC_KEY}
-  --extension             string        Go Template Extension ${KITTEN_EXTENSION} (default "tmpl")
-  --frameOptions          string        [owasp] X-Frame-Options ${KITTEN_FRAME_OPTIONS} (default "deny")
-  --graceDuration         duration      [http] Grace duration when signal received ${KITTEN_GRACE_DURATION} (default 30s)
-  --hsts                                [owasp] Indicate Strict Transport Security ${KITTEN_HSTS} (default true)
-  --idleTimeout           duration      [server] Idle Timeout ${KITTEN_IDLE_TIMEOUT} (default 2m0s)
-  --key                   string        [server] Key file ${KITTEN_KEY}
-  --klipyApiKey           string        [klipy] API Key ${KITTEN_KLIPY_API_KEY}
-  --loggerJson                          [logger] Log format as JSON ${KITTEN_LOGGER_JSON} (default false)
-  --loggerLevel           string        [logger] Logger level ${KITTEN_LOGGER_LEVEL} (default "INFO")
-  --loggerLevelKey        string        [logger] Key for level in JSON ${KITTEN_LOGGER_LEVEL_KEY} (default "level")
-  --loggerMessageKey      string        [logger] Key for message in JSON ${KITTEN_LOGGER_MESSAGE_KEY} (default "msg")
-  --loggerTimeKey         string        [logger] Key for timestamp in JSON ${KITTEN_LOGGER_TIME_KEY} (default "time")
-  --minify                              Minify HTML ${KITTEN_MINIFY} (default true)
-  --name                  string        [server] Name ${KITTEN_NAME} (default "http")
-  --okStatus              int           [http] Healthy HTTP Status code ${KITTEN_OK_STATUS} (default 204)
-  --pathPrefix            string        Root Path Prefix ${KITTEN_PATH_PREFIX}
-  --port                  uint          [server] Listen port (0 to disable) ${KITTEN_PORT} (default 1080)
-  --pprofAgent            string        [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${KITTEN_PPROF_AGENT}
-  --pprofPort             int           [pprof] Port of the HTTP server (0 to disable) ${KITTEN_PPROF_PORT} (default 0)
-  --publicURL             string        Public URL ${KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
-  --readTimeout           duration      [server] Read Timeout ${KITTEN_READ_TIMEOUT} (default 5s)
-  --redisAddress          string slice  [redis] Redis Address host:port (blank to disable) ${KITTEN_REDIS_ADDRESS}, as a string slice, environment variable separated by "," (default [127.0.0.1:6379])
-  --redisDatabase         int           [redis] Redis Database ${KITTEN_REDIS_DATABASE} (default 0)
-  --redisPassword         string        [redis] Redis Password, if any ${KITTEN_REDIS_PASSWORD}
-  --redisUsername         string        [redis] Redis Username, if any ${KITTEN_REDIS_USERNAME}
-  --shutdownTimeout       duration      [server] Shutdown Timeout ${KITTEN_SHUTDOWN_TIMEOUT} (default 10s)
-  --slackClientID         string        [slack] ClientID ${KITTEN_SLACK_CLIENT_ID}
-  --slackClientSecret     string        [slack] ClientSecret ${KITTEN_SLACK_CLIENT_SECRET}
-  --slackSigningSecret    string        [slack] Signing secret ${KITTEN_SLACK_SIGNING_SECRET}
-  --staticPaths           string slice  Paths served from static FS ${KITTEN_STATIC_PATHS}, as a string slice, environment variable separated by "," (default [/robots.txt, /sitemap.xml, /favicon.ico])
-  --telemetryRate         string        [telemetry] OpenTelemetry sample rate, 'always', 'never' or a float value ${KITTEN_TELEMETRY_RATE} (default "always")
-  --telemetryURL          string        [telemetry] OpenTelemetry gRPC endpoint (e.g. otel-exporter:4317) ${KITTEN_TELEMETRY_URL}
-  --telemetryUint64                     [telemetry] Change OpenTelemetry Trace ID format to an unsigned int 64 ${KITTEN_TELEMETRY_UINT64} (default true)
-  --title                 string        Application title ${KITTEN_TITLE} (default "KittenBot")
-  --tmpFolder             string        [kitten] Temp folder for storing cache image ${KITTEN_TMP_FOLDER} (default "/tmp")
-  --unsplashAccessKey     string        [unsplash] Unsplash Access Key ${KITTEN_UNSPLASH_ACCESS_KEY}
-  --unsplashName          string        [unsplash] Unsplash App name ${KITTEN_UNSPLASH_NAME} (default "SayIt")
-  --url                   string        [alcotest] URL to check ${KITTEN_URL}
-  --userAgent             string        [alcotest] User-Agent for check ${KITTEN_USER_AGENT} (default "Alcotest")
-  --writeTimeout          duration      [server] Write Timeout ${KITTEN_WRITE_TIMEOUT} (default 10s)
+  --corsCredentials                      [cors] Access-Control-Allow-Credentials ${KITTEN_CORS_CREDENTIALS} (default false)
+  --corsExpose             string        [cors] Access-Control-Expose-Headers ${KITTEN_CORS_EXPOSE}
+  --corsHeaders            string        [cors] Access-Control-Allow-Headers ${KITTEN_CORS_HEADERS} (default "Content-Type")
+  --corsMethods            string        [cors] Access-Control-Allow-Methods ${KITTEN_CORS_METHODS} (default "GET")
+  --corsOrigin             string        [cors] Access-Control-Allow-Origin ${KITTEN_CORS_ORIGIN} (default "*")
+  --csp                    string        [owasp] Content-Security-Policy ${KITTEN_CSP} (default "default-src 'self'; base-uri 'self'; script-src 'self' 'httputils-nonce'; style-src 'self' 'httputils-nonce'; img-src 'self' platform.slack-edge.com")
+  --discordApplicationID   string        [discord] Application ID ${KITTEN_DISCORD_APPLICATION_ID}
+  --discordBotToken        string        [discord] Bot Token ${KITTEN_DISCORD_BOT_TOKEN}
+  --discordClientID        string        [discord] Client ID ${KITTEN_DISCORD_CLIENT_ID}
+  --discordClientSecret    string        [discord] Client Secret ${KITTEN_DISCORD_CLIENT_SECRET}
+  --discordPublicKey       string        [discord] Public Key ${KITTEN_DISCORD_PUBLIC_KEY}
+  --extension              string        Go Template Extension ${KITTEN_EXTENSION} (default "tmpl")
+  --frameOptions           string        [owasp] X-Frame-Options ${KITTEN_FRAME_OPTIONS} (default "deny")
+  --graceDuration          duration      [http] Grace duration when signal received ${KITTEN_GRACE_DURATION} (default 30s)
+  --hsts                                 [owasp] Indicate Strict Transport Security ${KITTEN_HSTS} (default true)
+  --klipyApiKey            string        [klipy] API Key ${KITTEN_KLIPY_API_KEY}
+  --loggerJson                           [logger] Log format as JSON ${KITTEN_LOGGER_JSON} (default false)
+  --loggerLevel            string        [logger] Logger level ${KITTEN_LOGGER_LEVEL} (default "INFO")
+  --loggerLevelKey         string        [logger] Key for level in JSON ${KITTEN_LOGGER_LEVEL_KEY} (default "level")
+  --loggerMessageKey       string        [logger] Key for message in JSON ${KITTEN_LOGGER_MESSAGE_KEY} (default "msg")
+  --loggerTimeKey          string        [logger] Key for timestamp in JSON ${KITTEN_LOGGER_TIME_KEY} (default "time")
+  --minify                               Minify HTML ${KITTEN_MINIFY} (default true)
+  --okStatus               int           [http] Healthy HTTP Status code ${KITTEN_OK_STATUS} (default 204)
+  --pathPrefix             string        Root Path Prefix ${KITTEN_PATH_PREFIX}
+  --pprofAgent             string        [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${KITTEN_PPROF_AGENT}
+  --pprofPort              int           [pprof] Port of the HTTP server (0 to disable) ${KITTEN_PPROF_PORT} (default 0)
+  --publicURL              string        Public URL ${KITTEN_PUBLIC_URL} (default "https://kitten.vibioh.fr")
+  --redisAddress           string slice  [redis] Redis Address host:port (blank to disable) ${KITTEN_REDIS_ADDRESS}, as a string slice, environment variable separated by "," (default [127.0.0.1:6379])
+  --redisDatabase          int           [redis] Redis Database ${KITTEN_REDIS_DATABASE} (default 0)
+  --redisPassword          string        [redis] Redis Password, if any ${KITTEN_REDIS_PASSWORD}
+  --redisUsername          string        [redis] Redis Username, if any ${KITTEN_REDIS_USERNAME}
+  --serverAddress          string        [server] Listen address ${KITTEN_SERVER_ADDRESS}
+  --serverCert             string        [server] Certificate file ${KITTEN_SERVER_CERT}
+  --serverIdleTimeout      duration      [server] Idle Timeout ${KITTEN_SERVER_IDLE_TIMEOUT} (default 2m0s)
+  --serverKey              string        [server] Key file ${KITTEN_SERVER_KEY}
+  --serverName             string        [server] Name ${KITTEN_SERVER_NAME} (default "http")
+  --serverPort             uint          [server] Listen port (0 to disable) ${KITTEN_SERVER_PORT} (default 1080)
+  --serverReadTimeout      duration      [server] Read Timeout ${KITTEN_SERVER_READ_TIMEOUT} (default 5s)
+  --serverShutdownTimeout  duration      [server] Shutdown Timeout ${KITTEN_SERVER_SHUTDOWN_TIMEOUT} (default 10s)
+  --serverWriteTimeout     duration      [server] Write Timeout ${KITTEN_SERVER_WRITE_TIMEOUT} (default 10s)
+  --slackClientID          string        [slack] ClientID ${KITTEN_SLACK_CLIENT_ID}
+  --slackClientSecret      string        [slack] ClientSecret ${KITTEN_SLACK_CLIENT_SECRET}
+  --slackSigningSecret     string        [slack] Signing secret ${KITTEN_SLACK_SIGNING_SECRET}
+  --staticPaths            string slice  Paths served from static FS ${KITTEN_STATIC_PATHS}, as a string slice, environment variable separated by "," (default [/robots.txt, /sitemap.xml, /favicon.ico])
+  --telemetryRate          string        [telemetry] OpenTelemetry sample rate, 'always', 'never' or a float value ${KITTEN_TELEMETRY_RATE} (default "always")
+  --telemetryURL           string        [telemetry] OpenTelemetry gRPC endpoint (e.g. otel-exporter:4317) ${KITTEN_TELEMETRY_URL}
+  --telemetryUint64                      [telemetry] Change OpenTelemetry Trace ID format to an unsigned int 64 ${KITTEN_TELEMETRY_UINT64} (default true)
+  --title                  string        Application title ${KITTEN_TITLE} (default "KittenBot")
+  --tmpFolder              string        [kitten] Temp folder for storing cache image ${KITTEN_TMP_FOLDER} (default "/tmp")
+  --unsplashAccessKey      string        [unsplash] Unsplash Access Key ${KITTEN_UNSPLASH_ACCESS_KEY}
+  --unsplashName           string        [unsplash] Unsplash App name ${KITTEN_UNSPLASH_NAME} (default "SayIt")
+  --url                    string        [alcotest] URL to check ${KITTEN_URL}
+  --userAgent              string        [alcotest] User-Agent for check ${KITTEN_USER_AGENT} (default "Alcotest")
 ```

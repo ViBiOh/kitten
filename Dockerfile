@@ -1,6 +1,6 @@
 FROM rg.fr-par.scw.cloud/vibioh/scratch
 
-ENV KITTEN_PORT=1080
+ENV KITTEN_SERVER_PORT=1080
 EXPOSE 1080
 
 COPY cacert.pem /etc/ssl/cert.pem
