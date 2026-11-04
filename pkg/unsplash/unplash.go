@@ -69,8 +69,8 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.appName, "SayIt", overrides)
-	flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").StringVar(fs, &config.accessKey, "", overrides)
+	flags.New("Name", "Unsplash App name").Prefix(prefix).DocPrefix("unsplash").FlagVar(fs, &config.appName, "SayIt", overrides)
+	flags.New("AccessKey", "Unsplash Access Key").Prefix(prefix).DocPrefix("unsplash").FlagVar(fs, &config.accessKey, "", overrides)
 
 	return &config
 }

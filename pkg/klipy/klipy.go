@@ -66,7 +66,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("klipy").StringVar(fs, &config.apiKey, "", overrides)
+	flags.New("ApiKey", "API Key").Prefix(prefix).DocPrefix("klipy").FlagVar(fs, &config.apiKey, "", overrides)
 
 	return &config
 }

@@ -55,7 +55,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
-	flags.New("TmpFolder", "Temp folder for storing cache image").Prefix(prefix).DocPrefix("kitten").StringVar(fs, &config.TmpFolder, "/tmp", overrides)
+	flags.New("TmpFolder", "Temp folder for storing cache image").Prefix(prefix).DocPrefix("kitten").FlagVar(fs, &config.TmpFolder, "/tmp", overrides)
 
 	return &config
 }
