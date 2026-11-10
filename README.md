@@ -37,7 +37,7 @@ Usage of kitten:
   --discordClientID        string        [discord] Client ID ${KITTEN_DISCORD_CLIENT_ID}
   --discordClientSecret    string        [discord] Client Secret ${KITTEN_DISCORD_CLIENT_SECRET}
   --discordPublicKey       string        [discord] Public Key ${KITTEN_DISCORD_PUBLIC_KEY}
-  --extension              string        Go Template Extension ${KITTEN_EXTENSION} (default "tmpl")
+  --extension              string        Go Template Extension ${KITTEN_EXTENSION} (default "gotmpl")
   --frameOptions           string        [owasp] X-Frame-Options ${KITTEN_FRAME_OPTIONS} (default "deny")
   --graceDuration          duration      [http] Grace duration when signal received ${KITTEN_GRACE_DURATION} (default 30s)
   --hsts                                 [owasp] Indicate Strict Transport Security ${KITTEN_HSTS} (default true)
